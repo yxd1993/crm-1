@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.AuthorizationMapper">
+
+	<!-- 人员信息返回值 -->
+	<resultMap id="authorizedPersionResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.AuthorizationEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="authorizedPerson" column="MASTER_AUTHORIZEDPERSON" />
+		<result property="wasAuthorizedPerson" column="MASTER_WAS_AUTHORIZEDPERSON" />
+	</resultMap>
+
+	<!-- 根据登录名查询授权信息 -->
+	<select id="getAuthrizationByLoginUser" resultMap="authorizedPersionResultMap"
+		parameterType="string">
+		<![CDATA[
+			SELECT A.ID AS MASTER_ID, A.AuthorizedPerson AS MASTER_AUTHORIZEDPERSON, A.WasAuthorizedPerson AS MASTER_WAS_AUTHORIZEDPERSON
+			FROM t_crm_authorization A
+			WHERE A.WasAuthorizedPerson = #{loginName} AND A.ACTIVE = 'Y' AND A.AuthorizedStartTime < SYSDATE() AND A.AuthorizedEndTime > SYSDATE()
+		]]>
+	</select>
+	
+	<!-- 新增授权信息 -->
+	<insert id="addAuthorization">
+	    <![CDATA[
+			INSERT INTO t_crm_authorization(
+			ID,
+			AuthorizedPerson,
+			WasAuthorizedPerson,
+			AuthorizedStartTime,
+			AuthorizedEndTime,
+			CREATEUSER,
+			ACTIVE,
+			CREATEDATE
+		) VALUES(
+			UUID(),
+			#{authorizedPerson,jdbcType=VARCHAR},
+			#{wasAuthorizedPerson,jdbcType=VARCHAR},
+			#{authorizedStartTime,jdbcType=VARCHAR},
+			#{authorizedEndTime,jdbcType=VARCHAR},
+			#{createUser,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE()
+		)
+		]]>
+	</insert>
+	
+	<!--更新授权信息  -->
+	<update id="updateAuthorization" parameterType="map">
+	    update 
+	    t_crm_authorization 
+	    set AuthorizedStartTime = #{authorizedStartTime},
+	    	AuthorizedEndTime=#{authorizedEndTime}
+	    WHERE id = #{id} 
+	</update>
+	
+	<!-- 删除授权信息 -->
+	<update id="deleteAuthorization" parameterType="map"> 
+	    <![CDATA[
+			    UPDATE t_crm_authorization A SET
+				A.ACTIVE = 'N'
+		    ]]>
+			<where>
+				A.ID IN
+				<foreach collection="ids" item="id" open="(" close=")"
+					separator=",">
+					#{id}
+				</foreach>
+			</where>
+	</update>
+	
+	<!--分页查询权限信息 -->
+	<select id="getAuthorization" parameterType="map"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.AuthorizationEntity">
+	        <![CDATA[
+            SELECT id,AuthorizedPerson,WasAuthorizedPerson,AuthorizedStartTime,AuthorizedEndTime
+            ]]> 
+	        <![CDATA[
+	        	from t_crm_authorization a
+	        ]]>
+		<where>
+            a.Active='Y'
+            <if test=" authorizedPerson !=null and authorizedPerson != '' ">
+	            <![CDATA[
+				AND a.authorizedPerson like #{authorizedPerson,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+            <if test=" wasAuthorizedPerson !=null and wasAuthorizedPerson != '' ">
+	            <![CDATA[
+				AND a.wasAuthorizedPerson like #{wasAuthorizedPerson,jdbcType=VARCHAR}
+			    ]]>
+		    </if>
+            
+            <if test=" authorizedStartTime !=null and authorizedStartTime != '' ">
+	            <![CDATA[
+				AND a.authorizedStartTime >= #{authorizedStartTime}
+			    ]]>
+			</if>
+			
+            <if test=" authorizedEndTime !=null and authorizedEndTime != '' ">
+                <![CDATA[
+				AND a.authorizedEndTime < #{authorizedEndTime}
+			    ]]>
+			</if>
+         </where>    
+	        <![CDATA[
+			ORDER BY a.AuthorizedEndTime DESC
+		    ]]>
+	</select> 
+	
+	<!-- 分页查询权限信息总数 -->
+	<select id="countAuthorization" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             from t_crm_authorization a
+             
+             ]]>
+		  <where>
+            a.Active='Y'
+            <if test=" authorizedPerson !=null and authorizedPerson != '' ">
+	            <![CDATA[
+				AND a.authorizedPerson like #{authorizedPerson,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+            <if test=" wasAuthorizedPerson !=null and wasAuthorizedPerson != '' ">
+	            <![CDATA[
+				AND a.wasAuthorizedPerson like #{wasAuthorizedPerson,jdbcType=VARCHAR}
+			    ]]>
+		    </if>
+            
+            <if test=" authorizedStartTime !=null and authorizedStartTime != '' ">
+	            <![CDATA[
+				AND a.authorizedEndTime >= #{authorizedStartTime}
+			    ]]>
+			</if>
+			
+            <if test=" authorizedEndTime !=null and authorizedEndTime != '' ">
+                <![CDATA[
+				AND a.authorizedEndTime < #{authorizedEndTime}
+			    ]]>
+			</if>
+         </where>    
+	        <![CDATA[
+			ORDER BY a.createDate DESC
+		    ]]>
+	</select> 
+	
+	<!-- 按id查询需要修改的授权信息 -->
+	<select id="getAuthorizationById"
+		parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.AuthorizationEntity">
+		<![CDATA[
+			select id,AuthorizedPerson,WasAuthorizedPerson,AuthorizedStartTime,AuthorizedEndTime
+		]]>
+	    <![CDATA[
+	        	from t_crm_authorization a
+	    ]]>
+		<where>
+			a.id = #{id}
+			and
+			a.Active='Y'
+		</where>
+	</select>
+	
+	<!--根据被授权人查询授权人 -->
+	<select id="findAuthorizedPersonByWasAuthorizedPerson"
+		parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.AuthorizationEntity">
+		<![CDATA[
+			select id,AuthorizedPerson,WasAuthorizedPerson,AuthorizedStartTime,AuthorizedEndTime
+		]]>
+	    <![CDATA[
+	        	from t_crm_authorization a
+	    ]]>
+		<where>
+			a.wasAuthorizedPerson = #{wasAuthorizedPerson}
+			and
+			a.Active='Y'
+		</where>
+	</select>
+	
+</mapper>

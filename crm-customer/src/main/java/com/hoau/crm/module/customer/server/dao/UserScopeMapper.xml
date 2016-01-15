@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.UserScopeMapper">
+	<resultMap id="userScopeEntryResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.UserScopeEntryEntity">
+		<id property="id" column="ID" />
+		<result property="parentid" column="PARENTID" />
+		<result property="lan" column="LAN" />
+		<result property="lat" column="LAT" />
+	</resultMap>
+
+	<select id="queryUserScopeEntryInfo" parameterType="string"
+		resultMap="userScopeEntryResultMap">
+		<![CDATA[
+			SELECT
+				E.ID,
+				E.LAN,
+				E.LAT,
+				E.PARENTID
+			FROM
+				T_CRM_USERSCOPE_ENTRY E
+			WHERE
+				E.PARENTID = (
+					SELECT
+						ID
+					FROM
+						T_CRM_USERSCOPE U
+					WHERE
+						U.USER_ID = #{userID,jdbcType=VARCHAR} AND U.ACTIVE = 'Y')
+			ORDER BY sort 
+		]]>
+	</select>
+	
+	<resultMap id="userScopeResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.UserScopeEntity">
+		<id property="id" column="ID" />
+		<result property="maxlength" column="maxlength" />
+		<result property="lngA" column="lngA" />
+		<result property="latA" column="latA" />
+		<result property="lngB" column="lngB" />
+		<result property="latB" column="latB" />
+		<result property="centerlng" column="centerlng" />
+		<result property="centerlat" column="centerlat" />
+		<result property="minLat" column="centerlat" />
+		<result property="minLng" column="centerlat" />
+		<result property="maxLat" column="centerlat" />
+		<result property="maxLng" column="centerlat" />
+		<result property="user_id" column="user_id" />
+		<result property="user_name" column="user_name" />
+		<result property="ploygongeo" column="ploygongeo" />
+		<!-- <association property="userEntity" column="user_id"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.UserEntity">
+			<id property="id" column="ID" />
+			<id property="userName" column="userName" />
+		</association> -->
+	</resultMap>
+	
+	<select id="queryUserScopeInfo" parameterType="string"
+		resultMap="userScopeResultMap">
+		<![CDATA[
+		select id,user_id,user_name,maxlength,lngA,lngB,latA,latB,centerlat,centerlng,minLat,minLng,maxLat,maxLng from t_crm_userscope where user_id  = #{userID,jdbcType=VARCHAR} and ACTIVE = 'Y'
+		]]>
+	</select>
+	<!-- 
+	<select id="queryCustomerByUserScopeInfo" parameterType="map"
+		resultMap="userScopeResultMap">
+		<![CDATA[
+		select id,user_id,user_name,maxlength,lngA,lngB,latA,latB,centerlat,centerlng,minLat,minLng,maxLat,maxLng from t_crm_userscope  
+		where #{lng}  > minLat and #{lng} < maxLat and #{lat} > minLng and #{lat} < maxLng and ACTIVE = 'Y'
+		]]>
+	</select>  -->
+	
+	<select id="queryCustomerByUserScopeInfo"
+		resultMap="userScopeResultMap">
+		<![CDATA[
+		SELECT
+			u.id,
+			u.user_id,
+			u.user_name,
+			u.maxlength,
+			u.lngA,
+			u.lngB,
+			u.latA,
+			u.latB,
+			u.centerlat,
+			u.centerlng,
+			u.minLat,
+			u.minLng,
+			u.maxLat,
+			u.maxLng,
+			u.ploygongeo,
+			a.role_code
+		FROM
+			t_crm_userscope u left join t_auth_userrole a on a.user_code = u.user_id
+		WHERE u.ACTIVE = 'Y' and (a.role_code = '1006' or a.role_code = '1007')
+		]]>
+	</select>
+	
+	<!-- 新增客户信息 -->
+	<insert id="addUserScopeInfo" parameterType="com.hoau.crm.module.customer.api.shared.domain.UserScopeEntity">
+		<![CDATA[
+			INSERT INTO t_crm_userscope(
+			id,
+			user_id,
+			user_name,
+			maxlength,
+			lngA,
+			latA,
+			lngB,
+			latB,
+			centerlng,
+			centerlat,
+			minLat,
+			minLng,
+			maxLat,
+			maxLng,
+			ploygongeo,
+			ACTIVE,
+			CREATE_USER,
+			CREATE_DATE
+		) VALUES(
+			#{id,jdbcType=VARCHAR},
+			#{user_id,jdbcType=VARCHAR},
+			#{user_name,jdbcType=VARCHAR},
+			#{maxlength,jdbcType=DOUBLE},
+			#{lngA,jdbcType=DOUBLE},
+			#{latA,jdbcType=DOUBLE},
+			#{lngB,jdbcType=DOUBLE},
+			#{latB,jdbcType=DOUBLE},
+			#{centerlng,jdbcType=DOUBLE},
+			#{centerlat,jdbcType=DOUBLE},
+			#{minLat,jdbcType=DOUBLE},
+			#{minLng,jdbcType=DOUBLE},
+			#{maxLat,jdbcType=DOUBLE},
+			#{maxLng,jdbcType=DOUBLE},
+			#{ploygongeo,jdbcType=DOUBLE},
+			'Y',
+			#{createUser,jdbcType=VARCHAR},
+			SYSDATE()
+		)
+		]]>
+	</insert>
+	<insert id="addUserScopeEntryInfo" parameterType="java.util.List">
+	  insert into T_CRM_USERSCOPE_ENTRY ( id, parentid, lan,lat,sort ) values
+	  <foreach collection="list" item="item" index="index"
+	  separator=",">
+	  ( #{item.id}, #{item.parentid}, #{item.lan},#{item.lat},#{item.sort} )
+  </foreach>
+  </insert>
+	
+	<update id="delUserScopeInfo" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_userscope c SET
+				c.ACTIVE = 'N',
+				c.MODIFY_DATE = SYSDATE(),
+				c.MODIFY_USER = #{username} where user_id = #{userID,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<delete id="delUserScopeEntryInfo" parameterType="String">
+		<![CDATA[
+		delete from T_CRM_USERSCOPE_ENTRY where PARENTID = (SELECT ID FROM T_CRM_USERSCOPE U WHERE U.USER_ID = #{userID,jdbcType=VARCHAR} AND U.ACTIVE = 'Y')
+		]]>
+	</delete>
+	
+	<!-- 根据用户ID获得门店产值最高的的用户 -->
+	<select id="getMaxStoresOutputUsers" parameterType="java.util.List" resultType="String">
+		<![CDATA[
+		SELECT
+				CONCAT_WS(
+					';',
+					TEMP.LOGIN_NAME,
+					TEMP.EMPNAME
+				) AS USERS
+			FROM
+				(
+					SELECT
+						U.LOGIN_NAME,
+						E.EMPNAME,
+						(
+							SELECT
+								SUM(Y.OUTPUTNUM)
+							FROM
+								T_CRM_ACCOUNT_OUTPUT Y
+							WHERE
+								Y. YEAR = YEAR (NOW())
+							AND Y. MONTH < MONTH (NOW())
+							AND Y. MONTH >= (MONTH(NOW()) - 2)
+							AND Y.DCACCOUNT IN (
+								SELECT DISTINCT
+									C.DCACCOUNT
+								FROM
+									T_CRM_ACCOUNT C
+								WHERE
+									C.TIERCODE IN (
+										SELECT
+											D.LOGISTCODE
+										FROM
+											T_ORG_DEPARTMENT D
+										WHERE
+											D.DEPTCODE IN (
+												SELECT
+													E.DEPTCODE
+												FROM
+													T_ORG_EMPLOYEE E
+												WHERE
+													E.EMPCODE IN (
+														SELECT
+															EMP_CODE
+														FROM
+															T_AUTH_USER A
+														WHERE
+															A.LOGIN_NAME = U.LOGIN_NAME
+													)
+											)
+									)
+								AND C.DCACCOUNT IS NOT NULL
+								AND C.DCACCOUNT != ''
+							)
+						) AS OUTPUTNUM
+					FROM
+						T_AUTH_USER U
+					LEFT JOIN T_ORG_EMPLOYEE E ON U.EMP_CODE = E.EMPCODE ]]>
+					<where>
+						U.LOGIN_NAME IN 
+						<foreach collection="list" item="id" open="(" close=")"
+							separator=",">
+							#{id}
+						</foreach>
+					</where>
+		<![CDATA[
+				) TEMP WHERE TEMP.OUTPUTNUM > 0
+			ORDER BY
+				TEMP.OUTPUTNUM DESC
+			LIMIT 1
+		]]>
+	</select>
+	
+	
+	<!-- 根据用户ID获得客户经理产值最高的的用户 -->
+	<select id="getMaxSalesManagerOutputUsers" parameterType="java.util.List" resultType="String">
+		<![CDATA[
+		SELECT
+				CONCAT_WS(
+					';',
+					TEMP.LOGIN_NAME,
+					TEMP.EMPNAME
+				) AS USERS
+			FROM
+				(
+					SELECT
+						U.LOGIN_NAME,
+						E.EMPNAME,
+						(
+							SELECT
+								SUM(Y.OUTPUTNUM)
+							FROM
+								T_CRM_ACCOUNT_OUTPUT Y
+							WHERE
+								Y. YEAR = YEAR (NOW())
+							AND Y. MONTH < MONTH (NOW())
+							AND Y. MONTH >= (MONTH(NOW()) - 2)
+							AND Y.DCACCOUNT IN (
+								SELECT DISTINCT
+									C.DCACCOUNT
+								FROM
+									T_CRM_ACCOUNT C
+								WHERE
+									C.ManageEmpCode IN (
+										SELECT
+											EMP_CODE
+										FROM
+											T_AUTH_USER A
+										WHERE
+											A.LOGIN_NAME = U.LOGIN_NAME
+									)
+								AND C.DCACCOUNT IS NOT NULL
+								AND C.DCACCOUNT != ''
+							)
+						) AS OUTPUTNUM
+					FROM
+						T_AUTH_USER U
+					LEFT JOIN T_ORG_EMPLOYEE E ON U.EMP_CODE = E.EMPCODE ]]>
+					<where>
+						U.LOGIN_NAME IN 
+						<foreach collection="list" item="id" open="(" close=")"
+							separator=",">
+							#{id}
+						</foreach>
+					</where>
+		<![CDATA[
+				) TEMP WHERE TEMP.OUTPUTNUM > 0
+			ORDER BY
+				TEMP.OUTPUTNUM DESC
+			LIMIT 1
+		]]>
+	</select>
+	
+	
+</mapper>

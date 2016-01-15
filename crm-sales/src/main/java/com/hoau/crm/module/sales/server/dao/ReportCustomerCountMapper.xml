@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.ReportCustomerCountMapper">
+
+	<!-- 客户性质分布MAP -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity" id="customerNatureDistributionMap">
+		<result property="type" column="TYPE"/>
+		<result property="dataOne" column="DATAONE"/>
+	</resultMap>
+	
+	<!-- 客户明细分布MAP -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity" id="customerDetailMap">
+		<result property="type" column="TYPE"/>
+		<result property="dataOne" column="DATAONE"/>
+		<result property="dataTwo" column="DATATWO"/>
+	</resultMap>
+	
+    <!-- 查询当前部门客户总数和名称  -->
+	<select id="queryCurrentCustomerCountData" parameterType="string" resultType="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity">
+		<![CDATA[
+			SELECT STORE.orgName AS type,STORE.totalCount as dataOne
+			FROM t_report_customercount STORE
+			WHERE STORE.SUPORGCODE = #{deptCode} AND STORE.DELIVERCOUNT IS NULL AND STORE.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+	
+    <!-- 查询部门客户总数和发货客户  -->
+	<select id="queryDeliverCustomerCountData" parameterType="string" resultType="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity">
+		<![CDATA[
+			SELECT STORE.orgName AS type,STORE.totalCount as dataOne,STORE.DELIVERCOUNT AS dataTwo
+			FROM t_report_customercount STORE
+			WHERE STORE.ORGCODE = #{deptCode} AND STORE.ORGCODE != SUPORGCODE AND STORE.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+	<!-- 客户性质分布 -->
+	<select id="queryCustomerNatureDistribution" parameterType="string" resultMap="customerNatureDistributionMap">
+		<![CDATA[
+			SELECT orgName AS TYPE ,totalCount AS DATAONE FROM t_report_customercount STORE
+			WHERE STORE.ORGCODE = #{deptCode} AND STORE.suporgCode IS NULL AND STORE.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+	<!-- 统计当前部门客户明细 -->
+	<select id="queryCurrentCustomerCountDetailData" parameterType="string" resultMap="customerDetailMap">
+		<![CDATA[
+			SELECT STORE.orgName AS type,STORE.totalCount AS dataOne,STORE.deliverCount AS dataTwo
+			FROM t_report_customercount STORE
+			WHERE STORE.SUPORGCODE = #{deptCode} AND DELIVERCOUNT IS NOT NULL AND STORE.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+	<!-- 查询当前部门的子部门 -->
+	<select id="querySubCompanyDeptCode" parameterType="map" resultType="string">
+		<![CDATA[
+			SELECT  deptcode FROM t_org_department ORG 
+		]]>
+		<where>
+			<if test="group != null and group !='' ">
+				ORG.supdeptcode='DP010000' AND ORG.deptnature = '区域营运职能' AND ORG.canceled = '0'
+			</if>
+			<if test="business != null and business != ''">
+			 	ORG.supdeptcode=  #{deptCode,jdbcType=VARCHAR} AND ORG.deptname = ORG.subcompanyname AND ORG.CANCELED = '0'
+			</if>
+			<if test="regionsAndRoad != null and regionsAndRoad != ''">
+			 	ORG.supdeptcode = #{deptCode,jdbcType=VARCHAR} AND ORG.deptnature = '经营' AND ORG.CANCELED = '0'
+			</if>
+		</where>
+	</select>
+	
+	<!-- 统计客户总数(客户经理) -->
+	<select id="countCustomerOfManage" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_account CUSTOMER
+			WHERE CUSTOMER.ACTIVE = 'Y' AND CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 统计发货客户数(客户经理) -->
+	<select id="countDeliveryCustomerOfManage" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_account CUSTOMER
+			WHERE CUSTOMER.ACTIVE = 'Y' 
+				AND CUSTOMER.AccountType = '7'
+				AND CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 本月新增客户数 -->
+	<select id="countNewCustomer" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_account CUSTOMER
+			JOIN v_crm_account STORE ON CUSTOMER.ID = STORE.ID
+			WHERE CUSTOMER.ACTIVE = 'Y' AND CUSTOMER.CREATEDON >= DATE_ADD(curdate(), interval - day(curdate()) + 1 day)
+			AND ((STORE.BUSINESSCODE = #{deptCode,jdbcType=VARCHAR}) 
+				OR (STORE.REGIONSCODE = #{deptCode,jdbcType=VARCHAR}) 
+				OR (STORE.ROADAREACODE = #{deptCode,jdbcType=VARCHAR})
+				OR (STORE.DEPTCODE = #{deptCode,jdbcType=VARCHAR}))
+		]]>
+	</select>
+	
+	<!-- 本月新增客户数(客户经理) -->
+	<select id="countNewCustomerOfManage" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_account CUSTOMER
+			WHERE CUSTOMER.ACTIVE = 'Y' AND CUSTOMER.CREATEDON >= DATE_ADD(curdate(), interval - day(curdate()) + 1 day)
+			AND CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+</mapper>

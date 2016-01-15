@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.FunctionMapper">
+	
+	<!-- function表返回的结果集，多表联查，查询其父节点-->
+	<resultMap id="functionResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.FunctionEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="functionCode" column="MASTER_FUNCTION_CODE" />
+		<result property="functionName" column="MASTER_FUNCTION_NAME" />
+		<result property="uri" column="MASTER_URI" />
+		<result property="functionLevel" column="MASTER_FUNCTION_LEVEL" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="displayOrder" column="MASTER_DISPLAY_ORDER" />
+		<result property="checkable" column="MASTER_CHECKABLE" />
+		<result property="functionType" column="MASTER_FUNCTION_TYPE" />
+		<result property="leaf" column="MASTER_LEAF" />
+		<result property="iconCls" column="MASTER_ICON_CLS" />
+		<result property="cls" column="MASTER_CLS" />
+		<result property="functionDesc" column="MASTER_FUNCTION_DESC" />
+		<result property="functionSeq" column="MASTER_FUNCTION_SEQ" />
+		<result property="createUser" column="MASTER_CREATE_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATE_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFY_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFY_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<association property="parentCode" column="ENTRY_0_FUNCTION_CODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.FunctionEntity">
+			<id property="id" column="ENTRY_0_ID" />
+			<result property="functionCode" column="ENTRY_0_FUNCTION_CODE" />
+			<result property="functionName" column="ENTRY_0_FUNCTION_NAME" />
+			<result property="uri" column="ENTRY_0_URI" />
+			<result property="functionLevel" column="ENTRY_0_FUNCTION_LEVEL" />
+			<result property="parentCode.functionCode" column="ENTRY_0_PARENT_CODE" />
+			<result property="active" column="ENTRY_0_ACTIVE" />
+			<result property="displayOrder" column="ENTRY_0_DISPLAY_ORDER" />
+			<result property="checkable" column="ENTRY_0_CHECKABLE" />
+			<result property="functionType" column="ENTRY_0_FUNCTION_TYPE" />
+			<result property="leaf" column="ENTRY_0_LEAF" />
+			<result property="iconCls" column="ENTRY_0_ICON_CLS" />
+			<result property="cls" column="ENTRY_0_CLS" />
+			<result property="functionDesc" column="ENTRY_0_FUNCTION_DESC" />
+			<result property="functionSeq" column="ENTRY_0_FUNCTION_SEQ" />
+			<result property="createUser" column="ENTRY_0_CREATE_USER"
+				javaType="String" jdbcType="VARCHAR" />
+			<result property="createDate" column="ENTRY_0_CREATE_DATE"
+				javaType="Date" jdbcType="TIMESTAMP" />
+			<result property="modifyUser" column="ENTRY_0_MODIFY_USER"
+				javaType="String" jdbcType="VARCHAR" />
+			<result property="modifyDate" column="ENTRY_0_MODIFY_DATE"
+				javaType="Date" jdbcType="TIMESTAMP" />
+		</association>
+	</resultMap>
+	
+	<!-- function表返回查询字段-->
+	<sql id="select_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.FUNCTION_CODE AS MASTER_FUNCTION_CODE,
+		MASTER.FUNCTION_NAME AS MASTER_FUNCTION_NAME,
+		MASTER.URI AS MASTER_URI,
+		MASTER.LEAF AS MASTER_LEAF,
+		MASTER.ICON_CLS AS MASTER_ICON_CLS,
+		MASTER.CLS AS MASTER_CLS
+	</sql>
+	
+	<!-- function表返回的结果集，单表查询-->
+	<resultMap id="functionSimpleResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.FunctionEntity">
+		<id property="id" column="ID" />
+		<result property="functionCode" column="FUNCTION_CODE" />
+		<result property="functionName" column="FUNCTION_NAME" />
+		<result property="uri" column="URI" />
+		<result property="functionLevel" column="FUNCTION_LEVEL" />
+		<result property="active" column="ACTIVE" />
+		<result property="displayOrder" column="DISPLAY_ORDER" />
+		<result property="leaf" column="LEAF" />
+		<result property="functionType" column="FUNCTION_TYPE" />
+		<result property="checkable" column="CHECKABLE" />
+		<result property="iconCls" column="ICON_CLS" />
+		<result property="cls" column="CLS" />
+		<result property="functionDesc" column="FUNCTION_DESC" />
+		<result property="functionSeq" column="FUNCTION_SEQ" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<association property="parentCode" column="PARENT_CODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.FunctionEntity">
+			<result property="functionCode" column="PARENT_CODE" />
+		</association>
+	</resultMap>
+	
+	<!-- function表返回查询字段-->
+	<sql id="insert_param">
+		ID,
+		FUNCTION_CODE,
+		FUNCTION_NAME,
+		URI,
+		FUNCTION_LEVEL,
+		ACTIVE,
+		DISPLAY_ORDER,
+		CHECKABLE,
+		FUNCTION_TYPE,
+		LEAF,
+		ICON_CLS,
+		CLS,
+		FUNCTION_DESC,
+		FUNCTION_SEQ,
+		PARENT_CODE,
+		SYSTEM_TYPE,
+		CREATE_USER,
+		CREATE_DATE,
+		MODIFY_USER,
+		MODIFY_DATE
+	</sql>
+	
+	<!-- 获取当前节点下的所有节点，角色配置-->
+	<select id="queryTreeNodeList" resultMap="functionResultMap"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.FunctionEntity">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_AUTH_FUNCTION MASTER
+			LEFT JOIN T_AUTH_FUNCTION ENTRY_0
+            	ON MASTER.PARENT_CODE = ENTRY_0.FUNCTION_CODE
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="parentCode!=null and parentCode.functionCode!=null">
+				AND MASTER.PARENT_CODE = #{parentCode.functionCode}
+			</if>
+			<if test="functionName!=null and functionName!=''">
+				AND MASTER.FUNCTION_NAME LIKE #{functionName}
+			</if>
+			<if test="functionType!=null and functionType!=''">
+				AND MASTER.FUNCTION_TYPE = #{functionType}
+		    </if>
+		    <if test="active!=null">
+				AND MASTER.ACTIVE = #{active}
+			</if>
+			<if test="checkable!=null">
+				AND MASTER.CHECKABLE = #{checkable}
+		    </if>
+		</where>
+			ORDER BY cast(MASTER.DISPLAY_ORDER as unsigned int)
+	</select>
+	
+	<!-- 获取当前节点下的所有节点，首页菜单-->
+	<select id="queryTreeNodeListByHomeMenu" resultMap="functionResultMap"
+		parameterType="map">
+		<![CDATA[
+			SELECT 
+				DISTINCT 
+		]]>
+		<include refid="select_param" />	
+		<![CDATA[		
+			FROM T_AUTH_USERROLE UR 
+			INNER JOIN T_AUTH_FUNCTIONROLE FR ON UR.ROLE_CODE = FR.ROLE_CODE 
+			INNER JOIN T_AUTH_FUNCTION MASTER ON FR.FUNCTION_CODE = MASTER.FUNCTION_CODE 
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="functionCode!=null">
+				AND MASTER.PARENT_CODE = #{functionCode}
+			</if>
+			<if test="functionType!=null and functionType!=''">
+				AND MASTER.FUNCTION_TYPE = #{functionType}
+		    </if>
+		    <if test="userCode!=null and userCode != ''">
+				AND UR.USER_CODE = #{userCode}
+		    </if>
+		</where>
+			ORDER BY cast(MASTER.DISPLAY_ORDER as unsigned int)
+	</select>
+	
+	<!-- 获取用户所有权限，加入了权限验证-->
+	<select id="queryTreeNodeListByUser" resultType="string"
+		parameterType="string">
+		<![CDATA[
+			SELECT
+				DISTINCT
+				F.FUNCTION_CODE AS CODE
+			FROM
+				T_AUTH_USERROLE UR
+			INNER JOIN T_AUTH_FUNCTIONROLE FR ON UR.ROLE_CODE = FR.ROLE_CODE
+			INNER JOIN T_AUTH_FUNCTION F ON FR.FUNCTION_CODE = F.FUNCTION_CODE
+			WHERE
+				UR.USER_CODE = #{userCode}
+			    AND F.ACTIVE = 'Y'
+		]]>
+	</select>
+
+</mapper>

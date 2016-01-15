@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.SweepSignMapper">
+
+	<!-- 保存扫描签到记录 -->
+	<insert id="addSweepSignInfo"
+		parameterType="com.hoau.crm.module.sales.api.shared.domain.SweepSignEntity">
+	    <![CDATA[
+			INSERT
+			INTO
+			    t_sale_sweep_sign
+			    (
+			        id,
+					sweepPeop,
+					sweepPeopName,
+					sweepPeopJobCode,
+					sweepPeopJobName,
+					sweepPeopDeptCode,
+					sweepPeopDeptName,
+					wasSweepPeop,
+					wasSweepPeopName,
+					wasSweepPeopJobCode,
+					wasSweepPeopJobName,
+					wasSweepPeopDeptCode,
+					wasSweepPeopDeptName,
+					qrcodeTime,
+					sweepTime,
+					longitude,
+					latitude,
+					signAddress,
+					vantages,
+					imgName,
+					imgUrl,
+					create_user,
+					create_date,
+					active
+			    )
+			    VALUES
+			    (
+			    	#{id},
+			    	#{sweepPeop},
+			    	#{sweepPeopName},
+					#{sweepPeopJobCode},
+					#{sweepPeopJobName},
+					#{sweepPeopDeptCode},
+					#{sweepPeopDeptName},
+			    	#{wasSweepPeop},
+			    	#{wasSweepPeopName},
+					#{wasSweepPeopJobCode},
+					#{wasSweepPeopJobName},
+					#{wasSweepPeopDeptCode},
+					#{wasSweepPeopDeptName},
+			    	#{qrcodeTime},
+			    	#{sweepTime},
+			    	#{longitude},
+			    	#{latitude},
+			    	#{signAddress},
+			    	#{vantages},
+			    	#{imgName},
+			    	#{imgUrl},
+			    	#{createUser},
+			        SYSDATE(),
+			        'Y'
+			    )
+	    ]]>
+	</insert>
+
+	<!--分页查询客户扫描签到信息 -->
+	<select id="getSweepSign" parameterType="map"
+		resultMap="sweepSignEntity">
+	        <![CDATA[
+	        	SELECT S.*, b.fileUrl FROM (
+	       	    SELECT id,sweepPeopName,sweepPeopJobName,sweepPeopDeptName, wasSweepPeopName,wasSweepPeopJobName,wasSweepPeopDeptName,qrcodeTime ,sweepTime,signAddress,vantages 
+		    ]]> 
+	        <![CDATA[
+		      	from t_sale_sweep_sign a
+	        ]]>
+		<where>
+			a.active = 'Y'
+			<if test=" sweepPeopName !=null and sweepPeopName != '' ">
+	            <![CDATA[
+				AND sweepPeopName like #{sweepPeopName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" wasSweepPeopName !=null and wasSweepPeopName != '' ">
+	            <![CDATA[
+				AND wasSweepPeopName like #{wasSweepPeopName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" signAddress !=null and signAddress != '' ">
+	            <![CDATA[
+				AND signAddress like #{signAddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+
+			<if test=" sweepTime !=null and sweepTime != '' ">
+	                <![CDATA[
+					AND sweepTime >= #{sweepTime}
+				    ]]>
+			</if>
+			<if test=" sweepEndTime !=null and sweepEndTime != '' ">
+	                <![CDATA[
+					AND sweepTime < #{sweepEndTime}
+				    ]]>
+			</if>
+			<!-- 事业部大区路区权限 -->
+			<if test="userDeptCode != null and userDeptCode != ''">
+				<![CDATA[
+					AND create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{userDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptCode})
+				]]>
+			</if>
+		</where>   
+		<![CDATA[
+				ORDER BY sweepTime DESC
+	    ]]> 
+		<if test="startNum != null and startNum != '' and endNum != null and endNum != ''">
+			<![CDATA[
+				LIMIT ${startNum},${endNum}
+			]]>
+		</if>
+	    <![CDATA[
+				 ) S
+			left join t_crm_attachment b on S.id=b.fileId
+			ORDER BY S.sweepTime DESC
+	    ]]>
+	</select>
+
+
+	<!-- 分页查询客户扫描签到信息总数 -->
+	<select id="countSweepSign" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)
+			from t_sale_sweep_sign
+	        ]]>
+		<where>
+			active = 'Y'
+			<if test=" sweepPeopName !=null and sweepPeopName != '' ">
+	            <![CDATA[
+				AND sweepPeopName like #{sweepPeopName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" wasSweepPeopName !=null and wasSweepPeopName != '' ">
+	            <![CDATA[
+				AND wasSweepPeopName like #{wasSweepPeopName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" signAddress !=null and signAddress != '' ">
+	            <![CDATA[
+				AND signAddress like #{signAddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+
+			<if test=" sweepTime !=null and sweepTime != '' ">
+	                <![CDATA[
+					AND sweepTime >= #{sweepTime}
+				    ]]>
+			</if>
+			<if test=" sweepEndTime !=null and sweepEndTime != '' ">
+	                <![CDATA[
+					AND sweepTime < #{sweepEndTime}
+				    ]]>
+			</if>
+			<!-- 事业部大区路区权限 -->
+			<if test="userDeptCode != null and userDeptCode != ''">
+				<![CDATA[
+					AND create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{userDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptCode})
+				]]>
+			</if>
+		</where>
+	</select>
+
+	<!--扫描签到历史结果映射  -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.domain.SweepSignEntity" id="sweepSignEntity">
+		<id property="id" column="id"/>
+	    <result property="sweepPeopName" column="sweepPeopName" />
+	    <result property="sweepPeopJobName" column="sweepPeopJobName" />
+	    <result property="sweepPeopDeptName" column="sweepPeopDeptName" />
+	    <result property="wasSweepPeopName" column="wasSweepPeopName" />
+	    <result property="wasSweepPeopJobName" column="wasSweepPeopJobName" />
+	    <result property="wasSweepPeopDeptName" column="wasSweepPeopDeptName" />
+	    <result property="qrcodeTime" column="qrcodeTime" />
+	    <result property="sweepTime" column="sweepTime" />
+	    <result property="signAddress" column="signAddress" />
+	    <result property="vantages" column="vantages" />
+	    <collection property="attachmentList" resultMap="attachmentEntity"></collection>
+	</resultMap>
+	
+	<!--附件历史映射结果  -->
+	<resultMap type="com.hoau.crm.module.appcore.api.shared.domain.AttachmentEntity" id="attachmentEntity">
+	   <result property="fileUrl" column="fileUrl"/>
+	</resultMap>
+</mapper>

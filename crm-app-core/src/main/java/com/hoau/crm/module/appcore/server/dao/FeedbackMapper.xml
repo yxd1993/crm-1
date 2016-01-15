@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.FeedbackMapper">
+
+	<!-- 保存用户反馈信息 -->
+	<select id="userFeedBack"
+	parameterType="com.hoau.crm.module.appcore.api.shared.domain.FeedBackEntity">
+		<![CDATA[
+			INSERT INTO t_app_feedbackinfo(ID, USERID, FBTITLE, FBTYPE, FBCONTENT, FBDATE) 
+			VALUES (#{id}, #{userId}, #{fbTitle}, #{fbType}, #{fbContent}, SYSDATE())
+		]]>
+	</select>
+	
+</mapper>

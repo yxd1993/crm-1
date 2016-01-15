@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.DistrictJobMapper">
+    <!--删除T_BSE_DISTRICT表中的所有数据  -->
+    <delete id="deleteAll">
+        DELETE FROM T_BSE_DISTRICT WHERE 1=1
+    </delete>
+    <!-- 插入省市区信息 -->
+    <insert id="insert" parameterType="com.hoau.crm.module.job.shared.domain.DistrictBean">
+        <![CDATA[
+        INSERT INTO T_BSE_DISTRICT(
+        ID,
+        DISTRICT_CODE,
+        DISTRICT_NAME,
+        DISTRICT_TYPE,
+        PINYIN,
+        VERSION_NO,
+        PARENT_DISTRICT_CODE,
+        CREATE_TIME,
+        CREATE_USER_CODE,
+        MODIFY_TIME,
+        MODIFY_USER_CODE
+        )
+        VALUES(
+        #{id,jdbcType=VARCHAR},
+        #{districtCode,jdbcType=VARCHAR},
+        #{districtName,jdbcType=VARCHAR},
+        #{districtType,jdbcType=VARCHAR},
+        #{pinyin,jdbcType=VARCHAR},
+        #{versionNo,jdbcType=VARCHAR},
+        #{parentDistrictCode,jdbcType=VARCHAR},
+        NOW(),
+        #{createUser,jdbcType=VARCHAR},
+        #{modifyDate,jdbcType=VARCHAR},
+        #{modifyUser,jdbcType=VARCHAR}        
+        )
+        ]]>
+    </insert>
+    <!-- 查询T_BSE_DISTRICT表中selectVersionNo字段的最大值 -->
+    <select id="selectVersionNo" resultType="java.lang.String">
+        SELECT MAX(VERSION_NO) FROM T_BSE_DISTRICT
+    </select>
+</mapper>	
+	
+	
+

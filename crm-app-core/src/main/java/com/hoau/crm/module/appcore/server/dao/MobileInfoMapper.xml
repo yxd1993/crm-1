@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.MobileInfoMapper">
+
+	<!-- 根据imei查询设备 -->
+	<select id="findMobileInfo" parameterType="string"
+		resultType="com.hoau.crm.module.appcore.api.shared.domain.MobileInfoEntity">
+		<![CDATA[
+			select IMEI, IMSI, MTYPE,MTYB, ANDROIDSDK,ANDROIDV ,ID,CREATEDATE from t_app_mobileinfo where IMEI=#{imei}
+		]]>
+	</select>
+
+	<!-- 新增设备信息 -->
+	<insert id="createMobileInfo"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.MobileInfoEntity">
+		<![CDATA[
+			insert into t_app_mobileinfo(IMEI, IMSI, MTYPE,MTYB, ANDROIDSDK,ANDROIDV ,CREATEDATE) 
+			values(#{imei},#{imsi},#{mtype},#{mtyb},#{androidsdk},#{androidv},SYSDATE()) 
+		]]>
+	</insert>
+
+	<!-- 新增设备明细信息 -->
+	<insert id="createMobileInfoEntry"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.MobileInfoEntity">
+		<![CDATA[
+			insert into t_app_mobileinfo_entry(USERCODE,IMEI,IMSI,LOGINDATE)
+			values(#{userCode},#{imei},#{imsi},SYSDATE()) 
+		]]>
+	</insert>
+</mapper>

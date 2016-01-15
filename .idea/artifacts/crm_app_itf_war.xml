@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="crm-app-itf:war">
+    <output-path>$PROJECT_DIR$/crm-app-itf/target</output-path>
+    <root id="archive" name="crm-app-itf.war">
+      <element id="artifact" artifact-name="crm-app-itf:war exploded" />
+    </root>
+  </artifact>
+</component>

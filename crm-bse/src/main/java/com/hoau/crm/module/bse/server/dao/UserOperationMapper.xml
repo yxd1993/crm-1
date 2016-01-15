@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.bse.server.dao.UserOperationMapper">
+	    <!--分页查询客户操作信息 -->
+	    <select id="getUserOperation" parameterType="map" resultType="com.hoau.crm.module.appcore.api.shared.domain.UserOperationEntity">
+	        <![CDATA[
+	        SELECT e.empname as userOperationName,o.operation_ip as userOperationIp,o.operation_type as userOperationType,o.operation_time as userOperationTime
+		    ]]> 
+	        <![CDATA[
+	       from t_log_operation o
+           left join t_auth_user u on o.operation_user = u.login_name
+           left join t_org_employee e on u.emp_code = e.empcode
+	        ]]>
+	       <where>
+	       o.id !=''
+	        <if test=" userOperationName !=null and userOperationName != '' ">
+	                <![CDATA[
+					AND e.empname like #{userOperationName,jdbcType=VARCHAR}
+				    ]]>
+			</if>  
+	        <if test=" userOperationIp !=null and userOperationIp != '' ">
+	                <![CDATA[
+					AND o.operation_ip like #{userOperationIp,jdbcType=VARCHAR}
+				    ]]>
+			</if>     
+	         <if test=" userOperationType !=null and userOperationType != '' ">
+	                <![CDATA[
+					AND o.operation_type like #{userOperationType,jdbcType=VARCHAR}
+				    ]]>
+			</if>  
+	        <if test=" userOperationTime !=null and userOperationTime != '' ">
+	                <![CDATA[
+					AND o.operation_time >= #{userOperationTime}
+				    ]]>
+			</if>
+	          <if test=" userOperationEndTime !=null and userOperationEndTime != '' ">
+	                <![CDATA[
+					AND o.operation_time < #{userOperationEndTime}
+				    ]]>
+			</if>
+	       </where>   
+	        <![CDATA[
+			ORDER BY o.operation_time DESC
+		    ]]> 
+	    </select>
+	    
+	    <!-- 分页查询用户反馈信息总数 -->
+	    <select id="countUserOperation" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)
+	       from t_log_operation o
+           left join t_auth_user u on o.operation_user = u.login_name
+           left join t_org_employee e on u.emp_code = e.empcode
+	        ]]>
+	       <where>
+	       o.id !=''
+	        <if test=" userOperationName !=null and userOperationName != '' ">
+	                <![CDATA[
+					AND e.empname like #{userOperationName,jdbcType=VARCHAR}
+				    ]]>
+			</if>  
+	        <if test=" userOperationIp !=null and userOperationIp != '' ">
+	                <![CDATA[
+					AND o.operation_ip like #{userOperationIp,jdbcType=VARCHAR}
+				    ]]>
+			</if>     
+	         <if test=" userOperationType !=null and userOperationType != '' ">
+	                <![CDATA[
+					AND o.operation_type like #{userOperationType,jdbcType=VARCHAR}
+				    ]]>
+			</if>  
+	        <if test=" userOperationTime !=null and userOperationTime != '' ">
+	                <![CDATA[
+					AND o.operation_time >= #{userOperationTime}
+				    ]]>
+			</if>
+	          <if test=" userOperationEndTime !=null and userOperationEndTime != '' ">
+	                <![CDATA[
+					AND o.operation_time < #{userOperationEndTime}
+				    ]]>
+			</if>
+	       </where>   
+	        <![CDATA[
+			ORDER BY o.operation_time DESC
+		    ]]> 
+	    </select>
+	    
+	</mapper>
+	
+	

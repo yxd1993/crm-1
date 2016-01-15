@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.DepartmentMapper">
+
+	<!-- 组织信息返回值 -->
+	<resultMap id="dpartmentResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="deptCode" column="MASTER_DEPTCODE" />
+		<result property="deptName" column="MASTER_DEPTNAME" />
+		<result property="canceled" column="MASTER_CANCELED" />
+		<result property="supdeptCode" column="MASTER_SUPDEPTCODE" />
+		<result property="supdeptName" column="MASTER_SUPDEPTNAME" />
+		<result property="deptNature" column="MASTER_DEPTNATURE" />
+		<result property="logistCode" column="MASTER_LOGISTCODE" />
+		<result property="managerId" column="MASTER_MANAGERID" />
+		<result property="lastName" column="MASTER_LASTNAME" />
+		<result property="subCompanyId" column="MASTER_SUBCOMPANYID" />
+		<result property="subCompanyName" column="MASTER_SUBCOMPANYNAME" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<association property="parentDeptEntity" column="PARENT_DEPTCODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+			<id property="id" column="PARENT_ID" />
+			<result property="deptCode" column="PARENT_DEPTCODE" />
+			<result property="deptName" column="PARENT_DEPTNAME" />
+			<result property="canceled" column="PARENT_CANCELED" /> <result property="supdeptCode" 
+				column="PARENT_SUPDEPTCODE" /> <result property="supdeptName" column="PARENT_SUPDEPTNAME" 
+				/> <result property="deptNature" column="PARENT_DEPTNATURE" /> <result property="logistCode" 
+				column="PARENT_LOGISTCODE" /> <result property="managerId" column="PARENT_MANAGERID" 
+				/> <result property="lastName" column="PARENT_LASTNAME" /> <result property="subCompanyId" 
+				column="PARENT_SUBCOMPANYID" /> <result property="subCompanyName" column="PARENT_SUBCOMPANYNAME" 
+				/>
+		</association>
+		<collection property="childDeptList" resultMap="childDeptResultMap"></collection>
+	</resultMap>
+
+	<!-- 子部门信息 -->
+	<resultMap id="childDeptResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<id property="id" column="CHILD_ID" />
+		<result property="deptCode" column="CHILD_DEPTCODE" />
+		<result property="deptName" column="CHILD_DEPTNAME" />
+		<!-- <result property="canceled" column="CHILD_CANCELED" /> <result property="supdeptCode" 
+			column="CHILD_SUPDEPTCODE" /> <result property="supdeptName" column="CHILD_SUPDEPTNAME" 
+			/> <result property="deptNature" column="CHILD_DEPTNATURE" /> <result property="logistCode" 
+			column="CHILD_LOGISTCODE" /> <result property="managerId" column="CHILD_MANAGERID" 
+			/> <result property="lastName" column="CHILD_LASTNAME" /> <result property="subCompanyId" 
+			column="CHILD_SUBCOMPANYID" /> <result property="subCompanyName" column="CHILD_SUBCOMPANYNAME" 
+			/> -->
+	</resultMap>
+
+	<!-- 组织信息返回值 -->
+	<resultMap id="dpartmentSimpleResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="deptCode" column="MASTER_DEPTCODE" />
+		<result property="deptName" column="MASTER_DEPTNAME" />
+		<result property="canceled" column="MASTER_CANCELED" />
+		<result property="supdeptCode" column="MASTER_SUPDEPTCODE" />
+		<result property="supdeptName" column="MASTER_SUPDEPTNAME" />
+		<result property="deptNature" column="MASTER_DEPTNATURE" />
+		<result property="logistCode" column="MASTER_LOGISTCODE" />
+		<result property="managerId" column="MASTER_MANAGERID" />
+		<result property="lastName" column="MASTER_LASTNAME" />
+		<result property="subCompanyId" column="MASTER_SUBCOMPANYID" />
+		<result property="subCompanyName" column="MASTER_SUBCOMPANYNAME" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<!-- 组织信息查询字段 -->
+	<sql id="select_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.DEPTNAME AS MASTER_DEPTNAME,
+		MASTER.DEPTCODE AS MASTER_DEPTCODE,
+		MASTER.CANCELED AS MASTER_CANCELED,
+		MASTER.SUPDEPTCODE AS MASTER_SUPDEPTCODE,
+		MASTER.SUPDEPTNAME AS
+		MASTER_SUPDEPTNAME,
+		MASTER.DEPTNATURE AS MASTER_DEPTNATURE,
+		MASTER.LOGISTCODE AS MASTER_LOGISTCODE,
+		MASTER.MANAGERID AS
+		MASTER_MANAGERID,
+		MASTER.LASTNAME AS MASTER_LASTNAME,
+		MASTER.SUBCOMPANYID AS MASTER_SUBCOMPANYID,
+		MASTER.SUBCOMPANYNAME AS
+		MASTER_SUBCOMPANYNAME,
+		PARENT.ID AS PARENT_ID,
+		PARENT.DEPTNAME AS
+		PARENT_DEPTNAME,
+		PARENT.DEPTCODE AS PARENT_DEPTCODE,
+		PARENT.CANCELED AS PARENT_CANCELED, PARENT.SUPDEPTCODE AS PARENT_SUPDEPTCODE, 
+		PARENT.SUPDEPTNAME AS PARENT_SUPDEPTNAME, PARENT.DEPTNATURE AS PARENT_DEPTNATURE, 
+		PARENT.LOGISTCODE AS PARENT_LOGISTCODE, PARENT.MANAGERID AS PARENT_MANAGERID, 
+		PARENT.LASTNAME AS PARENT_LASTNAME, PARENT.SUBCOMPANYID AS PARENT_SUBCOMPANYID, 
+		PARENT.SUBCOMPANYNAME AS PARENT_SUBCOMPANYNAME,
+		CHILD.ID AS CHILD_ID,
+		CHILD.DEPTNAME AS CHILD_DEPTNAME,
+		CHILD.DEPTCODE
+		AS CHILD_DEPTCODE
+		<!-- CHILD.CANCELED AS CHILD_CANCELED, CHILD.SUPDEPTCODE AS CHILD_SUPDEPTCODE, 
+			CHILD.SUPDEPTNAME AS CHILD_SUPDEPTNAME, CHILD.DEPTNATURE AS CHILD_DEPTNATURE, 
+			CHILD.LOGISTCODE AS CHILD_LOGISTCODE, CHILD.MANAGERID AS CHILD_MANAGERID, 
+			CHILD.LASTNAME AS CHILD_LASTNAME, CHILD.SUBCOMPANYID AS CHILD_SUBCOMPANYID, 
+			CHILD.SUBCOMPANYNAME AS CHILD_SUBCOMPANYNAME -->
+	</sql>
+
+	<!-- 组织信息自身字段 -->
+	<sql id="select_simple_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.DEPTNAME AS MASTER_DEPTNAME,
+		MASTER.DEPTCODE AS MASTER_DEPTCODE,
+		MASTER.CANCELED AS MASTER_CANCELED,
+		MASTER.SUPDEPTCODE AS MASTER_SUPDEPTCODE,
+		MASTER.SUPDEPTNAME AS
+		MASTER_SUPDEPTNAME,
+		MASTER.DEPTNATURE AS MASTER_DEPTNATURE,
+		MASTER.LOGISTCODE AS MASTER_LOGISTCODE,
+		MASTER.MANAGERID AS
+		MASTER_MANAGERID,
+		MASTER.LASTNAME AS MASTER_LASTNAME,
+		MASTER.SUBCOMPANYID AS MASTER_SUBCOMPANYID,
+		MASTER.SUBCOMPANYNAME AS
+		MASTER_SUBCOMPANYNAME
+	</sql>
+
+	<!-- 根据父节点查询组织信息 -->
+	<select id="getChildDeptList" resultMap="dpartmentResultMap"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_ORG_DEPARTMENT MASTER
+			LEFT JOIN T_ORG_DEPARTMENT PARENT ON MASTER.SUPDEPTCODE = PARENT.DEPTCODE 
+			LEFT JOIN T_ORG_DEPARTMENT CHILD ON CHILD.SUPDEPTCODE = MASTER.DEPTCODE
+		]]>
+		<where>
+			MASTER.CANCELED = '0'
+			<choose>
+				<when test="parentDeptEntity.deptCode == 'root'">
+					AND (MASTER.SUPDEPTCODE IS NULL OR MASTER.SUPDEPTCODE = '')
+				</when>
+				<otherwise>
+					AND MASTER.SUPDEPTCODE = #{parentDeptEntity.deptCode}
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+
+	<!-- 根据编码查询组织信息 -->
+	<select id="getDeptByDeptCode" resultMap="dpartmentResultMap"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_ORG_DEPARTMENT MASTER
+			LEFT JOIN T_ORG_DEPARTMENT PARENT ON MASTER.SUPDEPTCODE = PARENT.DEPTCODE 
+			LEFT JOIN T_ORG_DEPARTMENT CHILD ON CHILD.SUPDEPTCODE = MASTER.DEPTCODE
+		]]>
+		<where>
+			<if test="deptCode != null and deptCode != ''">
+				MASTER.DEPTCODE = #{deptCode}
+			</if>
+			<if test="logistCode != null and logistCode != ''">
+				MASTER.logistcode = #{logistCode}
+			</if>
+		</where>
+		<![CDATA[
+			ORDER BY MASTER.canceled ASC
+		]]>
+	</select>
+	
+	<!-- 组织信息查询字段 -->
+	<sql id="select_bse_param">
+		BD.ID AS MASTER_ID,
+		BD.DEPT_NAME AS MASTER_DEPTNAME,
+		BD.DEPT_CODE AS MASTER_DEPTCODE,
+		BD.PARENT_DEPT_CODE AS MASTER_SUPDEPTCODE,
+		BD.PARENT_DEPT_NAME AS MASTER_SUPDEPTNAME,
+		BD.IS_STORE AS MASTER_ISSTORE,
+		BD.IS_ROAD AS MASTER_ISROAD,
+		BD.IS_REGION AS MASTER_ISREGION,
+		BD.IS_BUSINESS AS MASTER_ISBUSINESS
+	</sql>
+	
+	<!-- 组织信息返回值 -->
+	<resultMap id="dpartmentBseResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="deptCode" column="MASTER_DEPTCODE" />
+		<result property="deptName" column="MASTER_DEPTNAME" />
+		<result property="supdeptCode" column="MASTER_SUPDEPTCODE" />
+		<result property="supdeptName" column="MASTER_SUPDEPTNAME" />
+		<result property="isStore" column="MASTER_ISSTORE" />
+		<result property="isRoad" column="MASTER_ISROAD" />
+		<result property="isRegion" column="MASTER_ISREGION" />
+		<result property="isBusines" column="MASTER_ISBUSINESS" />
+	</resultMap>
+	
+	<!-- 根据编码查询当前组织的基础信息 -->
+	<select id="getSimpleDeptByDeptCode" resultMap="dpartmentBseResultMap"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_bse_param" />
+		<![CDATA[
+			FROM t_bse_dept BD WHERE BD.DEPT_CODE = #{deptCode} AND BD.ACTIVE = 'Y'
+		]]>
+	</select>
+
+	<!-- 分页查询组织信息 -->
+	<select id="getDeptList" resultMap="dpartmentSimpleResultMap"
+		parameterType="map">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_simple_param" />
+		<![CDATA[
+			FROM T_ORG_DEPARTMENT MASTER
+		]]>
+		<where>
+			MASTER.CANCELED = '0'
+			<if test="selectorParam != null and selectorParam != ''">
+				AND (
+				MASTER.DEPTNAME LIKE #{selectorParam} OR MASTER.LOGISTCODE LIKE
+				#{selectorParam})
+			</if>
+			<choose>
+				<when test="deptCode != null and deptCode != ''">
+					AND MASTER.deptcode IN (
+					SELECT V.deptcode from v_org_storedepartment V 
+						WHERE V.deptcode = #{deptCode} OR V.roadareacode = #{deptCode}
+							OR V.regionscode = #{deptCode}  OR V.businesscode = #{deptCode}
+					)
+				</when>
+				<otherwise>
+					AND MASTER.deptcode IN (
+						SELECT V.deptcode from v_org_storedepartment V
+					)
+				</otherwise>
+			</choose>
+		</where>
+		<![CDATA[
+			ORDER BY MASTER.LOGISTCODE
+		]]>
+	</select>
+
+	<!-- 查询组织信息总数 -->
+	<select id="countDept" resultType="long" parameterType="map">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM T_ORG_DEPARTMENT MASTER
+		]]>
+		<where>
+			MASTER.CANCELED = '0'
+			<if test="selectorParam != null and selectorParam != ''">
+				AND (
+				MASTER.DEPTNAME LIKE #{selectorParam} OR MASTER.LOGISTCODE LIKE
+				#{selectorParam})
+			</if>
+			<choose>
+				<when test="deptCode != null and deptCode != ''">
+					AND MASTER.deptcode IN (
+					SELECT V.deptcode from v_org_storedepartment V 
+						WHERE V.deptcode = #{deptCode} OR V.roadareacode = #{deptCode}
+							OR V.regionscode = #{deptCode}  OR V.businesscode = #{deptCode}
+					)
+				</when>
+				<otherwise>
+					AND MASTER.deptcode IN (
+						SELECT V.deptcode from v_org_storedepartment V
+					)
+				</otherwise>
+			</choose>
+		</where>
+		<![CDATA[
+			ORDER BY MASTER.LOGISTCODE
+		]]>
+	</select>
+	
+	<!-- 基础组织信息返回值 -->
+	<resultMap id="baseDepartmentResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.BseDepartmentBean">
+		<id property="id" column="ID" />
+		<result property="deptCode" column="DEPT_CODE" />
+		<result property="deptName" column="DEPT_NAME" />
+		<result property="logistCode" column="LOGIST_CODE" />
+		<result property="isStore" column="IS_STORE" />
+		<result property="isRoad" column="IS_ROAD" />
+		<result property="isRegion" column="IS_REGION" />
+		<result property="isBusiness" column="IS_BUSINESS" />
+	</resultMap>
+	
+	<!-- 根据部门编码查询组织信息 -->
+	<select id="queryBseDeptByDeptcode" parameterType="String" resultMap="baseDepartmentResultMap">
+		<![CDATA[
+			SELECT 
+				DEPT.ID,
+				DEPT.DEPT_CODE,
+				DEPT.DEPT_NAME,
+				DEPT.LOGIST_CODE,
+				DEPT.IS_STORE,
+				DEPT.IS_ROAD,
+				DEPT.IS_REGION,
+				DEPT.IS_BUSINESS
+			FROM t_bse_dept DEPT
+			WHERE DEPT.DEPT_CODE = #{deptCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+</mapper>

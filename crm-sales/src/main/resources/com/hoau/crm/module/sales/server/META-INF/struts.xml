@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="sales" namespace="/sales" extends="crm-default">
+		<result-types>
+			<result-type name="streamx"
+				class="com.sunspoter.lib.web.struts2.dispatcher.StreamResultX" />
+		</result-types>
+		<!-- 进入预约客户界面 -->
+		<action name="reserveMain">
+			<result name="success">reserveMain.jsp</result>
+		</action>
+		<!-- 进入洽谈客户界面 -->
+		<action name="chatsMain">
+			<result name="success">chatsMain.jsp</result>
+		</action>
+		
+		<!-- 进入意向客户界面 -->
+		<action name="intentionMain">
+			<result name="success">intentionMain.jsp</result>
+		</action>
+		
+		<!-- 预约action-->
+		<action name="saleReservePlanAction" class="saleReservePlanAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!--新增 修改预约信息 -->
+		<action name="saveOrUpdateReserve" class="saleReservePlanAction" method="saveOrUpdateReserve">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 洽谈action-->
+		<action name="saleChatsAction" class="saleChatsAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 去随机洽谈记录列表action-->
+		<action name="randomChatMain">
+			<result name="success">searchChartsRandom.jsp</result>
+		</action>
+		
+		<!-- 新增,修改洽谈信息-->
+		<action name="saveOrUpdateChatsContents" class="saleChatsAction" method="saveOrUpdateChatsContents">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!--意向action  -->
+		<action name="intentionAction" class="intentionAction">
+		    <result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 进入意向信息新增界面 -->
+		<action name="addIntention" class="intentionAction">
+			<result name="success">addIntention.jsp</result>
+		</action>
+		<!-- 进入意向信息查看界面 -->
+		<action name="lookIntention" class="intentionAction" method="queryIntentionInfoById">
+			<result name="success">lookIntention.jsp</result>
+		</action>
+		<!-- 分页查询意向信息 -->
+		<action name="intentionAction" class="intentionAction" method="queryIntentionInfo">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 上传界面 -->
+		<action name="toUpload" class="contractAttachmentAction"
+			method="toUpload">
+			<result name="success">upload.jsp</result>
+		</action>
+
+		<!-- 合同附件上传 -->
+		<action name="import" class="contractAttachmentAction" method="importAttachment">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+
+		<!-- 合同附件下载 -->
+		<action name="export" class="contractAttachmentAction" method="exportAttachment">
+			<result name="success" type="streamx">
+				<param name="contentType">application/x-download</param>
+				<param name="inputName">inputStream</param>
+				<param name="contentDisposition">attachment;filename=${fileName}</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>
+
+		<!-- 合同附件批量下载 -->
+		<action name="batchExport" class="contractAttachmentAction"
+			method="batchExportAttachment">
+			<result name="success" type="streamx">
+				<param name="contentType">application/x-download</param>
+				<param name="inputName">batchInputStream</param>
+				<param name="contentDisposition">attachment;filename=${batchFileName}</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>
+
+		<!--进入合同主页面 -->
+		<action name="contractMain" class="saleContractAction" method="main">
+			<result name="success">contractMain.jsp</result>
+		</action>
+			
+		<!-- 合同信息分页查询  -->	
+		<action name="saleContractAction" class="saleContractAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 进入查看合同详情界面 -->
+		<action name="lookContract" class="saleContractAction" method="lookContract">
+			<result name="success">lookContract.jsp</result>
+		</action>
+		
+		<!-- 洽谈记录导出 -->
+		<action name="chatInfoExport" class="saleChatsAction" method="excelExport">
+			<result name="success" type="streamx">
+				<param name="contentType">application/x-download</param>
+				<param name="inputName">inputStream</param>
+				<param name="contentDisposition">attachment;filename=${fileName}</param>
+				<param name="bufferSize">1024</param>
+			</result>
+			<result name="error">
+				chatsExportError.jsp
+			</result>
+		</action>
+		
+		<!--客户签到页面  -->
+		<action name="sign">
+			<result name="success">signMain.jsp</result>
+		</action>
+		<!--客户签到查询  -->	
+		<action name="signAction" class="signAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--扫描签到页面  -->
+		<action name="sweepSign">
+			<result name="success">sweepSignMain.jsp</result>
+		</action>
+		<!--扫描签到查询  -->	
+		<action name="sweepSignAction" class="sweepSignAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--会议签到页面  -->
+		<action name="meetingSignAction">
+			<result name="success">meetingSignMain.jsp</result>
+		</action>
+		<!--会议扫描签到查询  -->	
+		<action name="meetingSignAction1" class="meetingSignAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+	</package>
+</struts>

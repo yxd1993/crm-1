@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.EmployeeMapper">
+
+	<!-- 人员信息返回值 -->
+	<resultMap id="employeeResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="empCode" column="MASTER_EMPCODE" />
+		<result property="empName" column="MASTER_EMPNAME" />
+		<result property="gender" column="MASTER_GENDER" />
+		<result property="pinYinName" column="MASTER_PINYINNAME" />
+		<result property="pinYinShortName" column="MASTER_PINYINSHORTNAME" />
+		<result property="account" column="MASTER_ACCOUNT" />
+		<result property="password" column="MASTER_PASSWORD" />
+		<result property="deptname" column="DEPT_DEPTNAME" />
+		<result property="jobname" column="MASTER_JOBNAME" />
+		<result property="deptcode" column="MASTER_DEPTCODE" />
+		<result property="jobcode" column="MASTER_JOBCODE" />
+		<result property="managerCode" column="MASTER_MANAGERCODE" />
+		<result property="mobile" column="MASTER_MOBILE" />
+		<result property="email" column="MASTER_EMAIL" />
+		<result property="telePhone" column="MASTER_TELEPHONE" />
+		<result property="status" column="MASTER_STATUS" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<association property="deptEntity" column="DEPT_DEPTCODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+			<id property="id" column="DEPT_ID" />
+			<result property="deptCode" column="DEPT_DEPTCODE" />
+			<result property="deptName" column="DEPT_DEPTNAME" />
+		</association>
+	</resultMap>
+
+	<!-- 人员信息查询字段 -->
+	<sql id="select_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.EMPCODE AS MASTER_EMPCODE,
+		MASTER.EMPNAME AS MASTER_EMPNAME,
+		MASTER.GENDER AS MASTER_GENDER,
+		MASTER.PINYINNAME AS MASTER_PINYINNAME,
+		MASTER.PINYINSHORTNAME AS
+		MASTER_PINYINSHORTNAME,
+		MASTER.ACCOUNT AS MASTER_ACCOUNT,
+		MASTER.PASSWORD AS MASTER_PASSWORD,
+		MASTER.DEPTCODE AS MASTER_DEPTCODE,
+		MASTER.DEPTNAME AS MASTER_DEPTNAME,
+		MASTER.JOBCODE AS MASTER_JOBCODE,
+		MASTER.JOBNAME AS MASTER_JOBNAME,
+		MASTER.MANAGERCODE AS
+		MASTER_MANAGERCODE,
+		MASTER.MOBILE AS MASTER_MOBILE,
+		MASTER.EMAIL AS
+		MASTER_EMAIL,
+		MASTER.TELEPHONE AS MASTER_TELEPHONE,
+		MASTER.STATUS AS
+		MASTER_STATUS,
+		MASTER.CREATE_USER AS CREATE_USER,
+		MASTER.CREATE_DATE AS
+		CREATE_DATE,
+		MASTER.MODIFY_USER AS MODIFY_USER,
+		MASTER.MODIFY_DATE AS
+		MODIFY_DATE,
+		DEPT.ID AS DEPT_ID,
+		DEPT.DEPTCODE AS DEPT_DEPTCODE,
+		DEPT.DEPTNAME AS DEPT_DEPTNAME
+	</sql>
+
+	<!-- 分页查询人员信息 -->
+	<select id="getEmployeeList" resultMap="employeeResultMap"
+		parameterType="map">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_ORG_EMPLOYEE MASTER
+			LEFT JOIN T_ORG_DEPARTMENT DEPT ON MASTER.DEPTCODE = DEPT.DEPTCODE 
+		]]>
+		<where>
+			MASTER.STATUS IN (0, 1, 2)
+			<if test="selectorParam != null and selectorParam != ''">
+				AND (EMPCODE LIKE #{selectorParam}
+				OR EMPNAME LIKE #{selectorParam})
+			</if>
+			<if test="deptcode != null and deptcode != ''">
+				AND MASTER.DEPTCODE = #{deptcode}
+			</if>
+		</where>
+	</select>
+
+	<!-- 查询人员信息总数 -->
+	<select id="countEmp" resultType="long" parameterType="map">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM T_ORG_EMPLOYEE MASTER
+		]]>
+		<where>
+			MASTER.STATUS IN (0, 1, 2)
+			<if test="selectorParam != null and selectorParam != ''">
+				AND (EMPCODE LIKE #{selectorParam}
+				OR EMPNAME LIKE #{selectorParam})
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据工号查询人员信息 -->
+	<select id="getEmployeeByEmpcode" resultMap="employeeResultMap"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_ORG_EMPLOYEE MASTER
+			LEFT JOIN T_ORG_DEPARTMENT DEPT ON MASTER.DEPTCODE = DEPT.DEPTCODE 
+			WHERE MASTER.EMPCODE = #{empCode}
+		]]>
+	</select>
+	
+	<!-- 查询部门下所有人员 -->
+	<select id="getEmployeesByDeptCode" parameterType="map" 
+		resultType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+		<![CDATA[
+			SELECT
+				MASTER.EMPCODE AS empCode,
+				MASTER.EMPNAME AS empName
+			FROM T_ORG_EMPLOYEE MASTER
+			WHERE MASTER.JOBNAME IN ('客户经理','团队经理') AND MASTER.STATUS != '5'
+		]]>
+		<if test="selectorParam != null and selectorParam != ''">
+			<![CDATA[
+				AND (MASTER.EMPCODE LIKE #{selectorParam} OR MASTER.EMPNAME LIKE #{selectorParam})
+			]]>
+		</if>
+		<if test="deptCode != null and deptCode != ''">
+			<![CDATA[
+				 AND MASTER.DEPTCODE = #{deptCode}
+			]]>
+		</if>
+	</select>
+	
+</mapper>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.sales.server.dao.MeetingSignMapper">
+	    <!--查询会议签到实体信息  -->
+	    <select id="getMeetingSign" parameterType="map" resultMap="meetingSignMap">
+	        <![CDATA[
+	        	SELECT m.*,
+		        	a.descrip,
+		        	a.fileUrl,
+		        	a.fileName,
+        			c.wasSweepPeopName ,
+		       	    c.wasSweepPeopJobName ,
+		       	    c.wasSweepPeopDeptCode,
+		       	    c.wasSweepPeopDeptName ,
+		       	    c.id as cid FROM (
+		       	    SELECT 
+		       	        b.id as bid,
+			       	    b.sweepPeopName ,
+			       	    b.sweepPeopType ,
+			       	    b.sweepPeopJobName ,
+			       	    b.sweepPeopDeptName , 
+			       	    b.qrcodeTime ,
+			       	    b.sweepTime,
+			       	    b.signAddress,
+			       	    b.create_date
+			       	    from  t_sale_meeting_sign b
+			    ]]>
+				<where>
+					<if test=" sweepPeopName !=null and sweepPeopName != '' ">
+					            <![CDATA[
+								AND sweepPeopName like #{sweepPeopName,jdbcType=VARCHAR}
+							    ]]>
+					</if>
+			
+					<if test=" sweepPeopType !=null and sweepPeopType != '' ">
+				                <![CDATA[
+								AND sweepPeopType = #{sweepPeopType,jdbcType=VARCHAR}
+							    ]]>
+			        </if>
+					
+					<if test=" signAddress !=null and signAddress != '' ">
+					            <![CDATA[
+								AND signAddress like #{signAddress,jdbcType=VARCHAR}
+							    ]]>
+					</if>
+			
+					<if test=" sweepTime !=null and sweepTime != '' ">
+					                <![CDATA[
+									AND sweepTime >= #{sweepTime}
+								    ]]>
+					</if>
+					<if test=" sweepEndTime !=null and sweepEndTime != '' ">
+					                <![CDATA[
+									AND sweepTime < #{sweepEndTime}
+								    ]]>
+					</if>
+				</where>   
+				 <![CDATA[
+					ORDER BY b.create_date DESC
+			    ]]> 
+				<if test="startNum != null and startNum != '' and limitNum != null and limitNum != ''">
+				    limit ${startNum},${limitNum}
+				</if>
+		        <![CDATA[
+					) m
+			    ]]>
+		   	<![CDATA[
+				LEFT JOIN t_crm_attachment a ON m.bid  = a.fileId 
+				LEFT JOIN t_sale_meeting_wassweep c ON c.wasSweepPeopSignId = m.bid
+				ORDER BY m.create_date DESC
+	        ]]>
+		</select>
+	    
+	    <!-- 分页查询客户扫描签到信息总数 -->
+		<select id="countMeetingSign" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)
+			from  t_sale_meeting_sign b
+	        ]]>
+		<where>
+			<if test=" sweepPeopName !=null and sweepPeopName != '' ">
+	            <![CDATA[
+				AND sweepPeopName like #{sweepPeopName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" sweepPeopType !=null and sweepPeopType != '' ">
+                <![CDATA[
+				AND sweepPeopType = #{sweepPeopType,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+			<if test=" signAddress !=null and signAddress != '' ">
+	            <![CDATA[
+				AND signAddress like #{signAddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+
+			<if test=" sweepTime !=null and sweepTime != '' ">
+	                <![CDATA[
+					AND sweepTime >= #{sweepTime}
+				    ]]>
+			</if>
+			<if test=" sweepEndTime !=null and sweepEndTime != '' ">
+	                <![CDATA[
+					AND sweepTime < #{sweepEndTime}
+				    ]]>
+			</if>
+		</where>
+	</select>
+	
+	<!--根据会议类型与当前用户查询未关联的会议签到信息  -->
+    <select id="queryNoRelationMeetingSignList" parameterType="map" resultMap="meetingSignMap">
+        <![CDATA[
+       	    SELECT 
+       	        b.id as bid,
+       	        c.id as cid,
+	       	    b.sweepPeopName ,
+	       	    b.sweepPeopType ,
+	       	    b.sweepPeopJobName ,
+	       	    b.sweepPeopDeptName , 
+	       	    c.wasSweepPeopName ,
+	       	    c.wasSweepPeopJobName ,
+	       	    c.wasSweepPeopDeptCode,
+	       	    c.wasSweepPeopDeptName ,
+	       	    b.qrcodeTime ,
+	       	    b.sweepTime,
+	       	    b.signAddress
+	       	    from  t_sale_meeting_sign b
+	    ]]> 
+        <![CDATA[
+			LEFT JOIN t_sale_meeting_wassweep c ON c.wasSweepPeopSignId = b.id
+        ]]>       
+        <where>	    
+        	b.ACTIVE = 'Y' AND b.isRelation = 'N'
+	        <if test="meetingType !=null and meetingType != '' ">
+				AND b.sweepPeopType = #{meetingType}
+			</if>
+			<if test="loginName !=null and loginName != '' ">
+				AND b.create_user = #{loginName}
+			</if>
+        </where>    
+        <![CDATA[
+			ORDER BY b.create_date DESC
+	    ]]>
+    </select>
+	
+	<!--新增会议签到实体信息  -->
+	<insert id="addMeetingSignEntityInfo" parameterType="com.hoau.crm.module.sales.api.shared.domain.MeetingSignEntity">
+	    	<![CDATA[
+			insert into t_sale_meeting_sign (
+			        id,
+					sweepPeop,
+					sweepPeopName,
+					sweepPeopJobCode,
+					sweepPeopJobName,
+					sweepPeopDeptCode,
+					sweepPeopDeptName,
+					sweepPeopType,
+					qrcodeTime,
+					sweepTime,
+					longitude,
+					latitude,
+					signAddress,
+					in_rate,
+					create_user,
+					create_date,
+					active
+	      	)values (
+	      			#{id},
+			    	#{sweepPeop},
+			    	#{sweepPeopName},
+					#{sweepPeopJobCode},
+					#{sweepPeopJobName},
+					#{sweepPeopDeptCode},
+					#{sweepPeopDeptName},
+			    	#{sweepPeopType},
+			    	#{qrcodeTime},
+			    	#{sweepTime},
+			    	#{longitude},
+			    	#{latitude},
+			    	#{signAddress},
+			    	CONCAT(ROUND((${wasMeetingSignList.size()}+1)/
+			    	(SELECT
+						COUNT(1)
+					 FROM
+						t_org_employee Y
+					 WHERE
+						Y.DEPTCODE = #{deptCode}
+					 AND Y. STATUS != '5')
+					*100),'%'),
+			    	#{createUser},
+			        SYSDATE(),
+			        'Y'
+					)
+		]]>
+	    
+	</insert>
+	
+	<!-- 将签到置为已关联 -->
+	<update id="updateMeetingSignIsRelation" parameterType="map">
+		<![CDATA[
+			update t_sale_meeting_sign set isRelation='Y',modify_user=#{loginName},modify_date=sysdate() where id = #{signId}
+		]]>
+	</update>
+		
+    <!--历史结果映射  -->
+    <resultMap type="com.hoau.crm.module.sales.api.shared.domain.MeetingSignEntity" id="meetingSignMap">
+         <result property="id" column="bid"/>
+         <result property="sweepPeop" column="sweepPeop"/>
+         <result property="sweepPeopName" column="sweepPeopName" />
+         <result property="sweepPeopJobCode" column="sweepPeopJobCode" />
+         <result property="sweepPeopJobName" column="sweepPeopJobName" />
+         <result property="sweepPeopDeptCode" column="sweepPeopDeptCode" />
+         <result property="sweepPeopDeptName" column="sweepPeopDeptName" />
+         <result property="sweepPeopType" column="sweepPeopType" />
+         <result property="qrcodeTime" column="qrcodeTime" />
+         <result property="sweepTime" column="sweepTime" />
+         <result property="longitude" column="longitude" />
+         <result property="latitude" column="latitude" />
+         <result property="signAddress" column="signAddress" />
+         <result property="createDate" column="create_date"
+			javaType="Date" jdbcType="TIMESTAMP" />
+         <collection property="wasMeetingSignList" resultMap="wasMeetingSignListMap"></collection>
+         <collection property="attachmentList" resultMap="attachmentListMap"></collection>
+    </resultMap>
+    
+    <resultMap type="com.hoau.crm.module.sales.api.shared.domain.WasMeetingSignEntity" id="wasMeetingSignListMap">
+    	<result property="id" column="cid" />
+    	<result property="wasSweepPeop" column="wasSweepPeop" />
+    	<result property="wasSweepPeopName" column="wasSweepPeopName" />
+    	<result property="wasSweepPeopJobCode" column="wasSweepPeopJobCode" />
+    	<result property="wasSweepPeopJobName" column="wasSweepPeopJobName" />
+    	<result property="wasSweepPeopDeptCode" column="wasSweepPeopDeptCode" />
+    	<result property="wasSweepPeopDeptName" column="wasSweepPeopDeptName"/>
+    </resultMap>
+    
+    <resultMap type="com.hoau.crm.module.appcore.api.shared.domain.AttachmentEntity" id="attachmentListMap">
+    	<result property="fileName" column="fileName"/>
+    	<result property="fileUrl" column="fileUrl" />
+    	<result property="fileSize" column="fileSize" />
+    	<result property="descrip" column="descrip" />
+    </resultMap>
+    
+	</mapper>

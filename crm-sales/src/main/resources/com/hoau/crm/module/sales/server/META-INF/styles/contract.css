@@ -1,0 +1,70 @@
+/* but边框颜色 */
+.x-btn-default-small{
+	background-color: #FFF;
+	border-style:solid;
+	border-width:1px;
+	border-color:#494949;
+}
+/* but鼠标移动选择颜色 */
+.x-btn-over.x-btn-default-small{
+	background-color: #f15b23;
+	border-style:solid;
+	border-width:1px;
+	border-color:#f15b23;
+}
+/* but颜色 */
+.x-btn-inner-default-small{
+	color:#494949;
+	font-weight:bold;
+}
+.x-btn-over.x-btn-default-small span {
+	color: #ffffff;
+	font-weight:bold;
+}
+/**光标选择but颜色*/
+.x-btn-default-small:focus{
+	background-color: #f15b23;
+	border-style:solid;
+	border-width:1px;
+	border-color:#f15b23;
+}
+
+.x-toolbar-footer{
+	background-color: #ffffff;
+	border-style:solid;
+	border-width:1px;
+	border-color:#c3c3c3;
+}
+/* 表头背景和边框 */
+.x-grid-header-ct div{
+	background-color: #ececec;
+	font-weight:bold;
+}
+/**导航条*/
+.x-tab-active.x-tab-default {
+  border-color: #f15b23;
+  background-color: #f15b23;
+}
+/**模块导航背景*/
+.x-panel-header-default{
+	background-color: #ffffff;
+}
+/**模块导航字体颜色和边框*/
+.x-panel-header-title-default{
+	background-color: #ffffff;
+	font-weight:bold;
+	color: #494949;
+	border-bottom-style:solid;
+	border-bottom-width:2px;
+	border-bottom-color:#aaaaaa;
+}
+/**label字体粗体*/
+.x-form-item-label-default {
+	font-weight:bold;
+}
+input[readonly]{  
+    background-color:#ececec;  
+} 
+input[role="combobox"]{  
+    background-color:#ffffff;  
+}

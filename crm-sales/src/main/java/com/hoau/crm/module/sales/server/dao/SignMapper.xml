@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.sales.server.dao.SignMapper">
+	    <!--分页查询客户签到信息 -->
+	    <select id="getSign" parameterType="map" resultType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity" >
+	        <![CDATA[
+	       	    SELECT
+	       	    e.empname as customerName,
+	       	    s.id as customerId,
+	       	    s.longitude as longitude,
+	       	    s.latitude as latitude,
+	       	    s.signAddress as signAddress,
+	       	    s.imgName as imgName,
+	       	    s.imgUrl as imgUrl,
+	       	    s.create_date as createDate
+		    ]]> 
+	        <![CDATA[
+		      	from t_sale_sign s
+	            left join t_org_employee e on s.create_user = e.account
+	        ]]>
+	        <if test="(tacticcustomer != null and taticcustomer != '') or (customermanage != null and customermanage !='')">
+				<![CDATA[
+					left join t_crm_account c on s.customerId = c.id 
+				]]>
+			</if>
+	        <where>
+	           s.id !=''
+          	<if test=" customerName !=null and customerName != '' ">
+	            <![CDATA[
+				AND e.empname like #{customerName,jdbcType=VARCHAR}
+			    ]]>
+			</if> 
+			
+          	<if test=" signAddress !=null and signAddress != '' ">
+	            <![CDATA[
+				AND signAddress like #{signAddress,jdbcType=VARCHAR}
+			    ]]>
+			</if> 
+			
+            <if test=" createDate !=null and createDate != '' ">
+	                <![CDATA[
+					AND s.create_date >= #{createDate}
+				    ]]>
+			</if>
+	        <if test=" createEndDate !=null and createEndDate != '' ">
+	                <![CDATA[
+					AND s.create_date < #{createEndDate}
+				    ]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newstore != null and newstore != ''">
+				<![CDATA[
+					AND e.jobname in ('客户经理','团队经理')
+				]]>
+			</if>
+			<!-- 战略客户部权限 -->
+			<if test="tacticcustomer != null and taticcustomer != ''">
+				<![CDATA[
+					AND ((c.ACCOUNTRATINGCODE = '1') OR (
+						s.create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticcustomer} OR V.THREE_LEVEL_DEPTCODE = #{tacticcustomer}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticcustomer}  OR V.ONE_LEVEL_DEPTCODE = #{tacticcustomer})
+					))
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customermanage != null and customermanage !=''">
+				<![CDATA[
+					AND ((
+						c.ACCOUNTRATINGCODE != '1'
+					) AND (
+						s.create_user NOT IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					) AND (
+						c.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+			<!-- 事业部大区路区权限 -->
+			<if test="businessregionroad != null and businessregionroad != ''">
+				<![CDATA[
+					AND s.create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{businessregionroad} OR V.THREE_LEVEL_DEPTCODE = #{businessregionroad}
+							OR V.TWO_LEVEL_DEPTCODE = #{businessregionroad}  OR V.ONE_LEVEL_DEPTCODE = #{businessregionroad})
+				]]>
+			</if>
+			<!-- 门店客户经理权限 -->
+			<if test="storeorsale != null and storeorsale != ''">
+				<![CDATA[
+					AND s.create_user = #{storeorsale}
+				]]>
+			</if>
+			<!-- 团队经理权限 -->
+			<if test="termmanage != null and termmanage !=''">
+				<![CDATA[
+					AND s.create_user IN (
+						SELECT EMP.ACCOUNT
+						FROM t_org_employee EMP
+						WHERE EMP.DEPTCODE = #{termmanage}
+					)
+				]]>
+			</if>
+	        </where>
+	        <![CDATA[
+			ORDER BY s.create_date DESC
+		    ]]> 
+	    </select>
+	    	
+	    
+	    <!-- 分页查询客户签到信息总数 -->
+	    <select id="countSign" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)
+	            from t_sale_sign s
+	        ]]>
+	        <if test="(customerName !=null and customerName != '') or (newstore != null and newstore != '')">
+	        	<![CDATA[
+	        		 left join t_org_employee e on s.create_user = e.account
+	        	]]>
+	        </if>
+	        <if test="(tacticcustomer != null and taticcustomer != '') or (customermanage != null and customermanage !='')">
+				<![CDATA[
+					left join t_crm_account c on s.customerId = c.id 
+				]]>
+			</if>
+	        <where>
+	           s.id !=''
+          	<if test=" customerName !=null and customerName != '' ">
+	            <![CDATA[
+				AND e.empname like #{customerName,jdbcType=VARCHAR}
+			    ]]>
+			</if> 
+			
+          	<if test=" signAddress !=null and signAddress != '' ">
+	            <![CDATA[
+				AND signAddress like #{signAddress,jdbcType=VARCHAR}
+			    ]]>
+			</if> 
+			
+            <if test=" createDate !=null and createDate != '' ">
+	                <![CDATA[
+					AND s.create_date >= #{createDate}
+				    ]]>
+			</if>
+	        <if test=" createEndDate !=null and createEndDate != '' ">
+	                <![CDATA[
+					AND s.create_date < #{createEndDate}
+				    ]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newstore != null and newstore != ''">
+				<![CDATA[
+					AND e.jobname in ('客户经理','团队经理')
+				]]>
+			</if>
+			<!-- 战略客户部权限 -->
+			<if test="tacticcustomer != null and taticcustomer != ''">
+				<![CDATA[
+					AND ((c.ACCOUNTRATINGCODE = '1') OR (
+						s.create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticcustomer} OR V.THREE_LEVEL_DEPTCODE = #{tacticcustomer}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticcustomer}  OR V.ONE_LEVEL_DEPTCODE = #{tacticcustomer})
+					))
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customermanage != null and customermanage !=''">
+				<![CDATA[
+					AND ((
+						c.ACCOUNTRATINGCODE != '1'
+					) AND (
+						s.create_user NOT IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					) AND (
+						c.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+			<!-- 事业部大区路区权限 -->
+			<if test="businessregionroad != null and businessregionroad != ''">
+				<![CDATA[
+					AND s.create_user IN(
+						SELECT  EMP.ACCOUNT FROM t_org_employee EMP
+						LEFT JOIN v_org_department V ON EMP.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{businessregionroad} OR V.THREE_LEVEL_DEPTCODE = #{businessregionroad}
+							OR V.TWO_LEVEL_DEPTCODE = #{businessregionroad}  OR V.ONE_LEVEL_DEPTCODE = #{businessregionroad})
+				]]>
+			</if>
+			<!-- 门店客户经理权限 -->
+			<if test="storeorsale != null and storeorsale != ''">
+				<![CDATA[
+					AND s.create_user = #{storeorsale}
+				]]>
+			</if>
+			<!-- 团队经理权限 -->
+			<if test="termmanage != null and termmanage !=''">
+				<![CDATA[
+					AND s.create_user IN (
+						SELECT EMP.ACCOUNT
+						FROM t_org_employee EMP
+						WHERE EMP.DEPTCODE = #{termmanage}
+					)
+				]]>
+			</if>
+	        </where>    
+	    </select>
+	    
+	   <!-- 查询未关联洽谈的签到地址  -->
+  		<select id="getSignInfoNoRelation" parameterType="map"
+     		resultType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+    	<![CDATA[
+    		SELECT
+    			SIGN.ID AS id,
+    			SIGN.CUSTOMERID AS customerId ,
+    			CONCAT('签到时间:',SIGN.create_date,' 地址:',SIGN.signAddress) as signInfo,
+    			SIGN.signAddress
+    		FROM t_sale_sign SIGN
+    		WHERE SIGN.customerId = #{customerId} AND SIGN.isRelationChat = 'N' AND SIGN.ACTIVE='Y'
+    			AND SIGN.CREATE_USER = #{createUser}
+    	]]>
+	    </select>
+		    
+	    <!-- 统计未关联洽谈的签到地址 -->
+	    <select id="countSignInfoNoRelation" parameterType="map" resultType="long" >
+	    	<![CDATA[
+	    		SELECT COUNT(1)
+	    		FROM t_sale_sign SIGN
+	    		WHERE SIGN.customerId = #{customerId} AND SIGN.isRelationChat = 'N' AND SIGN.ACTIVE='Y'
+	    			AND SIGN.CREATE_USER = #{createUser}
+	    	]]>
+	    </select>
+	    
+	     <!-- 更新已绑定的签到地址 -->
+	    <update id="updateRelationChatStatus" parameterType="string">
+	    	<![CDATA[
+	    		UPDATE t_sale_sign SET isRelationChat = 'Y',modify_date=sysdate(),modify_user='sysadmin'
+	    		WHERE ID = #{signId}
+	    	]]>
+	    </update>
+	    
+	    <!-- 判断当前ID签到信息是否被绑定 -->
+		<select id="isHasThereSign" parameterType="string" resultType="long">
+		    <![CDATA[
+				SELECT count(1) FROM T_SALE_SIGN S WHERE S.ID = #{id} and isRelationChat = 'Y'
+		    ]]>
+		</select>
+	</mapper>

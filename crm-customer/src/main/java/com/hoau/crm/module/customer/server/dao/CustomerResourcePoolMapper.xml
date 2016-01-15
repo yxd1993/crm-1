@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.hoau.crm.module.customer.server.dao.CustomerResourcePoolMapper">
+	<!-- 客户资源池列表信息 -->
+	<resultMap id="customerResourcePoolResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerResourcePoolEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="industryCode" column="MASTER_INDUSTRYCODE" />
+		<result property="regions" column="MASTER_REGIONS" />
+		<result property="contactName" column="CONTACT_CONTACTNAME" />
+		<result property="cellphone" column="CONTACT_CELLPHONE" />
+		<result property="telephone" column="CONTACT_TELEPHONE" />
+		<result property="address" column="MASTER_DETAILEDADDRESS" />
+		<result property="accountType" column="MASTER_ACCOUNTTYPE" />
+		<result property="createDate" column="createDate" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="LastShipmentsTime" column="MASTER_LASTSHIPMENTSTIME"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="flowDate" column="MASTER_FLOWDATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<!-- 客户资源池列表信息 -->
+	<sql id="query_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.ENTERPRISENAME AS
+		MASTER_ENTERPRISENAME,
+		MASTER.INDUSTRYCODE AS MASTER_INDUSTRYCODE,
+		<choose>
+			<when test="deptCode != null and deptCode != ''">
+				CASE WHEN VS.ROADAREACODE = #{deptCode} THEN VS.ROADAREANAME ELSE VS.REGIONSNAME END AS MASTER_REGIONS,
+			</when>
+			<otherwise>
+				VS.REGIONSNAME AS MASTER_REGIONS,
+			</otherwise>
+		</choose>
+		MASTER.ACCOUNTTYPE as
+		MASTER_ACCOUNTTYPE,
+		MASTER.LASTSHIPMENTSTIME as
+		MASTER_LASTSHIPMENTSTIME,
+		CUSTOMERRESOURCEDELIVERYADDRESS	AS MASTER_DETAILEDADDRESS,
+		MASTER.FLOWDATE AS MASTER_FLOWDATE,
+		CONTACT.CONTACTNAME AS CONTACT_CONTACTNAME,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS CONTACT_TELEPHONE,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM')	using utf8) AS CONTACT_CELLPHONE,
+		MASTER.CREATEDON as createDate
+	</sql>
+
+	<!--按id查询 -->
+	<sql id="query_param_id">
+		MASTER.ID AS id,
+		MASTER.ENTERPRISENAME AS enterpriseName,
+		MASTER.INDUSTRYCODE AS industryCode,
+		VS.REGIONSNAME AS regions,
+		CUSTOMERRESOURCEDELIVERYADDRESS	AS address,
+		MASTER.FLOWDATE AS flowDate,
+		CONTACT.CONTACTNAME AS
+		contactName,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS telephone,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM') using utf8) AS cellphone
+	</sql>
+
+	<!-- 分页查询客户信息 -->
+	<select id="getCustomerResourcePools" parameterType="map"
+		resultMap="customerResourcePoolResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+		]]>
+		<choose>
+			<when test="contactName != null and contactName != ''">
+				LEFT JOIN (select * from t_crm_contact CONTACT where CONTACT.ISDEFAULT = 'Y' AND CONTACT.ACTIVE = 'Y' AND CONTACT.CONTACTNAME like #{contactName}) CONTACT
+				on MASTER.ID = CONTACT.ACCOUNTID
+			</when>
+			<otherwise>
+				LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y' AND CONTACT.ACTIVE = 'Y')
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="deptCode != null and deptCode != ''">
+				LEFT JOIN (select * from v_org_storedepartment VS where VS.businesscode = #{deptCode} OR VS.regionscode = #{deptCode} OR VS.roadareacode = #{deptCode}) VS 
+				ON MASTER .TIERCODE = VS.logistcode
+			</when>
+			<otherwise>
+				LEFT JOIN v_org_storedepartment VS ON MASTER.TIERCODE = VS.logistcode
+			</otherwise>
+		</choose>
+		<!-- <if test="deptCode != null and deptCode != ''">
+			<![CDATA[
+				 AND (VS.businesscode = #{deptCode} OR VS.regionscode = #{deptCode} OR VS.roadareacode = #{deptCode})
+			]]>
+		</if> -->
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '1'
+			<!-- 客户名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<!-- 客户名称拼音首字母 -->
+			<if test="enterpriseShortName != null and enterpriseShortName != ''">
+				AND MASTER.EnterpriseShortName like #{enterpriseShortName}
+			</if>
+			<!-- DC账号 -->
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCaccount = #{dcAccount}
+			</if>
+			<!-- CRM账号 -->
+			<if test="accountCode != null and accountCode != ''">
+				AND MASTER.AccountCode = #{accountCode}
+			</if>
+			<!-- 手机号 -->
+			<if test="cellPhone != null and cellPhone != ''">
+			    AND master.id in (select c.AccountId from t_crm_contact c where c.cellphone = HEX(AES_ENCRYPT(#{cellPhone}, 'CRM')) and c.ACTIVE = 'Y')
+			</if>
+			<!-- 座机号 -->
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 联系人姓名 -->
+			<if test="contactName != null and contactName != ''">
+				and CONTACT.id is not null
+			</if>
+			<!-- 客户地址 -->
+			<if test="address != null and address != ''">
+			     AND MASTER.CUSTOMERRESOURCEDELIVERYADDRESS like #{address}
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="industryCode != null and industryCode != ''">
+				AND MASTER.INDUSTRYCODE = #{industryCode}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND VS.REGIONSNAME like #{regions}
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.FLOWDATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.FLOWDATE < #{endDate}
+				]]>
+			</if>
+			<if test="deptCode != null and deptCode != ''">
+				<![CDATA[
+					AND VS.logistcode IS NOT NULL
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="timeDesc != null and timeDesc != '' ">
+				ORDER BY MASTER.FLOWDATE DESC
+			</when>
+			<when test="timeAsc != null and timeAsc != '' ">
+				ORDER BY MASTER.FLOWDATE ASC
+			</when>
+			<otherwise>
+				ORDER BY MASTER.CREATEDON DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="countCustomerResourcePool" parameterType="map"
+		resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_account MASTER
+		]]>
+		<if test="contactName != null and contactName != ''">
+			<![CDATA[
+				LEFT JOIN (select * from t_crm_contact CONTACT where CONTACT.ISDEFAULT = 'Y' AND CONTACT.ACTIVE = 'Y' AND CONTACT.CONTACTNAME like #{contactName}) CONTACT on MASTER.ID = CONTACT.ACCOUNTID
+			]]> 
+		</if>
+		<if test="(regions != null and regions != '') or (deptCode != null and deptCode != '')">
+			<![CDATA[
+				LEFT JOIN (select * from v_org_storedepartment VS where VS.businesscode = #{deptCode} OR VS.regionscode = #{deptCode} OR VS.roadareacode = #{deptCode}) VS 
+				ON MASTER.TIERCODE = VS.logistcode
+			]]>
+		</if>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '1'
+			<!-- 客户名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<!-- 客户名称拼音首字母 -->
+			<if test="enterpriseShortName != null and enterpriseShortName != ''">
+				AND MASTER.EnterpriseShortName like #{enterpriseShortName}
+			</if>
+			<!-- DC账号 -->
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCaccount = #{dcAccount}
+			</if>
+			<!-- CRM账号 -->
+			<if test="accountCode != null and accountCode != ''">
+				AND MASTER.AccountCode = #{accountCode}
+			</if>
+			<!-- 手机号 -->
+			<if test="cellPhone != null and cellPhone != ''">
+			    AND master.id in (select c.AccountId from t_crm_contact c where c.cellphone = HEX(AES_ENCRYPT(#{cellPhone}, 'CRM')) and c.ACTIVE = 'Y')
+			</if>
+			<!-- 座机号 -->
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 联系人姓名 -->
+			<if test="contactName != null and contactName != ''">
+				and CONTACT.id is not null
+			</if>
+			<!-- 客户地址 -->
+			<if test="address != null and address != ''">
+			     AND MASTER.CUSTOMERRESOURCEDELIVERYADDRESS like #{address}
+			</if>
+			<if test="industryCode != null and industryCode != ''">
+				AND MASTER.INDUSTRYCODE = #{industryCode}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND VS.REGIONSNAME like #{regions}
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.FLOWDATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.FLOWDATE < #{endDate}
+				]]>
+			</if>
+			<if test="deptCode != null and deptCode != ''">
+				<![CDATA[
+					AND VS.logistcode IS NOT NULL
+				]]>
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据主键查询 -->
+	<select id="getCustomerResourcePoolById" parameterType="string"
+		resultType="com.hoau.crm.module.customer.api.shared.domain.CustomerResourcePoolEntity">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_param_id" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+			LEFT JOIN v_org_storedepartment VS ON MASTER.TIERCODE = VS.logistcode
+		]]>
+		<where>
+			MASTER.ID = #{id}
+		</where>
+	</select>
+
+	<!-- 当天认领数 -->
+	<select id="getClaimNum" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT CLAIMNUM
+			FROM t_crm_claim_record
+			WHERE CLAIMPERSON = #{claimPerson} AND CLAIMDATE = CURDATE()
+		]]>
+	</select>
+
+	<!-- 新增认领记录 -->
+	<select id="insertClaimRecord" parameterType="map">
+		<![CDATA[
+			INSERT INTO t_crm_claim_record
+				(ID,
+				CLAIMPERSON,
+				CLAIMNUM,
+				CLAIMDATE)
+			VALUES
+				(UUID(),
+				#{claimPerson},
+				#{claimNum},
+				CURDATE())
+		]]>
+	</select>
+
+	<!-- 当天是否认领 -->
+	<select id="isClaimCurrent" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_claim_record
+			WHERE CLAIMPERSON = #{claimPerson} AND CLAIMDATE = CURDATE()
+		]]>
+	</select>
+
+	<!-- 更新认领数 -->
+	<update id="updateClaimRecord">
+		<![CDATA[
+			UPDATE t_crm_claim_record SET
+				CLAIMNUM = CLAIMNUM + #{claimNum}
+			WHERE CLAIMPERSON = #{claimPerson} AND CLAIMDATE = CURDATE()
+		]]>
+	</update>
+
+	<!-- 处理认领 -->
+	<update id="dealWithClaim" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_account SET
+				ManageEmpCode = #{manageEmpCode},
+				MANAGEPERSON = #{managePerson},
+				isCustomerResourcePool = '0',
+				ACCOUNTTYPE = '1',
+				CUSTOMERRESOURCEDELIVERYADDRESS = null,
+		]]>
+		<if test="customerOfOrg != null and customerOfOrg != ''">
+			<![CDATA[
+				CUSTOMEROFORG = #{customerOfOrg},
+			]]>
+		</if>
+		<if test="tierCode != null and tierCode != ''">
+			<![CDATA[
+				TIERCODE = #{tierCode},
+			]]>
+		</if>
+		<![CDATA[
+			CLAIMDATE = sysdate()
+			WHERE ID = #{id}
+		]]>
+	</update>
+
+	<!-- 获取大区编码 -->
+	<select id="getRegionsCode" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT CASE WHEN d2.IS_REGION = 'Y' THEN d2.DEPT_CODE
+				WHEN d3.IS_REGION = 'Y' THEN d3.DEPT_CODE
+				ELSE '' END  AS rCode
+			FROM t_bse_dept d1
+			LEFT JOIN t_bse_dept d2 on d1.PARENT_DEPT_CODE = d2.DEPT_CODE
+			LEFT JOIN t_bse_dept d3 on d2.PARENT_DEPT_CODE = d3.DEPT_CODE
+			WHERE d1.DEPT_CODE = #{deptCode}
+		]]>
+	</select>
+
+</mapper>

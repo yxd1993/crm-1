@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>crm</artifactId>
+		<groupId>com.hoau.crm</groupId>
+		<version>0.0.2-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.hoau.crm</groupId>
+	<artifactId>crm-bse</artifactId>
+	<version>0.0.2-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.hoau.crm</groupId>
+			<artifactId>crm-bse-api</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.hoau.crm</groupId>
+			<artifactId>crm-util</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.hoau.crm</groupId>
+			<artifactId>crm-common</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
+	<name>${project.artifactId}</name>
+	<url>http://maven.apache.org</url>
+	<properties>
+		<moduleContext>bse</moduleContext>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>ro.isdc.wro4j</groupId>
+				<artifactId>wro4j-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>

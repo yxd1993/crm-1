@@ -1,0 +1,32 @@
+/*单独样式*/
+#addArticle span.submit{
+	float: right;
+    margin-bottom: 1.2rem;
+}
+#addArticleForm > ul{
+	height:15.5rem;
+	list-style: none;
+}
+#addArticleForm > ul > li{
+	margin-top: 1.2rem;
+}
+#addArticleForm > ul > li > input{
+	width:15rem;
+}
+#addArticleForm > ul > li > input,select,textarea{
+	line-height: 1.3;
+    font:normal 1.1rem arial,sans-serif;
+}
+#addArticleForm > ul >  li:last-child >label,textarea{
+	float: left;
+}
+#addArticleForm > ul >  li:last-child > textarea{
+	width:65%;
+    margin-left: 0.29rem;
+}
+.froala-element.f-placeholder:before {
+    font-style: normal;
+}
+@media (min-width:480px) and (max-width:720px) {  
+		
+}

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--  
+	modifyuser 丁勇
+	modifydate 2015-06-19
+-->
+<mapper namespace="com.hoau.crm.module.sales.server.dao.IntentionMapper">
+	<!-- 客户与联系人详细信息 -->
+	<resultMap id="intentionResultMap" type="com.hoau.crm.module.sales.api.shared.domain.IntentionEntity" >
+	    <id column="intentionId" property="id"/>
+	    <result column="goodsName" property="goodsName"/>
+	    <result column="packaging" property="packaging"/>
+	    <result column="customerScore" property="customerScore"/>
+	    <result column="activityType" property="activityType"/>
+	    <result column="activityRemarks" property="activityRemarks"/>
+	    <association property="customerEntity" javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="EnterpriseName"/>
+				<result property="detailedAddress" column="DetailedAddress" />
+				<result property="deliveryAddress" column="DeliveryAddress"/>
+				<result property="deliveryAddressPostalCode" column="DeliveryAddressPostalCode"/>
+		</association>
+		<association property="contactEntity" javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="ContactName" />
+				<result property="cellphone" column="Cellphone" />
+		</association>
+  	</resultMap>
+
+
+	<!-- 客户与联系人详细信息 -->
+	<sql id="query_intention_param" >
+    	tsi.id as intentionId,
+    	tsi.account_id as accountId,
+    	tsi.contact_id as contactId,
+    	tsi.goods_name as goodsName,
+    	tsi.packaging,
+    	tsi.customer_score as customerScore,
+    	tsi.activity_type as activityType,
+    	tsi.activity_remarks as activityRemarks,
+    	tca.EnterpriseName,
+    	convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		tca.DeliveryAddress,
+		tca.DeliveryAddressPostalCode,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) as Cellphone
+  	</sql>
+	
+
+	<!-- 分页查询意向 -->
+	<select id="getIntentionInfo" parameterType="map"
+		resultMap="intentionResultMap">
+		<![CDATA[
+			select
+		]]>
+		<include refid="query_intention_param" />
+		<![CDATA[
+			from t_sale_intention tsi 
+			left join t_crm_account tca on tsi.account_id = tca.id
+			left join t_crm_contact tcc on tsi.contact_id = tcc.id
+		]]>
+		<where>
+			tsi.active = 'Y'
+			<!-- 联系人姓名 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!--客户信用评分  -->
+			<if test="customerScore != null and customerScore != ''">
+				and tsi.customer_score like #{customerScore}
+			</if>
+			<!--客户全称  -->
+			<if test="enterpriseName !=null and enterpriseName !=''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+		</where>
+		order by tsi.create_date desc
+	</select>
+
+	<!-- 查询信息条数 -->
+	<select id="countIntention" parameterType="map" resultType="long">
+		<![CDATA[
+			select count(1)
+			from t_sale_intention tsi 
+			left join t_crm_account tca on tsi.account_id = tca.id
+			left join t_crm_contact tcc on tsi.contact_id = tcc.id
+		]]>
+		<where>
+			tsi.active = 'Y'
+			<!-- 联系人姓名 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!--客户信用评分  -->
+			<if test="customerScore != null and customerScore != ''">
+				and tsi.customer_score like #{customerScore}
+			</if>
+			<!--客户全称  -->
+			<if test="enterpriseName !=null and enterpriseName !=''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+		</where>
+		order by tsi.create_date desc
+	</select>
+
+	<!-- 根据主键查询意向列表 -->
+	<select id="getIntentionInfoById" parameterType="string"
+		resultMap="intentionResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_intention_param" />
+		<![CDATA[
+			from t_sale_intention tsi 
+			left join t_crm_account tca on tsi.account_id = tca.id
+			left join t_crm_contact tcc on tsi.contact_id = tcc.id
+		]]>
+		<where>
+			tsi.id = #{id}
+		</where>
+	</select>
+
+	<!-- 新增意向信息 -->
+	<insert id="addIntentionInfo"
+		parameterType="com.hoau.crm.module.sales.api.shared.domain.IntentionEntity">
+		<![CDATA[
+			insert into t_sale_intention (
+					id, create_user, 
+					create_date, modify_user, modify_date,active, 
+					account_id,contact_id,goods_name,packaging, 
+					customer_score, activity_type,activity_remarks
+	      	)values (
+					#{id,jdbcType=VARCHAR},#{createUser,jdbcType=VARCHAR}, 
+					sysdate(), null, null, 'Y', #{customerEntity.id,jdbcType=VARCHAR}, 
+					#{contactEntity.id,jdbcType=VARCHAR}, #{goodsName,jdbcType=VARCHAR},#{packaging,jdbcType=CHAR},
+					#{customerScore,jdbcType=VARCHAR}, #{activityType,jdbcType=CHAR},#{activityRemarks,jdbcType=VARCHAR})
+		]]>
+	</insert>
+
+	<!-- 修改客户信息 -->
+	<insert id="updateIntentionInfo"
+		parameterType="com.hoau.crm.module.sales.api.shared.domain.IntentionEntity">
+		<![CDATA[
+			update t_sale_intention 
+				set
+			account_id = #{customerEntity.id,jdbcType=VARCHAR},
+			contact_id = #{contactEntity.id,jdbcType=VARCHAR},
+			modify_user = #{modifyUser,jdbcType=VARCHAR},
+			modify_date = sysdate(),
+			goods_name = #{goodsName,jdbcType=VARCHAR},
+			packaging = #{packaging,jdbcType=CHAR},
+			customer_score = #{customerScore,jdbcType=VARCHAR},
+			activity_type = #{activityType,jdbcType=CHAR},
+			activity_remarks = #{activityRemarks,jdbcType=VARCHAR}
+			where id = #{id,jdbcType=VARCHAR}
+		]]>
+	</insert>
+
+	<!-- 删除客户信息 -->
+	<update id="deleteIntentionInfo" parameterType="map">
+		<![CDATA[
+			UPDATE t_sale_intention tsi set
+				tsi.active = 'N',
+				tsi.del_desc = #{delDesc},
+				tsi.modify_date = sysdate(),
+				tsi.modify_user = #{username}
+		]]>
+		<where>
+			s.id in
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+</mapper>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.UserMapper">
+
+	<!-- 用户信息返回值 -->
+	<resultMap id="userResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.UserEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="userName" column="MASTER_LOGIN_NAME" />
+		<result property="password" column="MASTER_PASSWORD" />
+		<result property="lastLogin" column="MASTER_LAST_LOGIN"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<!-- <result property="position" column="MASTER_POSITION" /> -->
+		<!-- <result property="roleNames" column="MASTER_ROLENAMES" /> -->
+		<result property="endTime" column="MASTER_END_TIME" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="beginTime" column="MASTER_BEGIN_TIME"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="createUser" column="MASTER_CREATE_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATE_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFY_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFY_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<association property="empEntity" column="EMPLOYEE_EMP_CODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+			<id property="id" column="EMPLOYEE_ID" />
+			<result property="empCode" column="EMPLOYEE_EMP_CODE" />
+			<result property="empName" column="EMPLOYEE_EMP_NAME" />
+			<result property="jobname" column="EMPLOYEE_JOB_NAME" />
+			<result property="mobile" column="EMPLOYEE_MOBILE" />
+			<association property="deptEntity" column="EMPLOYEE_DEPT_CODE"
+				javaType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+				<id property="id" column="DEPARTMENT_ID" />
+				<result property="deptCode" column="DEPARTMENT_DEPT_CODE" />
+				<result property="deptName" column="DEPARTMENT_DEPT_NAME" />
+				<result property="supdeptCode" column="DEPARTMENT_SUPDEPTCODE" />
+			</association>
+		</association>
+	</resultMap>
+
+	<!-- 批量用户信息返回值 -->
+	<resultMap id="userSimpleResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.UserEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="userName" column="MASTER_LOGIN_NAME" />
+		<result property="lastLogin" column="MASTER_LAST_LOGIN"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="endTime" column="MASTER_END_TIME" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="beginTime" column="MASTER_BEGIN_TIME"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="createUser" column="MASTER_CREATE_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATE_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFY_USER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFY_DATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<association property="empEntity" column="EMPLOYEE_EMP_CODE"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+			<id property="id" column="EMPLOYEE_ID" />
+			<result property="empCode" column="EMPLOYEE_EMP_CODE" />
+			<result property="empName" column="EMPLOYEE_EMP_NAME" />
+			<result property="jobname" column="EMPLOYEE_JOB_NAME" />
+			<result property="mobile" column="EMPLOYEE_MOBILE" />
+			<association property="deptEntity" column="EMPLOYEE_DEPT_CODE"
+				javaType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+				<id property="id" column="DEPARTMENT_ID" />
+				<result property="deptCode" column="DEPARTMENT_DEPT_CODE" />
+				<result property="deptName" column="DEPARTMENT_DEPT_NAME" />
+			</association>
+		</association>
+	</resultMap>
+
+	<!-- 用户信息查询字段 -->
+	<sql id="select_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.LOGIN_NAME AS
+		MASTER_LOGIN_NAME,
+		MASTER.PASSWORD AS MASTER_PASSWORD,
+		MASTER.LAST_LOGIN AS MASTER_LAST_LOGIN,
+		MASTER.ACTIVE AS MASTER_ACTIVE,
+		MASTER.BEGIN_TIME AS MASTER_BEGIN_TIME,
+		MASTER.END_TIME AS
+		MASTER_END_TIME,
+		EMPLOYEE.ID AS EMPLOYEE_ID,
+		EMPLOYEE.EMPCODE AS
+		EMPLOYEE_EMP_CODE,
+		EMPLOYEE.EMPNAME AS
+		EMPLOYEE_EMP_NAME,
+		EMPLOYEE.JOBNAME AS
+		EMPLOYEE_JOB_NAME,
+		EMPLOYEE.MOBILE AS
+		EMPLOYEE_MOBILE,
+		DEPARTMENT.ID
+		AS DEPARTMENT_ID,
+		DEPARTMENT.DEPTCODE
+		AS DEPARTMENT_DEPT_CODE,
+		DEPARTMENT.DEPTNAME AS DEPARTMENT_DEPT_NAME,
+		DEPARTMENT.SUPDEPTCODE AS DEPARTMENT_SUPDEPTCODE
+	</sql>
+
+	<!-- 用户信息查询字段 -->
+	<sql id="select_simple_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.LOGIN_NAME AS
+		MASTER_LOGIN_NAME,
+		MASTER.LAST_LOGIN AS MASTER_LAST_LOGIN,
+		MASTER.ACTIVE AS MASTER_ACTIVE,
+		MASTER.BEGIN_TIME AS MASTER_BEGIN_TIME,
+		MASTER.END_TIME AS
+		MASTER_END_TIME,
+		EMPLOYEE.ID AS EMPLOYEE_ID,
+		EMPLOYEE.EMPCODE AS
+		EMPLOYEE_EMP_CODE,
+		EMPLOYEE.EMPNAME AS
+		EMPLOYEE_EMP_NAME,
+		EMPLOYEE.JOBNAME AS
+		EMPLOYEE_JOB_NAME,
+		EMPLOYEE.MOBILE AS
+		EMPLOYEE_MOBILE,
+		DEPARTMENT.ID
+		AS DEPARTMENT_ID,
+		DEPARTMENT.DEPTCODE
+		AS
+		DEPARTMENT_DEPT_CODE,
+		DEPARTMENT.DEPTNAME AS DEPARTMENT_DEPT_NAME
+	</sql>
+
+	<!-- 根据用户名查询用户信息 -->
+	<select id="getUserByUserName" parameterType="string" resultMap="userResultMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="select_param" />
+		<![CDATA[
+			FROM T_AUTH_USER MASTER
+			LEFT JOIN T_ORG_EMPLOYEE EMPLOYEE ON MASTER.emp_code = EMPLOYEE.empcode 
+			LEFT JOIN T_ORG_DEPARTMENT DEPARTMENT ON EMPLOYEE.deptcode = DEPARTMENT.deptcode
+			WHERE MASTER.LOGIN_NAME = #{userName}
+		]]>
+	</select>
+
+	<!-- 分页查询用户信息 -->
+	<select id="getUserList" parameterType="map" resultMap="userSimpleResultMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="select_simple_param" />
+		<![CDATA[
+			FROM T_AUTH_USER MASTER
+			LEFT JOIN T_ORG_EMPLOYEE EMPLOYEE ON MASTER.emp_code = EMPLOYEE.empcode 
+			LEFT JOIN T_ORG_DEPARTMENT DEPARTMENT ON EMPLOYEE.deptcode = DEPARTMENT.deptcode
+			LEFT JOIN t_auth_userrole UR ON MASTER.login_name = UR.USER_CODE
+		]]>
+		<where>
+			<!-- 用户名 -->
+			<if test="userName != null and userName != ''">
+				MASTER.LOGIN_NAME like #{userName}
+			</if>
+			<!-- 用户姓名 -->
+			<if test="empName != null and empName != ''">
+				AND EMPLOYEE.empName like #{empName}
+			</if>
+			<!-- 用户部门 -->
+			<if test="deptCode != null and deptCode != ''">
+				AND EMPLOYEE.deptcode = #{deptCode}
+			</if>
+			<!-- 角色 -->
+			<if test="roleCode != null and roleCode != ''">
+				AND UR.role_code = #{roleCode}
+			</if>
+			<!-- 用户状态 -->
+			<choose>
+				<when test="active != null">
+					AND MASTER.ACTIVE = #{active},
+				</when>
+				<otherwise>
+					AND MASTER.ACTIVE = 'Y'
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+
+	<!-- 查询用户信息权限 -->
+	<select id="countUser" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT 
+			COUNT(1)
+			FROM T_AUTH_USER MASTER
+			LEFT JOIN T_ORG_EMPLOYEE EMPLOYEE ON MASTER.emp_code = EMPLOYEE.empcode 
+			LEFT JOIN T_ORG_DEPARTMENT DEPARTMENT ON EMPLOYEE.deptcode = DEPARTMENT.deptcode
+			LEFT JOIN t_auth_userrole UR ON MASTER.login_name = UR.USER_CODE
+		]]>
+		<where>
+			<!-- 用户名 -->
+			<if test="userName != null and userName != ''">
+				MASTER.LOGIN_NAME like #{userName}
+			</if>
+			<!-- 用户姓名 -->
+			<if test="empName != null and empName != ''">
+				AND EMPLOYEE.empName like #{empName}
+			</if>
+			<!-- 用户部门 -->
+			<if test="deptCode != null and deptCode != ''">
+				AND EMPLOYEE.deptcode = #{deptCode}
+			</if>
+			<!-- 角色 -->
+			<if test="roleCode != null and roleCode != ''">
+				AND UR.role_code = #{roleCode}
+			</if>
+			<!-- 用户状态 -->
+			<choose>
+				<when test="active != null">
+					AND MASTER.ACTIVE = #{active},
+				</when>
+				<otherwise>
+					AND MASTER.ACTIVE = 'Y'
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+</mapper>

@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.WayBillMapper">
+
+	<!-- 运单信息 -->
+	<resultMap id="wayBillResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="billNum" column="MASTER_BILLNUM" />
+		<result property="dcAccount" column="MASTER_DCACCOUNT" />
+		<result property="transportType" column="MASTER_TRANSPORTTYPE" />
+		<result property="billingDate" column="MASTER_BILLINGDATE" />
+		<result property="checkDate" column="MASTER_CHECKDATE" />
+		<result property="startingPoint" column="MASTER_startingPoint" />
+		<result property="destination" column="MASTER_DESTINATION" />
+		<result property="shipper" column="MASTER_SHIPPER" />
+		<result property="consignee" column="MASTER_CONSIGNEE" />
+		<result property="billingAmount" column="MASTER_BILLINGAMOUNT" />
+		<result property="incomeAmount" column="MASTER_INCOMEAMOUNT" />
+		<result property="incomeDept" column="MASTER_INCOMEDEPT" />
+		<result property="signNo" column="MASTER_SIGNNO" />
+		<result property="signStatus" column="MASTER_SIGNSTATUS" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="createUser" column="MASTER_CREATEUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATEDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFYUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFYDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+	</resultMap>
+	
+	<!-- 运单信息返回值 -->
+	<sql id="query_waybill_param">
+		W.billNum AS MASTER_BILLNUM,
+		W.dcAccount AS MASTER_DCACCOUNT,
+		W.transportType AS MASTER_TRANSPORTTYPE,
+		W.billingDate AS MASTER_BILLINGDATE,
+		W.checkDate AS MASTER_CHECKDATE,
+		TRIM(W.startingPoint) AS MASTER_startingPoint,
+		TRIM(W.destination) AS MASTER_DESTINATION,
+		W.billingAmount AS MASTER_BILLINGAMOUNT
+	</sql>
+	
+	<!-- 查询未生成消息的运单 -->
+	<select id="getNotCreateMessageWayBill" resultMap="wayBillResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_waybill_param" />
+		<![CDATA[
+			FROM t_crm_waybill W WHERE W.ACTIVE = 'Y' AND W.ISMESSAGE = 'N' ORDER BY W.billingDate ASC
+		]]>
+	</select>
+
+	<!-- 新增运单信息 -->
+	<insert id="addWayBill"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			insert into t_crm_waybill(
+				id,
+				billNum,
+				dcAccount,
+				transportType,
+				billingDate,
+				checkDate,
+				startingPoint,
+				destination,
+				shipper,
+				consignee,
+				billingAmount,
+				isMessage,
+				ACTIVE,
+				CREATEUSER,
+				CREATEDATE,
+				MODIFYUSER,
+				MODIFYDATE
+			) values (
+				#{id},
+				#{billNum},
+				#{dcAccount},
+				#{transportType},
+				#{billingDate},
+				#{checkDate},
+				#{startingPoint},
+				#{destination},
+				#{shipper},
+				#{consignee},
+				#{billingAmount},
+				'N',
+				'Y',
+				'sysadmin',
+				SYSDATE(),
+				NULL,
+				NULL
+			)
+		]]>
+	</insert>
+
+	<!-- 修改运单信息 -->
+	<update id="updateWayBill"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			update t_crm_waybill
+				set 
+				id = #{id},
+				dcAccount = #{dcAccount},
+				transportType = #{transportType},
+				billingDate = #{billingDate},
+				checkDate = #{checkDate},
+				startingPoint = #{startingPoint},
+				destination = #{destination},
+				shipper = #{shipper},
+				consignee = #{consignee},
+				billingAmount = #{billingAmount},
+				MODIFYUSER = 'sysadmin',
+				MODIFYDATE = SYSDATE()
+			where billNum = #{billNum} and id < #{id}
+		]]>
+	</update>
+	
+	<!-- 修改运单信息,将是否生成消息置成'Y' -->
+	<update id="updateWayBillIsMessage"	parameterType="map">
+		<![CDATA[
+			update t_crm_waybill
+				set 
+				isMessage = 'Y'
+		]]>
+		<where>
+			billNum IN
+			<foreach collection="bills" item="bill" open="(" close=")"
+				separator=",">
+				#{bill}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 删除运单信息 -->
+	<update id="deleteWayBill"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			update t_crm_waybill
+				set 
+				id = #{id},
+				active = 'N'
+			where billNum = #{billNum} and id < #{id}
+		]]>
+	</update>
+
+	<!-- 修改运单金额信息 -->
+	<update id="updateWayBillAmount"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			update t_crm_waybill
+				set 
+				id = #{id},
+				billingAmount = #{billingAmount},
+				incomeAmount = (incomeAmount + #{incomeAmount}),
+				incomeDept = #{incomeDept},
+				MODIFYUSER = 'sysadmin',
+				MODIFYDATE = SYSDATE()
+			where billNum = #{billNum} and id < #{id}
+		]]>
+	</update>
+
+	<!-- 根据运单号查询运单信息 -->
+	<select id="getWayBillByBillNum" parameterType="string" resultType="long">
+		<![CDATA[
+			select count(1) from t_crm_waybill
+			where billNum = #{wId}
+		]]>
+	</select>
+
+	<!-- 新增运单签收信息 -->
+	<insert id="addWayBillSign"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			insert into t_crm_waybill_sign(
+				id,
+				billNum,
+				billingAmount,
+				dcAccount,
+				signStatus,
+				signNo,
+				isMessage,
+				ACTIVE,
+				CREATEUSER,
+				CREATEDATE,
+				MODIFYUSER,
+				MODIFYDATE
+			) values (
+				#{id},
+				#{billNum},
+				#{billingAmount},
+				#{dcAccount},
+				#{signStatus},
+				#{signNo},
+				'N',
+				'Y',
+				'sysadmin',
+				SYSDATE(),
+				NULL,
+				NULL
+			)
+		]]>
+	</insert>
+	
+	<!-- 修改运单签收信息 -->
+	<update id="updateWayBillSign"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.WayBillEntity">
+		<![CDATA[
+			update t_crm_waybill_sign
+				set 
+				id = #{id},
+				billingAmount = #{billingAmount},
+				signStatus = #{signStatus},
+				MODIFYUSER = 'sysadmin',
+				MODIFYDATE = SYSDATE()
+			where signNo = #{signNo} and id < #{id}
+		]]>
+	</update>
+	
+	<!-- 根据ID查询运单签收信息 -->
+	<select id="getWayBillSignById" parameterType="string" resultType="long">
+		<![CDATA[
+			select count(1) from t_crm_waybill_sign
+			where signNo = #{signNo}
+		]]>
+	</select>
+	
+	<!-- 查询未生成消息的签收信息 -->
+	<select id="getNotCreateMessageSign" resultMap="wayBillResultMap">
+		<![CDATA[
+			SELECT
+			W.billNum AS MASTER_BILLNUM,
+			W.dcAccount AS MASTER_DCACCOUNT,
+			W.signNo AS MASTER_SIGNNO,
+			W.signStatus AS MASTER_SIGNSTATUS,
+			W.billingAmount AS MASTER_BILLINGAMOUNT
+			FROM t_crm_waybill_sign W WHERE W.ACTIVE = 'Y' AND W.ISMESSAGE = 'N' ORDER BY W.CREATEUSER DESC
+		]]>
+	</select>
+	
+	<!-- 修改运单签收信息,将是否生成消息置成'Y' -->
+	<update id="updateSignIsMessage" parameterType="map">
+		<![CDATA[
+			update t_crm_waybill_sign
+				set 
+				isMessage = 'Y'
+		]]>
+		<where>
+			signNo IN
+			<foreach collection="signNos" item="signNo" open="(" close=")"
+				separator=",">
+				#{signNo}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 新增运单开单日志 -->
+	<insert id="addWayBillLog" parameterType="map">
+		<![CDATA[
+			insert into t_crm_waybill_log(
+				id,
+				dcAccount,
+				waybillLog,
+				ACTIVE,
+				CREATEUSER,
+				CREATEDATE,
+				NUM
+			) values (
+				#{id},
+				#{dcAccount},
+				CONCAT(#{waybillLog}, '\r\n'),
+				'Y',
+				'sysadmin',
+				SYSDATE(),
+				1
+			)
+		]]>
+	</insert>
+	
+	<!-- 修改运单开单日志 -->
+	<update id="updateWayBillLog" parameterType="map">
+		<![CDATA[
+			update t_crm_waybill_log set
+				waybillLog = CONCAT(CONCAT(#{waybillLog}, '\r\n'), waybillLog),
+				MODIFYUSER = 'sysadmin',
+				MODIFYDATE = SYSDATE(),
+				NUM = (NUM + 1)
+			where dcAccount = #{dcAccount}
+		]]>
+	</update>
+	
+	<!-- 根据DC账号查询开单日志 -->
+	<select id="getWayBillLogByDcAccount" parameterType="string" resultType="long">
+		<![CDATA[
+			select count(1) from t_crm_waybill_log where dcAccount = #{dcAccount}
+		]]>
+	</select>
+	<!--根据客户id查询运单日志  -->
+	<select id="queryWayBillLogByAccountId" parameterType="string" resultType="java.util.HashMap">
+	    <![CDATA[
+			SELECT
+				tca.id as accountId,
+				SUBSTRING_INDEX(tcw.waybillLog, '。', 20) AS waybilllog
+			FROM
+				t_crm_waybill_log tcw
+			LEFT JOIN t_crm_account tca ON tca.DCaccount = tcw.dcAccount
+			WHERE
+				tca.id = #{accountId}
+		]]>
+	</select>
+</mapper>

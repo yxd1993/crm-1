@@ -1,0 +1,942 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.SaleChatsMapper">
+	<!--分页查询洽谈信息 -->
+	<select id="getChatsInfoByPaging" parameterType="map" resultMap="chatsMapByPageing">
+		    <![CDATA[
+		    	select
+		    ]]>
+		<include refid="query_paramByPageing" />
+		    <![CDATA[
+		    	from t_sale_chats tsc 
+		    	left join t_crm_account tca on tca.id = tsc.account_id
+		    	left join t_crm_contact tcc on tcc.id = tsc.contact_id
+		    	left join t_org_employee toe on toe.empcode = tsc.create_user
+		    ]]>
+		<where>
+			tsc.active = 'Y'
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+			<!-- 门店代码 -->
+			<if test="tierCode != null and tierCode != ''">
+				and tca.tierCode = #{tierCode}
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!-- 洽谈开始时间 -->
+			<if test="chatStartTime != null and chatStartTime != '' ">
+				<![CDATA[
+					and tsc.chat_start_time >= #{chatStartTime}
+				]]>
+			</if>
+			<!-- 洽谈结束时间 -->
+			<if test="chatEndTime != null and chatEndTime != ''">
+				<![CDATA[
+					and tsc.chat_start_time < #{chatEndTime}
+				]]>
+			</if>
+			<!--洽谈类型  -->
+			<if test="chatType != null and chatType != ''">
+				and tsc.chat_type = #{chatType}
+			</if>
+			<!--创建人名称  -->
+			<if test="createUserName != null and createUserName != ''">
+				and toe.empname = #{createUserName}
+			</if>
+			<if test="empCode != null and empCode !='' ">
+				<![CDATA[
+					AND (
+						tsc.CREATE_USER = #{empCode,jdbcType=VARCHAR}
+					)
+				]]>
+			</if>
+			<if test="deptCode !=null and deptCode !=''">
+				<![CDATA[
+					AND tsc.create_user in (
+						SELECT
+							e.empcode
+						FROM
+							t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+						WHERE
+						(
+							V.FOUR_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.THREE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.TWO_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.ONE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						)
+					)
+				]]>
+			</if>
+		</where>
+		order by tsc.chat_start_time desc
+	</select>
+	
+	<!-- 按id查询需要修改的信息 -->
+	<select id="getChatsDetailByIdUseUpdate"
+		parameterType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity"
+		resultMap="chatsBasicMap">
+		<![CDATA[
+			select
+		]]>
+		<include refid="query_param" />
+		<![CDATA[
+			from t_sale_chats tsc
+			left join t_crm_account tca on tsc.account_id = tca.id
+			left join t_crm_contact tcc on tsc.contact_id = tcc.id
+			left join t_org_employee toe on toe.empcode = tsc.create_user
+			left join t_sale_reserve tsr on tsr.id = tsc.relation_reserve_id
+			left join t_sale_sign tss on tsc.relation_sign_id = tss.id
+			left join t_sale_sign_accompany tssa on tssa.sign_id = tss.id
+		]]>
+		<where>
+			tsc.id = #{id}
+		</where>
+	</select>
+	<!-- 查看详情 -->
+	<select id="getChatsDetailById" parameterType="com.hoau.crm.module.sales.api.shared.vo.SaleChatsVo"
+		resultMap="chatsDetailMap">
+				<![CDATA[
+					select
+				]]>
+				<include refid="queryDetailById" />
+				<![CDATA[
+					from t_sale_chats tsc
+					left join t_crm_account tca on tsc.account_id = tca.id
+					left join t_crm_contact tcc on tsc.contact_id = tcc.id
+					left join t_sale_reserve tsr on tsc.relation_reserve_id = tsr.id
+					left join t_org_employee tier on tsc.com_tier_emp_code = tier.empcode
+					left join t_org_employee road on tsc.com_road_emp_code = road.empcode
+					left join t_org_employee regions on tsc.com_regions_emp_code = regions.empcode
+					left join t_org_employee business on tsc.com_business_emp_code = business.empcode
+					left join t_org_employee od on tsc.com_od_emp_code = od.empcode
+					left join t_org_employee ceo on tsc.com_ceo_emp_code = ceo.empcode
+					left join t_org_employee team on tsc.team_manager_emp_code = team.empcode
+					left join t_org_employee sale on tsc.sale_man_emp_code = sale.empcode
+					left join t_org_employee toe on toe.empcode = tsc.create_user
+					left join t_sale_sign tss on tsc.relation_sign_id = tss.id
+					left join t_sale_sign_accompany tssa on tssa.sign_id = tss.id
+					left join t_org_employee e on e.account = tss.create_user
+				]]>
+		<where>
+			tsc.id = #{id}
+		</where>
+	</select>
+	
+	<!-- 查询信息总数 -->
+	<select id="chatsCount" parameterType="map"	resultType="long">
+		<![CDATA[
+				select 
+				count(1)
+				from t_sale_chats tsc
+			]]>
+		<if test="(enterpriseName != null and enterpriseName != '') or (tierCode != null and tierCode != '')">
+			<![CDATA[
+				left join t_crm_account tca on tca.id = tsc.account_id
+			]]>
+		</if>
+		<if test="contactName != null and contactName != ''">
+			<![CDATA[
+				left join t_crm_contact tcc on tcc.id = tsc.contact_id
+			]]>
+		</if>
+		<if test="createUserName != null and createUserName != ''">
+			<![CDATA[
+				left join t_org_employee toe on toe.empcode = tsc.create_user
+			]]>
+		</if>
+		<if test="deptCode !=null and deptCode !=''">
+			<![CDATA[
+				JOIN (SELECT
+					E.empcode
+				FROM
+					t_org_employee E
+				LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+				WHERE
+					(
+						V.FOUR_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						OR V.THREE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						OR V.TWO_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						OR V.ONE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+					)) t on tsc.create_user = t.empcode
+			]]>
+		</if>
+		<where>
+			tsc.active = 'Y'
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+			<!-- 门店代码 -->
+			<if test="tierCode != null and tierCode != ''">
+				and tca.tierCode = #{tierCode}
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!-- 洽谈开始时间 -->
+			<if test="chatStartTime != null and chatStartTime != '' ">
+				<![CDATA[
+					and tsc.chat_start_time >= #{chatStartTime}
+				]]>
+			</if>
+			<!-- 洽谈结束时间 -->
+			<if test="chatEndTime != null and chatEndTime != ''">
+				<![CDATA[
+					and tsc.chat_start_time < #{chatEndTime}
+				]]>
+			</if>
+			<!--洽谈类型  -->
+			<if test="chatType != null and chatType != ''">
+				and tsc.chat_type = #{chatType}
+			</if>
+			<!--创建人名称  -->
+			<if test="createUserName != null and createUserName != ''">
+				and toe.empname = #{createUserName}
+			</if>
+			<if test="empCode != null and empCode !='' ">
+				<![CDATA[
+					AND (
+						tsc.CREATE_USER = #{empCode,jdbcType=VARCHAR}
+					)
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<!--新增洽谈信息 -->
+	<insert id="addSaleChat">
+		insert into t_sale_chats (
+			id,account_id,contact_id,chat_start_time,chat_end_time,chat_type,com_tier_emp_code,com_road_emp_code,
+			com_regions_emp_code,com_business_emp_code,com_od_emp_code,com_ceo_emp_code,team_manager_emp_code,sale_man_emp_code,
+			chat_theme,reserve_address,chat_contents,relation_reserve_id,relation_sign_id,create_user,create_deptcode,
+			create_date,modify_user,modify_date,active,platform
+		) value(
+			#{id},#{customerEntity.id},#{contactEntity.id},#{chatStartTime},#{chatEndTime},#{chatType},
+			#{comTierEmpCode},#{comRoadEmpCode},#{comRegionsEmpCode},#{comBusinessEmpCode},
+			#{comOdEmpCode},#{comCeoEmpCode},#{teamManagerEmpCode},#{saleManEmpCode},#{chatTheme},#{reserveAddress},#{chatContents},#{reserveEntity.id}, #{sign.id},
+			#{createUser},#{createDeptCode},sysdate(),null,null,'Y',#{platform}
+		)
+	</insert>
+	
+	<!--修改洽谈客户信息 -->
+	<update id="updateSaleChats">
+		update t_sale_chats set
+		account_id = #{customerEntity.id},
+		contact_id = #{contactEntity.id},
+		chat_start_time= #{chatStartTime},
+		chat_end_time = #{chatEndTime},
+		chat_type = #{chatType},
+		com_tier_emp_code = #{comTierEmpCode},
+		com_road_emp_code = #{comRoadEmpCode},
+		com_regions_emp_code = #{comRegionsEmpCode},
+		com_business_emp_code = #{comBusinessEmpCode},
+		com_od_emp_code = #{comOdEmpCode},
+		com_ceo_emp_code = #{comCeoEmpCode},
+		team_manager_emp_code = #{teamManagerEmpCode},
+		sale_man_emp_code = #{saleManEmpCode},
+		chat_theme =#{chatTheme},
+		chat_contents = #{chatContents},
+		reserve_address = #{reserveAddress},
+		relation_reserve_id = #{reserveEntity.id},
+		modify_date = sysdate(),
+		modify_user = #{modifyUser},
+		del_desc = #{delDesc}
+		where id = #{id}
+	</update>
+	
+	<!--删除功能  -->
+	<update id="deleteChats">
+		   <![CDATA[
+			update t_sale_chats tsc set
+			tsc.active = 'N',
+			tsc.del_desc = #{delDesc},
+			tsc.modify_date = sysdate(),
+			tsc.modify_user= #{username}
+		]]>
+		<where>
+			tsc.id in
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!--洽谈客户与联系人分页查询  -->
+	<sql id="query_paramByPageing">
+		tsc.id as chatsId,
+		tsc.chat_start_time as chatStartTime,
+		tsc.chat_type as chatType,
+		tsc.reserve_address as reserveAddress,
+		tsc.chat_theme as chatTheme,
+		tsc.active as active,
+		tca.id as accountId,
+		tca.EnterpriseName,
+		tca.ManageEmpCode,
+		tcc.id as contactId,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) AS Telephone,
+		toe.empname,
+		tsc.create_date
+	</sql>
+	
+	<!-- 洽谈客户与联系人修改查询 -->
+	<sql id="query_param">
+		tsc.id as chatsId,
+		tsc.chat_start_time as chatStartTime,
+		tsc.chat_end_time as chatEndTime,
+		tsc.chat_type as chatType,
+		tsc.com_tier_emp_code as comTierEmpCode,
+		tsc.com_road_emp_code as comRoadEmpCode,
+		tsc.com_regions_emp_code as comRegionsEmpCode,
+		tsc.com_business_emp_code as comBusinessEmpCode,
+		tsc.com_od_emp_code as comOdEmpCode,
+		tsc.com_ceo_emp_code as comCeoEmpCode,
+		tsc.team_manager_emp_code as teamManagerEmpCode,
+		tsc.sale_man_emp_code as saleManEmpCode,
+		tsc.reserve_address as reserveAddress,
+		tsc.chat_theme as chatTheme,
+		tsc.chat_contents as chatContents,
+		tsc.active as active,
+		tsr.id as reserveId,
+		date_format(tsr.reserve_start_time,'%Y-%m-%d %T') as reserveStartTime,
+		tsr.reserve_theme as reserveTheme,
+		tca.id as accountId,
+		tca.TierCode as tierCode,
+		tca.EnterpriseName as enterpriseName,
+		tca.ManageEmpCode as manageEmpCode,
+		tca.ManagePerson as managePerson,
+		convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) AS Telephone,
+		tss.id as signId,
+		CONCAT('签到时间:',tss.create_date,' 地址:',tss.signAddress) as signAddress,
+		tssa.id as accompanyId,
+		tssa.scan_accompany_empcode as scanAccompanyEmpCode,
+		tssa.scan_accompany_empname as scanAccompanyEmpName
+	</sql>
+	<!--按id查询详情 -->
+	<sql id="queryDetailById">
+		tsc.id as chatsId,
+		tsc.chat_start_time as chatStartTime,
+		tsc.chat_end_time as chatEndTime,
+		tsc.chat_type as chatType,
+		tsc.reserve_address as reserveAddress,
+		tsc.chat_theme as chatTheme,
+		tsc.chat_contents as chatContents,
+		tsc.create_date as createDate,
+		tier.empname as tierEmpName,
+		road.empname as roadEmpName,
+		regions.empname as regionsEmpName,
+		business.empname as businessEmpName,
+		od.empname as odEmpName,
+		ceo.empname as ceoEmpName,
+		team.empname as teamManagerEmpName,
+		sale.empname as saleManEmpName,
+		tca.EnterpriseName,
+		convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) AS Telephone,
+		concat('开始:',date_format(tsr.reserve_start_time,'%Y-%m-%d %H:%i'),
+		' 结束:',date_format(tsr.reserve_end_time,'%Y-%m-%d %H:%i'),
+		' 主题:',tsr.reserve_theme) as reserveInfo,
+		tss.id as signId,
+		e.empname as signEmpName,
+		tss.imgName as imgName,
+		tss.imgUrl as imgUrl,
+		tss.signAddress as signAddress,
+		tss.create_date as signDatetime,
+		tssa.id as accompanyId,
+		tssa.scan_accompany_empcode as scanAccompanyEmpCode,
+		tssa.scan_accompany_empname as scanAccompanyEmpName
+	</sql>
+	
+	<!--查询详情用于导出 -->
+	<sql id="queryDetailByExport">
+		tsc.id as chatsId,
+		tsc.chat_start_time as chatStartTime,
+		tsc.chat_end_time as chatEndTime,
+		tsc.chat_type as chatType,
+		tsc.reserve_address as reserveAddress,
+		tsc.chat_theme as chatTheme,
+		tsc.chat_contents as chatContents,
+		tsc.create_date as createDate,
+		tier.empname as tierEmpName,
+		road.empname as roadEmpName,
+		regions.empname as regionsEmpName,
+		business.empname as businessEmpName,
+		team.empname as teamManagerEmpName,
+		sale.empname as saleManEmpName,
+		od.empname as odEmpName,
+		ceo.empname as ceoEmpName,
+		tsc.platform as platform,
+		tca.EnterpriseName,
+		convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) AS Telephone,
+		concat('开始:',date_format(tsr.reserve_start_time,'%Y-%m-%d %H:%i'),
+		' 结束:',date_format(tsr.reserve_end_time,'%Y-%m-%d %H:%i'),
+		' 主题:',tsr.reserve_theme) as reserveInfo,
+		toe.empname,
+		toe.empCode,
+		toe.jobname,
+		CASE WHEN d1.logistCode  REGEXP '[0-9]+' THEN D1.logistCode ELSE D1.deptName END AS deptName,
+		tca.dcAccount,
+		case when d1.logistCode  REGEXP '[0-9]+' then d2.deptName else d1.deptName end as threeLevelUnit,
+		case when d1.logistCode  REGEXP '[0-9]+' then case when d3.deptName like '%事业部%' or d3.deptName like '%总裁%' 
+			then d2.deptName else d3.deptName end else case when d2.deptName like '%事业部%' or d2.deptName like '%总裁%' 
+			then d1.deptName else d2.deptName end end as twoLevelUnit,
+		case when d1.logistCode  REGEXP '[0-9]+' then case when d4.deptName like '%总裁%' or d3.deptName is null 
+			then d3.deptName else d4.deptName end else case when d3.deptName like '%总裁%' or d3.deptName is null 
+			then case when d2.deptName like '%总裁%' then d1.deptName else d2.deptName end  else d3.deptName end end as oneLevelUnit
+	</sql>
+	<!--分页查询-->
+	<resultMap
+		type="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity" id="chatsMapByPageing">
+		<id property="id" column="chatsId" />
+		<result property="chatStartTime" column="chatStartTime" />
+		<result property="chatType" column="chatType" />
+		<result property="reserveAddress" column="reserveAddress"/>
+		<result property="chatTheme" column="chatTheme" />
+		<result property="active" column="active"/>
+		<result property="createDate" column="create_date"/>
+		<association property="customerEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="accountId" />
+			<result property="enterpriseName" column="EnterpriseName" />
+			<result property="manageEmpCode" column="ManageEmpCode"/>
+		</association>
+		<association property="contactEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="contactId" />
+			<result property="contactName" column="ContactName" />
+			<result property="cellphone" column="Cellphone" />
+			<result property="telephone" column="Telephone"/>
+		</association>
+		<association property="employeeEntity"
+			javaType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+			<id property="id" column="employeeId" />
+			<result property="empName" column="empname" />
+		</association>
+	</resultMap>
+	<!--修改查询映射 -->
+	<resultMap
+		type="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity" id="chatsBasicMap">
+		<id property="id" column="chatsId" />
+		<result property="chatStartTime" column="chatStartTime" />
+		<result property="chatEndTime" column="chatEndTime" />
+		<result property="chatType" column="chatType" />
+		<result property="comTierEmpCode" column="comTierEmpCode" />
+		<result property="comRoadEmpCode" column="comRoadEmpCode" />
+		<result property="comRegionsEmpCode" column="comRegionsEmpCode" />
+		<result property="comBusinessEmpCode" column="comBusinessEmpCode" />
+		<result property="comOdEmpCode" column="comOdEmpCode" />
+		<result property="comCeoEmpCode" column="comCeoEmpCode" />
+		<result property="teamManagerEmpCode" column="teamManagerEmpCode" />
+		<result property="saleManEmpCode" column="saleManEmpCode" />
+		<result property="reserveAddress" column="reserveAddress"/>
+		<result property="chatTheme" column="chatTheme" />
+		<result property="chatContents" column="chatContents" />
+		<result property="active" column="active"/>
+		<association property="customerEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="accountId" />
+			<result property="enterpriseName" column="enterpriseName" />
+			<result property="detailedAddress" column="DetailedAddress" />
+			<result property="tierCode" column="tierCode"/>
+			<result property="manageEmpCode" column="manageEmpCode"/>
+			<result property="managePerson" column="managePerson"/>
+		</association>
+		<association property="contactEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="contactId" />
+			<result property="contactName" column="ContactName" />
+			<result property="cellphone" column="Cellphone" />
+			<result property="telephone" column="Telephone"/>
+		</association>
+		<association property="reserveEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleReserveEntity">
+			<id property="id" column="reserveId" />
+			<result property="reserveStartTime" column="reserveStartTime"/>
+			<result property="reserveTheme" column="reserveTheme"/>
+		</association>
+		<association property="sign" javaType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+			    <id property="id" column="signId"/>
+			    <result property="signAddress" column="signAddress"/>
+			    <collection property="signAccopmanyList" resultMap="signAccompanyMap"/>
+		</association>
+	</resultMap>
+	<!--详情查询 map,客户表,联系人表,预约表,员工信息表映射 -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.vo.SaleChatsVo"
+		id="chatsDetailMap">
+		<id property="id" column="chatsId" />
+		<result property="tierEmpName" column="tierEmpName" />
+		<result property="roadEmpName" column="roadEmpName" />
+		<result property="regionsEmpName" column="regionsEmpName" />
+		<result property="businessUnitEmpName" column="businessEmpName" />
+		<result property="odEmpName" column="odEmpName" />
+		<result property="ceoEmpName" column="ceoEmpName" />
+		<result property="teamManagerEmpName" column="teamManagerEmpName" />
+		<result property="saleManEmpName" column="saleManEmpName" />
+		<result property="reserveInfo" column="reserveInfo"/>
+		<association property="chatsEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity">
+			<id property="id" column="chatsId" />
+			<result property="chatStartTime" column="chatStartTime" />
+			<result property="chatEndTime" column="chatEndTime" />
+			<result property="chatType" column="chatType" />
+			<result property="reserveAddress" column="reserveAddress"/>
+			<result property="chatTheme" column="chatTheme" />
+			<result property="chatContents" column="chatContents" />
+			<result property="createDate" column="createDate" />
+			<association property="customerEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="EnterpriseName" />
+				<result property="detailedAddress" column="DetailedAddress" />
+			</association>
+			<association property="contactEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="ContactName" />
+				<result property="cellphone" column="Cellphone" />
+				<result property="telephone" column="Telephone"/>
+			</association>
+			<association property="sign"
+				javaType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+				<id property="id" column="signId" />
+				<result property="customerName" column="signEmpName" />
+				<result property="imgName" column="imgName" />
+				<result property="imgUrl" column="imgUrl"/>
+				<result property="signAddress" column="signAddress"/>
+				<result property="createDate" column="signDatetime"/>
+				<collection property="signAccopmanyList" resultMap="signAccompanyMap"/>
+			</association>
+		</association>
+	</resultMap>
+	<!--签到陪同人员  -->
+	<resultMap type="com.hoau.crm.module.bse.api.shared.domain.SignAccompanyEntity" id="signAccompanyMap">
+	    <id property="id" column="accompanyId"/>
+	    <result property="scanAccompanyEmpCode" column="scanAccompanyEmpCode"/>
+	    <result property="scanAccompanyEmpName" column="scanAccompanyEmpName"/>
+	</resultMap>
+	
+	<!--洽谈记录导出map -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.vo.SaleChatsVo"
+		id="chatsDetailExportMap">
+		<id property="id" column="chatsId" />
+		<result property="tierEmpName" column="tierEmpName" />
+		<result property="roadEmpName" column="roadEmpName" />
+		<result property="regionsEmpName" column="regionsEmpName" />
+		<result property="businessUnitEmpName" column="businessEmpName" />
+		<result property="odEmpName" column="odEmpName" />
+		<result property="ceoEmpName" column="ceoEmpName" />
+		<result property="teamManagerEmpName" column="teamManagerEmpName" />
+		<result property="saleManEmpName" column="saleManEmpName" />
+		<result property="reserveInfo" column="reserveInfo"/>
+		<result property="signInfo" column="signInfo"/>
+		<result property="dcAccount" column="dcAccount" />
+		<result property="oneLevelUnit" column="oneLevelUnit" />
+		<result property="twoLevelUnit" column="twoLevelUnit" />
+		<result property="threeLevelUnit" column="threeLevelUnit" />
+		<association property="chatsEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity">
+			<id property="id" column="chatsId" />
+			<result property="chatStartTime" column="chatStartTime" />
+			<result property="chatEndTime" column="chatEndTime" />
+			<result property="chatType" column="chatType" />
+			<result property="reserveAddress" column="reserveAddress"/>
+			<result property="chatTheme" column="chatTheme" />
+			<result property="chatContents" column="chatContents" />
+			<result property="createDate" column="createDate" />
+			<result property="platform" column="platform"/>
+			<association property="customerEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="EnterpriseName" />
+				<result property="detailedAddress" column="DetailedAddress" />
+			</association>
+			<association property="contactEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="ContactName" />
+				<result property="cellphone" column="Cellphone" />
+				<result property="telephone" column="Telephone"/>
+			</association>
+			<association property="employeeEntity"
+				javaType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+				<id property="id" column="employeeId" />
+				<result property="empName" column="empname" />
+				<result property="empCode" column="empCode" />
+				<result property="jobname" column="jobname" />
+				<result property="deptname" column="deptName" />
+			</association>
+		</association>
+	</resultMap>
+	<!-- 判断是否部门负责人 -->
+	<select id="isDeptManeger" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_org_department
+			WHERE MANAGERID = #{empCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 查询洽谈信息用于记录导出  -->
+	<select id="getChatsInfoToExport" parameterType="map" resultMap="chatsDetailExportMap">
+		<![CDATA[
+					select
+				]]>
+				<include refid="queryDetailByExport" />
+				<![CDATA[
+					from t_sale_chats tsc
+					left join t_crm_account tca on tsc.account_id = tca.id
+					left join t_crm_contact tcc on tsc.contact_id = tcc.id
+					left join t_sale_reserve tsr on tsc.relation_reserve_id = tsr.id
+					left join t_org_employee tier on tsc.com_tier_emp_code = tier.empcode
+					left join t_org_employee road on tsc.com_road_emp_code = road.empcode
+					left join t_org_employee regions on tsc.com_regions_emp_code = regions.empcode
+					left join t_org_employee business on tsc.com_business_emp_code = business.empcode
+					left join t_org_employee od on tsc.com_od_emp_code = od.empcode
+					left join t_org_employee ceo on tsc.com_ceo_emp_code = ceo.empcode
+					left join t_org_employee team on tsc.team_manager_emp_code = team.empcode
+					left join t_org_employee sale on tsc.sale_man_emp_code = sale.empcode
+					left join t_org_employee toe on toe.empcode = tsc.create_user
+					left join t_org_department d1 on tsc.create_deptcode = d1.deptcode
+					left join t_org_department d2 on d1.supdeptcode = d2.deptcode
+					left join t_org_department d3 on d2.supdeptcode = d3.deptcode
+					left join t_org_department d4 on d3.supdeptcode = d4.deptcode
+				]]>
+		<where>
+			tsc.active = 'Y'
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+			<!-- 门店代码 -->
+			<if test="tierCode != null and tierCode != ''">
+				and tca.tierCode = #{tierCode}
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!-- 洽谈开始时间 -->
+			<if test="chatStartTime != null and chatStartTime != '' ">
+					<![CDATA[
+						and tsc.chat_start_time >= #{chatStartTime}
+					]]>
+			</if>
+			<!-- 洽谈结束时间 -->
+			<if test="chatEndTime != null and chatEndTime != ''">
+					<![CDATA[
+						and tsc.chat_start_time < #{chatEndTime}
+					]]>
+			</if>
+			<!-- 洽谈方式 -->
+			<if test="chatType != null and chatType != ''">
+				and tsc.chat_type = #{chatType}
+			</if>
+			<!--创建人名称  -->
+			<if test="createUserName != null and createUserName != ''">
+				and toe.empname like #{createUserName}
+			</if>
+			<if test="empCode != null and empCode !='' ">
+				<![CDATA[
+					AND (
+						tsc.CREATE_USER = #{empCode,jdbcType=VARCHAR}
+					)
+				]]>
+			</if>
+			<if test="deptCode !=null and deptCode !=''">
+				<![CDATA[
+					AND EXISTS (SELECT
+						1
+					FROM
+						t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+					WHERE
+						(
+							V.FOUR_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.THREE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.TWO_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.ONE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						) and tsc.create_user = e.empcode)
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<!--更新客户性质  -->
+	<update id="updateCustomerType" parameterType="map">
+	    update 
+	    t_crm_account 
+	    set AccountType = #{accountType},
+	    ModifiedOn = SYSDATE(),
+	    ModifiedBy = 'sysadmin' 
+	    WHERE id = #{accountId} 
+	</update>
+	
+	<!-- 随机洽谈记录MAP -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.domain.SaleChatRandomEntity" id="randomChatResultMap">
+		<id property="id" column="ID" />
+		<result property="customerName" column="CUSTOMERNAME"/>
+		<result property="cellphone" column="CELLPHONE"/>
+		<result property="chatStartTime" column="CHATSTARTTIME" javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="chatType" column="CHATTYPE"/>
+		<result property="chatContent" column="CHATCONTENT"/>
+		<result property="createUserEmp" column="CREATEUSEREMP"/>
+		<result property="createUserName" column="CREATEUSERNAME"/>
+		<result property="createUserDept" column="CREATEUSERDEPT"/>
+		<result property="oneLevelUnit" column="ONELEVELUNIT"/>
+		<result property="twoLevelUnit" column="TWOLEVELUNIT"/>
+		<result property="threeLevelUnit" column="THREELEVELUNIT"/>
+		<result property="status" column="STATUS"/>
+		<result property="checkResult" column="CHECKRESULT"/>
+		<result property="createUser" column="CREATEUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATEDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFYUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFYDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+	</resultMap>
+	
+	<!-- 分页查询随机洽谈记录 -->
+	<select id="getSaleChatRandomInfos" parameterType="map" resultMap="randomChatResultMap">
+		<![CDATA[
+			SELECT
+				CHAT.ID,
+				CHAT.CUSTOMERNAME,
+				CHAT.CELLPHONE,
+				CHAT.CHATSTARTTIME,
+				CHAT.CHATTYPE,
+				CHAT.CHATCONTENT,
+				CHAT.CREATEUSEREMP,
+				CHAT.CREATEUSERNAME,
+				CHAT.CREATEUSERDEPT,
+				CHAT.ONELEVELUNIT,
+				CHAT.TWOLEVELUNIT,
+				CHAT.THREELEVELUNIT,
+				CHAT.STATUS,
+				CHAT.CHECKRESULT,
+				CHAT.CREATEUSER,
+				CHAT.CREATEDATE,
+				CHAT.MODIFYUSER,
+				CHAT.MODIFYDATE
+			FROM t_sale_chats_random CHAT
+		]]>
+		<where>
+			CHAT.ACTIVE = 'Y'
+			<if test="customerName != null and customerName != ''">
+			    AND CHAT.CUSTOMERNAME like #{customerName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+			    AND CHAT.CELLPHONE = #{cellphone}
+			</if>
+			<if test="startDate != null and startDate != ''">
+			   <![CDATA[
+			    AND CHAT.CREATEDATE >= #{startDate}
+			    ]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+			     <![CDATA[
+			    AND CHAT.CREATEDATE < #{endDate}
+			    ]]>
+			</if>
+			<if test="chatType != null and chatType != ''">
+			    AND CHAT.CHATTYPE = #{chatType}
+			</if>
+			<if test="status != null and status != ''">
+			    AND CHAT.STATUS = #{status}
+			</if>
+			<if test="createUserName != null and createUserName != ''">
+			    AND CHAT.CREATEUSERNAME = #{createUserName}
+			</if>
+			<if test="createUserDept != null and createUserDept != ''">
+			    AND CHAT.CREATEUSERDEPT = #{createUserDept}
+			</if>
+								
+			<if test="deptCode != null and deptCode != ''">
+				<![CDATA[
+					AND (CREATEUSERDEPTCODE = #{deptCode} OR ONELEVELUNITCODE = #{deptCode} 
+						OR TWOLEVELUNITCODE = #{deptCode} OR THREELEVELUNITCODE = #{deptCode})
+				]]>
+			</if>
+		</where>
+		ORDER BY CHAT.STATUS,CHAT.createDate DESC
+	</select>
+	
+	<!-- 统计查询随机洽谈记录 -->
+	<select id="countSaleChatRandomInfos" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+				COUNT(1)
+			FROM t_sale_chats_random CHAT
+		]]>
+		<where>
+			CHAT.ACTIVE = 'Y'
+			<if test="customerName != null and customerName != ''">
+			    AND CHAT.CUSTOMERNAME like #{customerName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+			    AND CHAT.CELLPHONE = #{cellphone}
+			</if>
+			<if test="startDate != null and startDate != ''">
+			   <![CDATA[
+			    AND CHAT.CREATEDATE >= #{startDate}
+			    ]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+			     <![CDATA[
+			    AND CHAT.CREATEDATE < #{endDate}
+			    ]]>
+			</if>
+			<if test="chatType != null and chatType != ''">
+			    AND CHAT.CHATTYPE = #{chatType}
+			</if>
+			<if test="status != null and status != ''">
+			    AND CHAT.STATUS = #{status}
+			</if>
+			<if test="createUserName != null and createUserName != ''">
+			    AND CHAT.CREATEUSERNAME = #{createUserName}
+			</if>
+			<if test="createUserDept != null and createUserDept != ''">
+			    AND CHAT.CREATEUSERDEPT = #{createUserDept}
+			</if>
+								
+			<if test="deptCode != null and deptCode != ''">
+				<![CDATA[
+					AND (CREATEUSERDEPTCODE = #{deptCode} OR ONELEVELUNITCODE = #{deptCode} 
+						OR TWOLEVELUNITCODE = #{deptCode} OR THREELEVELUNITCODE = #{deptCode})
+				]]>
+			</if>
+		</where>
+		ORDER BY CHAT.STATUS,CHAT.createDate ASC
+	</select>
+	<!--按id查询  -->
+	<select id="queryChatsRandomById" parameterType="string" resultType="com.hoau.crm.module.sales.api.shared.domain.SaleChatRandomEntity">
+	   		SELECT
+				CHAT.ID,
+				CHAT.CUSTOMERNAME,
+				CHAT.CHATCONTENT,
+				CHAT.STATUS,
+				CHAT.CHECKRESULT
+			FROM T_SALE_CHATS_RANDOM CHAT
+			WHERE ID = #{id}
+	</select>
+	<!-- 更新抽查结果 -->
+	<update id="updateCheckResult" parameterType="map">
+		<![CDATA[
+			UPDATE t_sale_chats_random SET
+			STATUS = #{status},
+			CHECKRESULT = #{checkResult},
+			MODIFYUSER = #{modifyUser},
+			MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			id in
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 统计总数(导出) -->
+	<select id="countChatsInfoToExport" parameterType="map" resultType="long">
+		<![CDATA[
+					select count(1)
+				]]>
+				<![CDATA[
+					from t_sale_chats tsc
+					left join t_crm_account tca on tsc.account_id = tca.id
+					left join t_crm_contact tcc on tsc.contact_id = tcc.id
+					left join t_sale_reserve tsr on tsc.relation_reserve_id = tsr.id
+					left join t_org_employee tier on tsc.com_tier_emp_code = tier.empcode
+					left join t_org_employee road on tsc.com_road_emp_code = road.empcode
+					left join t_org_employee regions on tsc.com_regions_emp_code = regions.empcode
+					left join t_org_employee business on tsc.com_business_emp_code = business.empcode
+					left join t_org_employee od on tsc.com_od_emp_code = od.empcode
+					left join t_org_employee ceo on tsc.com_ceo_emp_code = ceo.empcode
+					left join t_org_employee team on tsc.team_manager_emp_code = team.empcode
+					left join t_org_employee sale on tsc.sale_man_emp_code = sale.empcode
+					left join t_org_employee toe on toe.empcode = tsc.create_user
+					left join t_org_department d1 on tsc.create_deptcode = d1.deptcode
+					left join t_org_department d2 on d1.supdeptcode = d2.deptcode
+					left join t_org_department d3 on d2.supdeptcode = d3.deptcode
+					left join t_org_department d4 on d3.supdeptcode = d4.deptcode
+				]]>
+		<where>
+			tsc.active = 'Y'
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				and tca.EnterpriseName like #{enterpriseName}
+			</if>
+			<!-- 门店代码 -->
+			<if test="tierCode != null and tierCode != ''">
+				and tca.tierCode = #{tierCode}
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName != ''">
+				and tcc.ContactName like #{contactName}
+			</if>
+			<!-- 洽谈开始时间 -->
+			<if test="chatStartTime != null and chatStartTime != '' ">
+				<![CDATA[
+					and tsc.chat_start_time >= #{chatStartTime}
+				]]>
+			</if>
+			<!-- 洽谈结束时间 -->
+			<if test="chatEndTime != null and chatEndTime != ''">
+				<![CDATA[
+					and tsc.chat_start_time < #{chatEndTime}
+				]]>
+			</if>
+			<!-- 洽谈方式 -->
+			<if test="chatType != null and chatType != ''">
+				and tsc.chat_type = #{chatType}
+			</if>
+			<!--创建人名称  -->
+			<if test="createUserName != null and createUserName != ''">
+				and toe.empname like #{createUserName}
+			</if>
+			<if test="empCode != null and empCode !='' ">
+				<![CDATA[
+					AND (
+						tsc.CREATE_USER = #{empCode,jdbcType=VARCHAR}
+					)
+				]]>
+			</if>
+			<if test="deptCode !=null and deptCode !=''">
+				<![CDATA[
+					AND EXISTS (SELECT
+						1
+					FROM
+						t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+					WHERE
+						(
+							V.FOUR_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.THREE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.TWO_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+							OR V.ONE_LEVEL_DEPTCODE = #{deptCode,jdbcType=VARCHAR}
+						) and tsc.create_user = e.empcode)
+				]]>
+			</if>
+		</where>
+	</select>
+	
+</mapper>

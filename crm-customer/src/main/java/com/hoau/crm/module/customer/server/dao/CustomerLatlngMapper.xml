@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.CustomerLatlngMapper">
+	<!-- 新增客户坐标信息 -->
+	<insert id="addCustomerLatlngInfo" parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerLatlngEntity">
+		<![CDATA[
+			INSERT INTO t_crm_customer_latlng(
+			id,
+			type,
+			customerId,
+			lng,
+			lat,
+			precise,
+			confidence
+		) VALUES(
+			#{id,jdbcType=VARCHAR},
+			#{type,jdbcType=VARCHAR},
+			#{customerId,jdbcType=VARCHAR},
+			#{lng,jdbcType=DOUBLE},
+			#{lat,jdbcType=DOUBLE},
+			#{precise,jdbcType=VARCHAR},
+			#{confidence,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+	<insert id="addBatchCustomerLatlng" parameterType="java.util.List">
+	  insert into t_crm_customer_latlng ( id, type, lng,lat ,customerId,precise,confidence) values
+	  <foreach collection="list" item="item" index="index"
+	  separator=",">
+	  ( #{item.id}, #{item.type}, #{item.lng},#{item.lat},#{item.customerId},#{item.precise},#{item.confidence} )
+  </foreach>
+  </insert>
+  
+  <delete id="delCustomerLatlngInfo" parameterType="String">
+		<![CDATA[
+		delete from t_crm_customer_latlng where customerId = #{customerId,jdbcType=VARCHAR}
+		]]>
+	</delete>
+	
+	
+		
+	<select id="countCustomer" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_account a where not EXISTS (select customerid from t_crm_customer_latlng l where type = '1' and l.customerid = a.id) and a.ACTIVE = 'Y' and a.detailedAddress is not null
+		]]>
+	</select>
+	
+	<resultMap id="customerResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="id" />
+		<result property="detailedAddress" column="detailedAddress" />
+	</resultMap>
+	
+	<!-- 初始化客户信息 -->
+	<select id="getinitializeCustomerLatLng" parameterType="map" resultMap="customerResultMap">
+		<![CDATA[
+			select id,convert(AES_DECRYPT(UNHEX(detailedAddress),'CRM') using utf8) as detailedAddress   from t_crm_account a where not EXISTS (select customerid from t_crm_customer_latlng l where type = '1' and l.customerid = a.id) and a.detailedAddress is not null and a.ACTIVE = 'Y' ORDER BY CREATEDON DESC LIMIT #{start},#{end}
+		]]>
+	</select>
+	
+	<resultMap id="customerLatlngResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerLatlngEntity">
+		<id property="id" column="id" />
+		<result property="lat" column="lat" />
+		<result property="lng" column="lng" />
+		<result property="type" column="type" />
+		<result property="customerId" column="customerId" />
+		<result property="managePerson" column="managePerson" />
+		<result property="enterpriseName" column="enterpriseName" />
+		<result property="detailedAddress" column="detailedAddress" />
+		<result property="cellphone" column="cellphone" />
+		<result property="districtNumber" column="districtNumber" />
+		<result property="telephone" column="telephone" />
+		<result property="contactName" column="ContactName" />
+		<!-- <association property="customerEntity" column="aid"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="ID" />
+			<result property="enterpriseName" column="enterpriseName" />
+			<result property="detailedAddress" column="detailedAddress" />
+			<result property="managePerson" column="managePerson" />
+			<result property="RegionsCode" column="RegionsCode" />
+			<result property="accountType" column="accountType" />
+			<association property="customerEntity.contactEntity" column="cid"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="ID" />
+				<result property="ContactName" column="ContactName" />
+				<result property="Cellphone" column="Cellphone" />
+			</association>
+		</association> -->
+	</resultMap>
+	
+	<!-- 获得附近10公里客户 -->
+	<select id="getNearCustomerScopeLatLng" parameterType="map" resultMap="customerLatlngResultMap">
+		<![CDATA[
+			SELECT
+				l.*, a.enterpriseName,
+				convert(AES_DECRYPT(UNHEX(a.DetailedAddress),'CRM') using utf8) as detailedAddress,
+				a.managePerson,
+				a.RegionsCode,
+				a.accountType,
+				a.id AS aid,
+				convert(AES_DECRYPT(UNHEX(c.Cellphone),'CRM') using utf8) AS cellphone,
+				c.ContactName,
+				c.districtNumber,
+				convert(AES_DECRYPT(UNHEX(c.telephone),'CRM') using utf8) AS telephone,
+				c.id AS cid
+			FROM
+				t_crm_customer_latlng l
+				LEFT JOIN t_crm_account a ON (l.customerId = a.id and a.active='Y')
+				LEFT JOIN t_crm_contact c ON (c.AccountId = a.id and  c.ISDEFAULT = 'Y')
+			]]>
+			<where>
+				<![CDATA[
+					l.type = '1' AND lng > #{minLat} 
+					AND lng < #{maxLat} 
+					AND lat > #{minLng}
+					AND lat < #{maxLng}
+					AND a.isCustomerResourcePool = '0'
+				]]>	
+			<if test="userDeptcode !=null and userDeptcode !=''">
+					<![CDATA[
+						AND ((a.TIERCODE IN (
+							SELECT v.logistcode 
+							FROM v_org_storedepartment v 
+							WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+									OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+							)
+							OR ( a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+								OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+							))
+					]]>
+				</if>
+				<if test="roadDeptcode !=null and roadDeptcode !=''">
+					<![CDATA[
+						AND (((a.TIERCODE IN (
+							SELECT v.logistcode 
+							FROM v_org_storedepartment v 
+							WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+									OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+							)
+							OR ( a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+								OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+							)) AND a.customerOfOrg = '0')
+					]]>
+				</if>
+				<if test="salePerson != null and salePerson !=''">
+					<![CDATA[
+						AND a.MANAGEEMPCODE = #{salePerson}
+					]]>
+				</if>
+				<if test="newStoreData != null and newStoreData != ''">
+					<![CDATA[
+						AND a.customerOfOrg = '1'
+					]]>
+				</if>
+				<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+					<![CDATA[
+						AND ((a.ACCOUNTRATINGCODE = '1') OR (
+							a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+								OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+						))
+					]]>
+				</if>
+				<if test="storeAuth != null and storeAuth !=''">
+					<![CDATA[
+						AND (a.TIERCODE = #{storeAuth} and a.customerOfOrg = '0')
+					]]>
+				</if>
+				<if test="customerManage != null and customerManage != ''">
+					<![CDATA[
+						AND ((
+							a.ACCOUNTRATINGCODE != '1'
+						) AND (
+							a.MANAGEEMPCODE NOT IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+								OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+							
+						) AND (
+							a.customerOfOrg = '0'
+						))
+					]]>
+				</if>
+			</where>
+		<![CDATA[
+			ORDER BY
+				(ROUND(((ACOS(
+					SIN((#{lng} * 3.1415) / 180) * SIN((lat * 3.1415) / 180) + COS((#{lng} * 3.1415) / 180) * COS((lat * 3.1415) / 180) * COS(
+						(#{lat} * 3.1415) / 180 - (lng * 3.1415) / 180
+					)
+				) * 6380) * 1000),2)) ASC limit 0,200
+		]]>
+	</select>
+	
+	<select id="getCustomerGroupCount" resultType="com.hoau.crm.module.customer.api.shared.domain.CustomerGroupEntity">
+		<![CDATA[
+			select count,lat,lng from t_crm_customer_heatmap where count > 0
+		]]>
+	</select>
+	
+	<select id="getCustomerHeatMapOutPut" resultType="com.hoau.crm.module.customer.api.shared.domain.CustomerGroupEntity">
+		<![CDATA[
+			select outputcount as count,lat,lng from t_crm_customer_heatmap where outputcount > 0
+		]]>
+	</select>
+	
+</mapper>

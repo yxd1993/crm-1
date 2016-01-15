@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.SequenceNoMapper">
+	
+	<!-- 查询 -->
+	<select id="query" parameterType="String" 
+		resultType="com.hoau.crm.module.customer.api.shared.domain.SequenceNoEntity">
+		<![CDATA[
+			SELECT
+				ID,
+				TYPE,
+				TIME,
+				SEQNO,
+				CREATE_USER AS CREATEUSER,
+				CREATE_DATE AS CREATEDATE,
+				MODIFY_USER AS MODIFYUSER,
+				MODIFY_DATE AS MODIFYDATE,
+				ACTIVE
+			FROM t_data_sequence
+			WHERE TYPE=#{businessType,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 修改 -->
+	<update id="updateSeqNo" parameterType="com.hoau.crm.module.customer.api.shared.domain.SequenceNoEntity">
+		<![CDATA[
+			UPDATE t_data_sequence SET
+				TIME = #{time,jdbcType=TIMESTAMP},
+				SEQNO = ${seqNo},
+				MODIFY_USER = 'sysadmin',
+				MODIFY_DATE = NOW()
+			WHERE ID = #{id,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 锁表 -->
+	<update id="lockWfno" parameterType="String">
+		<![CDATA[
+			UPDATE t_data_sequence SET
+				SEQNO = SEQNO+1
+			WHERE TYPE = #{type,jdbcType=VARCHAR}
+		]]>
+	</update>
+</mapper>

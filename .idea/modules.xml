@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/crm.iml" filepath="$PROJECT_DIR$/crm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-app-core/crm-app-core.iml" filepath="$PROJECT_DIR$/crm-app-core/crm-app-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-app-itf/crm-app-itf.iml" filepath="$PROJECT_DIR$/crm-app-itf/crm-app-itf.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-bse/crm-bse.iml" filepath="$PROJECT_DIR$/crm-bse/crm-bse.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-bse-api/crm-bse-api.iml" filepath="$PROJECT_DIR$/crm-bse-api/crm-bse-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-common/crm-common.iml" filepath="$PROJECT_DIR$/crm-common/crm-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-config/crm-config.iml" filepath="$PROJECT_DIR$/crm-config/crm-config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-customer/crm-customer.iml" filepath="$PROJECT_DIR$/crm-customer/crm-customer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-job/crm-job.iml" filepath="$PROJECT_DIR$/crm-job/crm-job.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-login/crm-login.iml" filepath="$PROJECT_DIR$/crm-login/crm-login.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-news/crm-news.iml" filepath="$PROJECT_DIR$/crm-news/crm-news.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-news-web/crm-news-web.iml" filepath="$PROJECT_DIR$/crm-news-web/crm-news-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-sales/crm-sales.iml" filepath="$PROJECT_DIR$/crm-sales/crm-sales.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-util/crm-util.iml" filepath="$PROJECT_DIR$/crm-util/crm-util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/crm-web/crm-web.iml" filepath="$PROJECT_DIR$/crm-web/crm-web.iml" />
+    </modules>
+  </component>
+</project>

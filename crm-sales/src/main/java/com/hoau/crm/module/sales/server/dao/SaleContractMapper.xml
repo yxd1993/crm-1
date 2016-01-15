@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.SaleContractMapper">
+
+	<!-- 销售合同详细信息MAP -->
+	<resultMap
+		type="com.hoau.crm.module.sales.api.shared.domain.SaleContractEntity"
+		id="saleContractDetailMap">
+		<result property="id" column="CONTRACT_ID" />
+		<result property="status" column="CONTRACT_STATUS" />
+		<result property="title" column="CONTRACT_TITLE" />
+		<result property="workflowExplain" column="CONTRACT_WORkFLOWEXPLAIN" />
+		<result property="emergencyDegree" column="CONTRACT_EMERGENCYDEGREE" />
+		<result property="workflowCode" column="CONTRACT_WORKFLOWCODE" />
+		<result property="applyDate" column="CONTRACT_APPLYDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="applyUser" column="CONTRACT_APPLYUSER" />
+		<result property="applyUserEmpCode" column="CONTRACT_APPLYUSEREMPCODE" />
+		<result property="applyUserJobName" column="CONTRACT_APPLYUSERJOBNAME" />
+		<result property="applyUserDeptName" column="CONTRACT_APPLYUSERDEPTNAME" />
+		<result property="applyUserDeclareName" column="CONTRACT_APPLYUSERDECLARENAME" />
+		<result property="applyUserLogisticCode" column="CONTRACT_APPLYUSERLOGISTICCODE" />
+		<result property="roadAreaCode" column="CONTRACT_ROADAREACODE" />
+		<result property="regionsCode" column="CONTRACT_REGIONSCODE" />
+		<result property="businessUnitCode" column="CONTRACT_BUSINESSUNITCODE" />
+		<result property="financeRegionsCode" column="CONTRACT_FINANCEREGIONSCODE" />
+		<result property="contractAdmin" column="CONTRACT_CONTRACTADMIN" />
+		<result property="ifSaleManager" column="CONTRACT_IFSALEMANAGER" />
+		<result property="processType" column="CONTRACT_PROCESSTYPE" />
+		<result property="contractVersion" column="CONTRACT_CONTRACTVERSION" />
+		<result property="signAttribute" column="CONTRACT_SIGNATTRIBUTE" />
+		<result property="dcAccount" column="CONTRACT_DCACCOUNT" />
+		<result property="enterpriseName" column="CONTRACT_ENTERPRISENAME" />
+		<result property="customerNature" column="CONTRACT_CUSTOMERNATURE" />
+		<result property="industryCode" column="CONTRACT_INDUSTRYCODE" />
+		<result property="mainGoodsName" column="CONTRACT_MAINGOODSNAME" />
+		<result property="typeOfPackage" column="CONTRACT_TYPEOFPACKAGE" />
+		<result property="ddMonthCount" column="CONTRACT_DDMONTHCOUNT" />
+		<result property="ddDiscount" column="CONTRACT_DDDISCOUNT" />
+		<result property="duDiscount" column="CONTRACT_DUDISCOUNT" />
+		<result property="lowestValuationFee" column="CONTRACT_LOWESTVALUATIONFEE" />
+		<result property="insuranceRate" column="CONTRACT_INSURANCERATE" />
+		<result property="cargoServiceAgreement" column="CONTRACT_CARGOSERVICEAGREEMENT" />
+		<result property="lowestDeliveryFee" column="CONTRACT_LOWESTDELIVERYFEE" />
+		<result property="lowestShippingFee" column="CONTRACT_LOWESTSHIPPINGFEE" />
+		<result property="agreedDelivery" column="CONTRACT_AGREEDDELIVERY" />
+		<result property="expense" column="CONTRACT_EXPENSE" />
+		<result property="informationCost" column="CONTRACT_INFORMATIONCOST" />
+		<result property="lowestFuel" column="CONTRACT_LOWESTFUEL" />
+		<result property="serviceAgreement" column="CONTRACT_SERVICEAGREEMENT" />
+		<result property="contractStartDate" column="CONTRACT_CONTRACTSTARTDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="contractEndDate" column="CONTRACT_CONTRACTENDDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="ifCod" column="CONTRACT_IFCOD" />
+		<result property="collectionChargesMin" column="CONTRACT_COLLECTIONCHARGESMIN" />
+		<result property="chargeRateMin" column="CONTRACT_CHARGERATEMIN" />
+		<result property="paymentMethod" column="CONTRACT_PAYMENTMETHOD" />
+		<result property="accountDescribe" column="CONTRACT_ACCOUNTDESCRIBE" />
+		<result property="provideContractVersion" column="CONTRACT_PROVIDECONTRACTVERSION" />
+		<result property="ifHaveNonstandardContractTerm" column="CONTRACT_IFHAVENONSTANDARDCONTRACTTERM" />
+		<result property="ifHaveNonstandardOperatTerm" column="CONTRACT_IFHAVENONSTANDARDOPERATTERM" />
+		<result property="ifOpenOnlineOrder" column="CONTRACT_IFOPENONLINEORDER" />
+		<result property="oldDdDiscount" column="CONTRACT_OLDDDDISCOUNT" />
+		<result property="oldDuDiscount" column="CONTRACT_OLDDUDISCOUNT" />
+		<result property="oldInsuranceRate" column="CONTRACT_OLDINSURANCERATE" />
+		<result property="oldLowestValuationFee" column="CONTRACT_OLDLOWESTVALUATIONFEE" />
+		<result property="oldLowestDeliveryFee" column="CONTRACT_OLDLOWESTDELIVERYFEE" />
+		<result property="oldLowestShippingFee" column="CONTRACT_OLDLOWESTSHIPPINGFEE" />
+		<result property="oldExpense" column="CONTRACT_OLDEXPENSE" />
+		<result property="oldInformationCost" column="CONTRACT_OLDINFORMATIONCOST" />
+		<result property="oldLowestFuel" column="CONTRACT_OLDLOWESTFUEL" />
+		<result property="oldChargeRateMin" column="CONTRACT_OLDCHARGERATEMIN" />
+		<result property="applyInstruction" column="CONTRACT_APPLYINSTRUCTION" />
+	</resultMap>
+
+	<!-- 销售合同基本信息MAP -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.vo.SaleContractVo"
+		id="saleContractBaseMap">
+		<result property="id" column="CONTRACT_ID" />
+		<result property="crmAccount" column="CONTRACT_CRMACCOUNT" />
+		<result property="dcAccount" column="CONTRACT_DCACCOUNT" />
+		<result property="status" column="CONTRACT_STATUS" />
+		<result property="url" column="CONTRACT_URL" />
+		<result property="enterpriseName" column="CONTRACT_ENTERPRISENAME" />
+		<result property="contractStartDate" column="CONTRACT_CONTRACTSTARTDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="contractEndDate" column="CONTRACT_CONTRACTENDDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="workflowCode" column="CONTRACT_WORKFLOWCODE" />
+		<result property="applyDate" column="CONTRACT_APPLYDATE"
+			jdbcType="TIMESTAMP" />
+		<result property="createUser" column="CONTRACT_CREATE_USER" />
+		<result property="createDate" column="CONTRACT_CREATE_DATE"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="CONTRACT_MODIFY_USER" />
+		<result property="modifyDate" column="CONTRACT_MODIFY_DATE"
+			jdbcType="TIMESTAMP" />
+		<result property="fileDate" column="CONTRACT_FILE_DATE"
+			jdbcType="TIMESTAMP" />
+		<result property="applyUserDeclareName" column="CONTRACT_APPLYUSERDECLARENAME" />
+		<result property="road" column="CONTRACT_ROADAREACODE" />
+		<result property="regions" column="CONTRACT_REGIONSCODE" />
+		<result property="businessUnit" column="CONTRACT_BUSINESSUNITCODE" />
+	</resultMap>
+
+	<!-- 新增销售合同基本信息 -->
+	<insert id="addContractBaseInfo"
+		parameterType="com.hoau.crm.module.sales.api.shared.vo.SaleContractVo">
+		<![CDATA[
+			INSERT INTO t_sale_contract(
+				ID,
+				CRMACCOUNT,
+				DCACCOUNT,
+				STATUS,
+				ENTERPRISENAME,
+				WORKFLOWCODE,
+				URL,
+				CREATE_USER,
+				CREATE_DATE,
+				ACTIVE
+			)
+			VALUES(
+				UUID(),
+				#{crmAccount,jdbcType=VARCHAR},
+				#{dcAccount,jdbcType=VARCHAR},
+				#{status,jdbcType=VARCHAR},
+				#{enterpriseName,jdbcType=VARCHAR},
+				#{workflowCode,jdbcType=VARCHAR},
+				#{url,jdbcType=VARCHAR},
+				#{createUser,jdbcType=VARCHAR},
+				SYSDATE(),
+				'Y'
+			)
+		]]>
+	</insert>
+
+	<!-- 更新销售合同详细信息 -->
+	<update id="updateContractDetailInfo"
+		parameterType="com.hoau.crm.module.sales.api.shared.domain.SaleContractEntity">
+		<![CDATA[
+			UPDATE t_sale_contract CONTRACT SET
+					CONTRACT.STATUS = #{status,jdbcType=VARCHAR},
+					CONTRACT.TITLE = #{title,jdbcType=VARCHAR},
+					CONTRACT.WORkFLOWEXPLAIN = #{workflowExplain,jdbcType=VARCHAR},
+					CONTRACT.EMERGENCYDEGREE = #{emergencyDegree,jdbcType=VARCHAR},
+					CONTRACT.WORKFLOWCODE = #{workflowCode,jdbcType=VARCHAR},
+					CONTRACT.APPLYDATE = #{applyDate,jdbcType=TIMESTAMP},
+					CONTRACT.APPLYUSER = #{applyUser,jdbcType=VARCHAR},
+					CONTRACT.APPLYUSEREMPCODE = #{applyUserEmpCode,jdbcType=VARCHAR},
+					CONTRACT.APPLYUSERJOBNAME = #{applyUserJobName,jdbcType=VARCHAR},
+					CONTRACT.APPLYUSERDEPTNAME = #{applyUserDeptName,jdbcType=VARCHAR},
+					CONTRACT.APPLYUSERDECLARENAME = #{applyUserDeclareName,jdbcType=VARCHAR},
+					CONTRACT.APPLYUSERLOGISTICCODE = #{applyUserLogisticCode,jdbcType=VARCHAR},
+					CONTRACT.ROADAREACODE = #{roadAreaCode,jdbcType=VARCHAR},
+					CONTRACT.REGIONSCODE = #{regionsCode,jdbcType=VARCHAR},
+					CONTRACT.BUSINESSUNITCODE = #{businessUnitCode,jdbcType=VARCHAR},
+					CONTRACT.FINANCEREGIONSCODE = #{financeRegionsCode,jdbcType=VARCHAR},
+					CONTRACT.CONTRACTADMIN = #{contractAdmin,jdbcType=VARCHAR},
+					CONTRACT.IFSALEMANAGER = #{ifSaleManager,jdbcType=VARCHAR},
+					CONTRACT.PROCESSTYPE = #{processType,jdbcType=VARCHAR},
+					CONTRACT.CONTRACTVERSION = #{contractVersion,jdbcType=VARCHAR},
+					CONTRACT.SIGNATTRIBUTE = #{signAttribute,jdbcType=VARCHAR},
+					CONTRACT.DCACCOUNT = #{dcAccount,jdbcType=VARCHAR},
+					CONTRACT.ENTERPRISENAME = #{enterpriseName,jdbcType=VARCHAR},
+					CONTRACT.CUSTOMERNATURE = #{customerNature,jdbcType=VARCHAR},
+					CONTRACT.INDUSTRYCODE = #{industryCode,jdbcType=VARCHAR},
+					CONTRACT.MAINGOODSNAME = #{mainGoodsName,jdbcType=VARCHAR},
+					CONTRACT.TYPEOFPACKAGE = #{typeOfPackage,jdbcType=VARCHAR},
+					CONTRACT.DDMONTHCOUNT = #{ddMonthCount,jdbcType=NUMERIC},
+					CONTRACT.DDDISCOUNT = #{ddDiscount,jdbcType=NUMERIC},
+					CONTRACT.DUDISCOUNT = #{duDiscount,jdbcType=NUMERIC},
+					CONTRACT.LOWESTVALUATIONFEE = #{lowestValuationFee,jdbcType=NUMERIC},
+					CONTRACT.INSURANCERATE = #{insuranceRate,jdbcType=NUMERIC},
+					CONTRACT.CARGOSERVICEAGREEMENT = #{cargoServiceAgreement,jdbcType=NUMERIC},
+					CONTRACT.LOWESTDELIVERYFEE = #{lowestDeliveryFee,jdbcType=NUMERIC},
+					CONTRACT.LOWESTSHIPPINGFEE = #{lowestShippingFee,jdbcType=NUMERIC},
+					CONTRACT.AGREEDDELIVERY = #{agreedDelivery,jdbcType=NUMERIC},
+					CONTRACT.EXPENSE = #{expense,jdbcType=NUMERIC},
+					CONTRACT.INFORMATIONCOST = #{informationCost,jdbcType=NUMERIC},
+					CONTRACT.LOWESTFUEL = #{lowestFuel,jdbcType=NUMERIC},
+					CONTRACT.SERVICEAGREEMENT = #{serviceAgreement,jdbcType=VARCHAR},
+					CONTRACT.CONTRACTSTARTDATE = #{contractStartDate,jdbcType=TIMESTAMP},
+					CONTRACT.CONTRACTENDDATE = #{contractEndDate,jdbcType=TIMESTAMP},
+					CONTRACT.IFCOD = #{ifCod,jdbcType=VARCHAR},
+					CONTRACT.COLLECTIONCHARGESMIN = #{collectionChargesMin,jdbcType=NUMERIC},
+					CONTRACT.CHARGERATEMIN = #{chargeRateMin,jdbcType=NUMERIC},
+					CONTRACT.PAYMENTMETHOD = #{paymentMethod,jdbcType=VARCHAR},
+					CONTRACT.ACCOUNTDESCRIBE = #{accountDescribe,jdbcType=VARCHAR},
+					CONTRACT.PROVIDECONTRACTVERSION = #{provideContractVersion,jdbcType=VARCHAR},
+					CONTRACT.IFHAVENONSTANDARDCONTRACTTERM = #{ifHaveNonstandardContractTerm,jdbcType=VARCHAR},
+					CONTRACT.IFHAVENONSTANDARDOPERATTERM = #{ifHaveNonstandardOperatTerm,jdbcType=VARCHAR},
+					CONTRACT.IFOPENONLINEORDER = #{ifOpenOnlineOrder,jdbcType=VARCHAR},
+					CONTRACT.OLDDDDISCOUNT = #{oldDdDiscount,jdbcType=NUMERIC},
+					CONTRACT.OLDDUDISCOUNT = #{oldDuDiscount,jdbcType=NUMERIC},
+					CONTRACT.OLDINSURANCERATE = #{oldInsuranceRate,jdbcType=NUMERIC},
+					CONTRACT.OLDLOWESTVALUATIONFEE = #{oldLowestValuationFee,jdbcType=NUMERIC},
+					CONTRACT.OLDLOWESTDELIVERYFEE = #{oldLowestDeliveryFee,jdbcType=NUMERIC},
+					CONTRACT.OLDLOWESTSHIPPINGFEE = #{oldLowestShippingFee,jdbcType=NUMERIC},
+					CONTRACT.OLDEXPENSE = #{oldExpense,jdbcType=NUMERIC},
+					CONTRACT.OLDINFORMATIONCOST = #{oldInformationCost,jdbcType=NUMERIC},
+					CONTRACT.OLDLOWESTFUEL = #{oldLowestFuel,jdbcType=NUMERIC},
+					CONTRACT.OLDCHARGERATEMIN = #{oldChargeRateMin,jdbcType=NUMERIC},
+					CONTRACT.APPLYINSTRUCTION = #{applyInstruction,jdbcType=VARCHAR},
+					CONTRACT.MODIFY_USER = #{modifyUser,jdbcType=VARCHAR},
+					CONTRACT.MODIFY_DATE = SYSDATE()
+			WHERE CONTRACT.WORKFLOWCODE = #{workflowCode,jdbcType=VARCHAR}
+		]]>
+	</update>
+
+	<!-- 删除销售合同 -->
+	<update id="deleteContract" parameterType="map">
+		<![CDATA[
+			UPDATE t_sale_contract CONTRACT SET
+				CONTRACT.ACTIVE = 'N',
+				CONTRACT.MODIFY_USER =  #{username,jdbcType=VARCHAR},
+				CONTRACT.MODIFY_DATE = SYSDATE()
+		]]>
+		<where>
+			CONTRACT.ID IN
+			<foreach collection="ids" item="id" separator="," open="("
+				close=")">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+
+	<!-- 查询合同详细信息参数 -->
+	<sql id="query_contract_detail_param">
+		CONTRACT.STATUS AS CONTRACT_STATUS,
+		CONTRACT.TITLE
+		AS
+		CONTRACT_TITLE,
+		CONTRACT.WORKFLOWEXPLAIN AS
+		CONTRACT_WORKFLOWEXPLAIN,
+		CONTRACT.EMERGENCYDEGREE AS
+		CONTRACT_EMERGENCYDEGREE,
+		CONTRACT.WORKFLOWCODE AS
+		CONTRACT_WORKFLOWCODE,
+		CONTRACT.APPLYDATE AS
+		CONTRACT_APPLYDATE,
+		CONTRACT.APPLYUSER AS CONTRACT_APPLYUSER,
+		CONTRACT.APPLYUSEREMPCODE AS
+		CONTRACT_APPLYUSEREMPCODE,
+		CONTRACT.APPLYUSERJOBNAME AS
+		CONTRACT_APPLYUSERJOBNAME,
+		CONTRACT.APPLYUSERDEPTNAME AS
+		CONTRACT_APPLYUSERDEPTNAME,
+		CONTRACT.APPLYUSERDECLARENAME AS
+		CONTRACT_APPLYUSERDECLARENAME,
+		CONTRACT.APPLYUSERLOGISTICCODE AS
+		CONTRACT_APPLYUSERLOGISTICCODE,
+		CONTRACT.ROADAREACODE AS
+		CONTRACT_ROADAREACODE,
+		CONTRACT.REGIONSCODE AS
+		CONTRACT_REGIONSCODE,
+		CONTRACT.BUSINESSUNITCODE AS
+		CONTRACT_BUSINESSUNITCODE,
+		CONTRACT.FINANCEREGIONSCODE AS
+		CONTRACT_FINANCEREGIONSCODE,
+		CONTRACT.CONTRACTADMIN AS
+		CONTRACT_CONTRACTADMIN,
+		CONTRACT.IFSALEMANAGER AS
+		CONTRACT_IFSALEMANAGER,
+		CONTRACT.PROCESSTYPE
+		AS CONTRACT_PROCESSTYPE,
+		CONTRACT.CONTRACTVERSION AS
+		CONTRACT_CONTRACTVERSION,
+		CONTRACT.SIGNATTRIBUTE AS
+		CONTRACT_SIGNATTRIBUTE,
+		CONTRACT.DCACCOUNT AS
+		CONTRACT_DCACCOUNT,
+		CONTRACT.ENTERPRISENAME AS CONTRACT_ENTERPRISENAME,
+		CONTRACT.CUSTOMERNATURE AS CONTRACT_CUSTOMERNATURE,
+		CONTRACT.INDUSTRYCODE AS CONTRACT_INDUSTRYCODE,
+		CONTRACT.MAINGOODSNAME
+		AS CONTRACT_MAINGOODSNAME,
+		CONTRACT.TYPEOFPACKAGE AS
+		CONTRACT_TYPEOFPACKAGE,
+		CONTRACT.DDMONTHCOUNT AS CONTRACT_DDMONTHCOUNT,
+		CONTRACT.DDDISCOUNT AS CONTRACT_DDDISCOUNT,
+		CONTRACT.DUDISCOUNT AS
+		CONTRACT_DUDISCOUNT,
+		CONTRACT.LOWESTVALUATIONFEE AS
+		CONTRACT_LOWESTVALUATIONFEE,
+		CONTRACT.INSURANCERATE AS
+		CONTRACT_INSURANCERATE,
+		CONTRACT.CARGOSERVICEAGREEMENT AS
+		CONTRACT_CARGOSERVICEAGREEMENT,
+		CONTRACT.LOWESTDELIVERYFEE AS
+		CONTRACT_LOWESTDELIVERYFEE,
+		CONTRACT.LOWESTSHIPPINGFEE AS
+		CONTRACT_LOWESTSHIPPINGFEE,
+		CONTRACT.AGREEDDELIVERY AS
+		CONTRACT_AGREEDDELIVERY,
+		CONTRACT.EXPENSE AS CONTRACT_EXPENSE,
+		CONTRACT.INFORMATIONCOST AS CONTRACT_INFORMATIONCOST,
+		CONTRACT.LOWESTFUEL AS CONTRACT_LOWESTFUEL,
+		CONTRACT.SERVICEAGREEMENT
+		AS CONTRACT_SERVICEAGREEMENT,
+		CONTRACT.CONTRACTSTARTDATE AS
+		CONTRACT_CONTRACTSTARTDATE,
+		CONTRACT.CONTRACTENDDATE AS
+		CONTRACT_CONTRACTENDDATE,
+		CONTRACT.IFCOD AS CONTRACT_IFCOD,
+		CONTRACT.COLLECTIONCHARGESMIN AS CONTRACT_COLLECTIONCHARGESMIN,
+		CONTRACT.CHARGERATEMIN AS CONTRACT_CHARGERATEMIN,
+		CONTRACT.PAYMENTMETHOD AS CONTRACT_PAYMENTMETHOD,
+		CONTRACT.ACCOUNTDESCRIBE AS CONTRACT_ACCOUNTDESCRIBE,
+		CONTRACT.PROVIDECONTRACTVERSION AS CONTRACT_PROVIDECONTRACTVERSION,
+		CONTRACT.IFHAVENONSTANDARDCONTRACTTERM AS
+		CONTRACT_IFHAVENONSTANDARDCONTRACTTERM,
+		CONTRACT.IFHAVENONSTANDARDOPERATTERM AS
+		CONTRACT_IFHAVENONSTANDARDOPERATTERM,
+		CONTRACT.IFOPENONLINEORDER AS
+		CONTRACT_IFOPENONLINEORDER,
+		CONTRACT.OLDDDDISCOUNT AS
+		CONTRACT_OLDDDDISCOUNT,
+		CONTRACT.OLDDUDISCOUNT AS
+		CONTRACT_OLDDUDISCOUNT,
+		CONTRACT.OLDINSURANCERATE AS
+		CONTRACT_OLDINSURANCERATE,
+		CONTRACT.OLDLOWESTVALUATIONFEE AS
+		CONTRACT_OLDLOWESTVALUATIONFEE,
+		CONTRACT.OLDLOWESTDELIVERYFEE AS
+		CONTRACT_OLDLOWESTDELIVERYFEE,
+		CONTRACT.OLDLOWESTSHIPPINGFEE AS
+		CONTRACT_OLDLOWESTSHIPPINGFEE,
+		CONTRACT.OLDEXPENSE AS
+		CONTRACT_OLDEXPENSE,
+		CONTRACT.OLDINFORMATIONCOST AS
+		CONTRACT_OLDINFORMATIONCOST,
+		CONTRACT.OLDLOWESTFUEL AS
+		CONTRACT_OLDLOWESTFUEL,
+		CONTRACT.OLDCHARGERATEMIN AS
+		CONTRACT_OLDCHARGERATEMIN,
+		CONTRACT.APPLYINSTRUCTION AS
+		CONTRACT_APPLYINSTRUCTION
+	</sql>
+
+	<!-- 查询合同基本信息参数 -->
+	<sql id="query_contract_base_param">
+		CONTRACT.ID AS CONTRACT_ID,
+		CONTRACT.CRMACCOUNT AS
+		CONTRACT_CRMACCOUNT,
+		CONTRACT.DCACCOUNT AS CONTRACT_DCACCOUNT,
+		CONTRACT.STATUS AS CONTRACT_STATUS,
+		CONTRACT.URL AS CONTRACT_URL,
+		CONTRACT.ENTERPRISENAME AS
+		CONTRACT_ENTERPRISENAME,
+		CONTRACT.CONTRACTSTARTDATE AS
+		CONTRACT_CONTRACTSTARTDATE,
+		CONTRACT.CONTRACTENDDATE AS
+		CONTRACT_CONTRACTENDDATE,
+		CONTRACT.WORKFLOWCODE AS
+		CONTRACT_WORKFLOWCODE,
+		CONTRACT.APPLYDATE AS
+		CONTRACT_APPLYDATE,
+		EMP.EMPNAME AS CONTRACT_CREATE_USER,
+		CONTRACT.CREATE_DATE AS
+		CONTRACT_CREATE_DATE,
+		CONTRACT.MODIFY_USER AS
+		CONTRACT_MODIFY_USER,
+		CONTRACT.FILE_DATE AS CONTRACT_FILE_DATE,
+		CONTRACT.APPLYUSERDECLARENAME AS CONTRACT_APPLYUSERDECLARENAME,
+		CONTRACT.ROADAREACODE AS CONTRACT_ROADAREACODE,
+		CONTRACT.REGIONSCODE AS CONTRACT_REGIONSCODE,
+		CONTRACT.BUSINESSUNITCODE AS CONTRACT_BUSINESSUNITCODE
+	</sql>
+
+	<!-- 根据主键查询合同信息 -->
+	<select id="getContractInfoById" parameterType="string"
+		resultMap="saleContractDetailMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_contract_detail_param"></include>
+		<![CDATA[
+			FROM t_sale_contract CONTRACT
+			WHERE
+				CONTRACT.ACTIVE = 'Y' AND 
+			CONTRACT.ID = #{id,jdbcType=VARCHAR}
+		]]>
+	</select>
+
+	<!-- 分页查询销售合同信息 -->
+	<select id="getContractInfo" parameterType="map" resultMap="saleContractBaseMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_contract_base_param"></include>
+		<![CDATA[
+			FROM t_sale_contract CONTRACT
+			LEFT JOIN t_org_employee EMP ON CONTRACT.CREATE_USER = EMP.ACCOUNT
+		]]>
+		<where>
+			CONTRACT.ACTIVE = 'Y'
+			<if test=" status !=null and status !='' ">
+				<![CDATA[
+					AND CONTRACT.STATUS = #{status,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" enterpriseName !=null and enterpriseName !='' ">
+				<![CDATA[
+					AND CONTRACT.ENTERPRISENAME LIKE #{enterpriseName,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="firstStartDate != null and firstStartDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTSTARTDATE >= #{firstStartDate}
+				]]>
+			</if>
+			<if test="firstEndDate != null and firstEndDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTSTARTDATE < #{firstEndDate}
+				]]>
+			</if>
+			<if test="secondStartDate != null and secondStartDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTENDDATE >= #{secondStartDate}
+				]]>
+			</if>
+			<if test="secondEndDate != null and secondEndDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTENDDATE < #{secondEndDate}
+				]]>
+			</if>
+			<if test=" workflowCode !=null and workflowCode !='' ">
+				<![CDATA[
+					AND CONTRACT.WORKFLOWCODE LIKE #{workflowCode,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" crmAccount !=null and crmAccount !='' ">
+				<![CDATA[
+					AND CONTRACT.CRMACCOUNT LIKE #{crmAccount,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" dcAccount !=null and dcAccount !='' ">
+				<![CDATA[
+					AND CONTRACT.DCACCOUNT LIKE #{dcAccount,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" userName !=null and userName !='' ">
+				<![CDATA[
+					AND ( CONTRACT.CREATE_USER = #{userName,jdbcType=VARCHAR}
+						OR (CONTRACT.CREATE_USER IN (
+						SELECT  ACCOUNT from t_org_department ORG
+						LEFT JOIN t_org_employee EMP ON ORG.MANAGERID=emp.EMPCODE
+						WHERE ORG.supdeptcode = #{userDeptcode} AND ORG.CANCELED = '0'
+					)))
+				]]>
+			</if>
+		</where>
+		<![CDATA[
+			ORDER BY CONTRACT.CREATE_DATE DESC
+		]]>
+	</select>
+
+	<!-- 分页查询销售合同信息 -->
+	<select id="countContract" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+				COUNT(1)
+			FROM t_sale_contract CONTRACT
+		]]>
+		<where>
+			CONTRACT.ACTIVE = 'Y'
+			<if test=" status !=null and status !='' ">
+				<![CDATA[
+					AND CONTRACT.STATUS = #{status,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" enterpriseName !=null and enterpriseName !='' ">
+				<![CDATA[
+					AND CONTRACT.ENTERPRISENAME LIKE #{enterpriseName,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="firstStartDate != null and firstStartDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTSTARTDATE >= #{firstStartDate}
+				]]>
+			</if>
+			<if test="firstEndDate != null and firstEndDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTSTARTDATE < #{firstEndDate}
+				]]>
+			</if>
+			<if test="secondStartDate != null and secondStartDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTENDDATE >= #{secondStartDate}
+				]]>
+			</if>
+			<if test="secondEndDate != null and secondEndDate != ''">
+				<![CDATA[
+					AND CONTRACT.CONTRACTENDDATE < #{secondEndDate}
+				]]>
+			</if>
+			<if test=" workflowCode !=null and workflowCode !='' ">
+				<![CDATA[
+					AND CONTRACT.WORKFLOWCODE LIKE #{workflowCode,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" crmAccount !=null and crmAccount !='' ">
+				<![CDATA[
+					AND CONTRACT.CRMACCOUNT LIKE #{crmAccount,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" dcAccount !=null and dcAccount !='' ">
+				<![CDATA[
+					AND CONTRACT.DCACCOUNT LIKE #{dcAccount,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test=" userName !=null and userName !='' ">
+				<![CDATA[
+					AND ( CONTRACT.CREATE_USER = #{userName,jdbcType=VARCHAR}
+						OR (CONTRACT.CREATE_USER IN (
+						SELECT  ACCOUNT from t_org_department ORG
+						LEFT JOIN t_org_employee EMP ON ORG.MANAGERID=emp.EMPCODE
+						WHERE ORG.supdeptcode = #{userDeptcode} AND ORG.CANCELED = '0'
+					)))
+				]]>
+			</if>
+		</where>
+	</select>
+
+	<!-- 判断销售合同是否存在 -->
+	<select id="isExistContract" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+			FROM t_sale_contract CONTRACT
+		]]>
+		<where>
+			CONTRACT.ACTIVE = 'Y'
+			<if test=" dcAccount !=null and dcAccount !='' ">
+				AND CONTRACT.DCACCOUNT =
+				#{dcAccount,jdbcType=VARCHAR}
+			</if>
+			<if test=" crmAccount !=null and crmAccount !='' ">
+				AND CONTRACT.CRMACCOUNT = #{crmAccount,jdbcType=VARCHAR}
+			</if>
+			<if test=" status != null and status !='' ">
+				<![CDATA[
+					AND CONTRACT.STATUS <> #{status,jdbcType=VARCHAR}
+				]]>
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据id查找附件URL -->
+	<select id="getAttachmentUrl" parameterType="map" resultMap="saleContractBaseMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_contract_base_param"></include>
+		<![CDATA[
+			FROM t_sale_contract CONTRACT
+			LEFT JOIN t_org_employee EMP ON CONTRACT.CREATE_USER = EMP.ACCOUNT
+		]]>
+		<where>
+			CONTRACT.ACTIVE = 'Y'
+			<if test=" id != null and id !='' ">
+				AND CONTRACT.ID = #{id,jdbcType=VARCHAR}
+			</if>
+			<if test=" crmAccount != null and crmAccount !='' ">
+				AND CONTRACT.CRMACCOUNT = #{crmAccount,jdbcType=VARCHAR}
+			</if>
+			<if test=" status != null and status !='' ">
+				AND CONTRACT.STATUS = #{status,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+
+	<!-- 获取所有附件URL -->
+	<select id="getAllAttachmentUrl" parameterType="map" resultType="string">
+		<![CDATA[
+			SELECT
+				CONTRACT.URL
+			FROM t_sale_contract CONTRACT
+		]]>
+		<where>
+			CONTRACT.ID IN
+			<foreach collection="ids" item="id" separator="," open="("
+				close=")">
+				#{id}
+			</foreach>
+		</where>
+	</select>
+
+	<!-- 修改合同时,修改附件URL -->
+	<update id="updateAttachmentUrl" parameterType="map">
+		<![CDATA[
+			UPDATE t_sale_contract CONTRACT SET
+				CONTRACT.URL = #{url,jdbcType=VARCHAR},
+				CONTRACT.MODIFY_USER = #{modifyUser,jdbcType=VARCHAR},
+				CONTRACT.MODIFY_DATE = SYSDATE() 
+			WHERE CONTRACT.CRMACCOUNT = #{crmAccount,jdbcType=VARCHAR}
+			AND CONTRACT.STATUS = #{status,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 根据DC账号查询合同基本信息 -->
+	<select id="getSaleContractVoByDcAccount" parameterType="map" resultMap="saleContractBaseMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_contract_base_param"></include>
+		<![CDATA[
+			FROM t_sale_contract CONTRACT
+			LEFT JOIN t_org_employee EMP ON CONTRACT.CREATE_USER = EMP.ACCOUNT
+			WHERE
+				CONTRACT.ACTIVE = 'Y' 
+		]]>
+		<if test=" dcAccount !=null and dcAccount != '' ">
+			AND	CONTRACT.DCACCOUNT = #{dcAccount,jdbcType=VARCHAR}
+		</if>
+		<if test=" status != null and status != '' ">
+			AND CONTRACT.STATUS = #{status,jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<!-- 更新归档时间 -->
+	<update id="updateFileDate" parameterType="string">
+		<![CDATA[
+			UPDATE t_sale_contract SET 
+				FILE_DATE = SYSDATE(),
+				MODIFY_DATE = SYSDATE(),
+				MODIFY_USER='sysadmin'
+			WHERE workflowCode = #{workflowCode,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 根据流水号删除记录 -->
+	<delete id="deleteByWorkflowCode" parameterType="string">
+		<![CDATA[
+			DELETE FROM t_sale_contract
+			WHERE WORKFLOWCODE = #{workflowCode,jdbcType=VARCHAR}
+		]]>
+	</delete>
+	
+</mapper>

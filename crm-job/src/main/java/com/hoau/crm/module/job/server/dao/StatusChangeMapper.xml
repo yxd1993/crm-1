@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.StatusChangeMapper">
+
+	<!-- 刷新已过期合同状态  -->
+	<update id="StatusChangeOfContract">
+		<![CDATA[
+			UPDATE t_sale_contract CONTRACT SET  
+				CONTRACT.STATUS = '5',
+				MODIFY_USER = 'sysadmin',
+				MODIFY_DATE = SYSDATE()
+			WHERE CONTRACT.CONTRACTENDDATE = DATE_SUB(CURDATE(),INTERVAL 1 DAY) AND CONTRACT.STATUS = '3'
+		]]>
+	</update>
+	
+	<!-- 刷新已过期合同状态时,客户性质转换  -->
+	<update id="refreshCustomerStatusOutOfTimeContract" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_account CUSTOMER SET
+				CUSTOMER.AccountType = 
+						 /*签约客户，变成流失客户*/
+				(CASE WHEN CUSTOMER.LASTSHIPMENTSTIME < #{stopTime} THEN '4'
+						 /*签约客户，合同过期,三个月无发货,变成流失客户*/
+					WHEN CUSTOMER.LASTSHIPMENTSTIME IS NULL THEN '4'
+					/*签约客户，合同过期,三个月有发货,变成发货客户7*/
+				ELSE '7'
+				END)
+			WHERE CUSTOMER.contractEndTime = DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+		]]>
+	</update>
+	
+	<!-- 查询客户的状态：更新客户的状态：已过期合同,变发货或流失 -->
+	<select id="getCustomerStatusIsOutOfTimeContract" parameterType="map" resultType="map">
+		<![CDATA[
+			SELECT
+				CUSTOMER.id,
+				CUSTOMER.accountType,
+				CUSTOMER.lastShipmentsTime
+			FROM t_crm_account CUSTOMER 
+			WHERE CUSTOMER.contractEndTime = DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+		]]>
+	</select>
+	
+	<!-- 合同归档,更新客户性质为签约客户 -->
+	<update id="statusChangeOfCustomerToSign" parameterType="map">
+		<![CDATA[
+			update t_crm_account A 
+			inner join (select id from t_crm_account CUSTOMER 
+						WHERE CUSTOMER.contractStartTime <= #{takeEffectTime} AND CUSTOMER.contractEndTime >= #{takeEffectTime}
+						AND CUSTOMER.AccountType  NOT IN('4','5')) C ON A.id = C.ID
+			SET A.ACCOUNTTYPE = '5'
+		]]>
+	</update>
+	
+	<!-- 查询客户的状态：合同归档,更新客户性质为签约客户 -->
+	<select id="getCustomerStatusIsSign" parameterType="map" resultType="map">
+		<![CDATA[
+			SELECT
+				id,
+				accountType
+			FROM t_crm_account CUSTOMER
+			WHERE CUSTOMER.contractStartTime <= #{takeEffectTime} AND CUSTOMER.contractEndTime >= #{takeEffectTime}
+				AND CUSTOMER.AccountType  NOT IN('4','5')
+		]]>
+	</select>
+	
+	<!-- 查询客户的状态，如果是签约（5）或发货（7）客户，超过三个月未发货，则置为流失客户（4） -->
+	<select id="selectCustomerStatusIsLoss" parameterType="map" resultType="map">
+		<![CDATA[
+			SELECT
+				A.id,
+				A.enterpriseName,
+				A.manageEmpCode,
+				A.dCaccount,
+				A.accountType
+			FROM
+				T_CRM_ACCOUNT A
+			WHERE
+				A.ACTIVE = 'Y'
+			AND A.ACCOUNTTYPE IN (5, 7)
+			AND A.LASTSHIPMENTSTIME < #{stopTime}
+			AND A.ManageEmpCode IS NOT NULL
+			AND LENGTH(trim(A.ManageEmpCode)) > 0
+		]]>
+	</select>
+	
+	<!-- 刷新客户的状态，如果是签约（5）或发货（7）客户，超过三个月未发货，则置为流失客户（4） -->
+	<update id="refreshCustomerStatus" parameterType="map">
+		<![CDATA[
+			UPDATE T_CRM_ACCOUNT A
+				SET A.ACCOUNTTYPE = 4
+			WHERE
+				A.ACTIVE = 'Y'
+			AND	A.ACCOUNTTYPE IN (5, 7)
+			AND A.LASTSHIPMENTSTIME < #{stopTime}
+		]]>
+	</update>
+	
+	<!-- 更新客户的第1单、最后1单发货以及根据发货改变客户状态 -->
+	<update id="refreshCustomerWayBillTime" parameterType="map">
+		<![CDATA[
+			UPDATE T_CRM_ACCOUNT A
+				SET A.STARTINGTIME =
+				IF (
+					A.STARTINGTIME IS NULL,
+					(select max(w.billingDate) from t_crm_waybill w where w.dcAccount = a.DCaccount),
+					A.STARTINGTIME
+				),
+				A.AccountType = 
+						 /*意向客户，变成发货客户*/
+				(CASE WHEN A.AccountType = '3' THEN '7'
+						 /*流失状态，无合同，变成发货客户7*/
+						 WHEN (A.AccountType = '4' AND A.contractStartTime IS NULL) THEN '7'
+						 /*流失状态，有合同，无效，变成发货客户7*/
+						 WHEN (A.AccountType = '4' AND A.contractStartTime IS NOT NULL AND (A.contractStartTime > #{startTime} OR A.contractEndTime < #{startTime})) THEN '7'
+						 /*流失状态，有合同，有效，变成签约客户5*/
+						 WHEN (A.AccountType = '4' AND A.contractStartTime IS NOT NULL AND (A.contractStartTime <= #{startTime} AND A.contractEndTime >= #{startTime})) THEN '5'
+				ELSE A.AccountType
+				END),
+				A.LastShipmentsTime = (select max(w.billingDate) from t_crm_waybill w where w.dcAccount = a.DCaccount)
+			WHERE
+				A.DCaccount in (select DISTINCT(b.dcAccount) from t_crm_waybill b where b.billingDate > #{startTime} and b.billingDate < #{endTime})
+		]]>
+	</update>
+	
+	<!-- 根据保留天数删除运单信息 -->
+	<delete id="deleteWayBillByKeepDay" parameterType="map">
+		<![CDATA[
+			DELETE W
+			FROM
+				T_CRM_WAYBILL W
+			WHERE
+				W.BILLINGDATE < #{keepTime}
+		]]>
+	</delete>
+	
+	<!-- 根据保留天数删除运单签收信息 -->
+	<delete id="deleteWaybillSignByKeepDay" parameterType="map">
+		<![CDATA[
+			DELETE W
+			FROM
+				t_crm_waybill_sign W
+			WHERE
+				W.CREATEDATE < #{keepTime}
+		]]>
+	</delete>
+	
+	<!-- 合同过期提前提醒 -->
+	<select id="contractOutOfTimeRemind" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT CONTRACT.dcAccount FROM t_sale_contract CONTRACT WHERE DATE_FORMAT(CONTRACT.contractEndDate,"%Y-%m-%d") = #{endTime}
+		]]>
+	</select>
+	
+	<!-- 合同过期提前提醒,合同状态修改 -->
+	<update id="updateContractStatusOutofTimeRemind" parameterType="string">
+		<![CDATA[
+			UPDATE t_sale_contract SET STATUS = '6' WHERE contractEndDate = #{endTime} AND STATUS = '3'
+		]]>
+	</update>
+	
+	<!-- 查询客户的状态：意向、流失置为发货 -->
+	<select id="getCustomerStatusIsDeliJver" parameterType="map" resultType="map">
+		<![CDATA[
+			SELECT
+				A.id,
+				A.accountType,
+				A.contractStartTime,
+				A.contractEndTime
+			FROM
+				T_CRM_ACCOUNT A
+			WHERE
+				A.DCaccount in (select DISTINCT(b.dcAccount) from t_crm_waybill b where b.billingDate > #{startTime} and b.billingDate < #{endTime})
+				AND A.accountType IN ('3','4')
+		]]>
+	</select>
+	
+	<!-- 执行随机抽取洽谈记录存储过程 -->
+	<select id="executeRandomChatInfosProc" statementType="CALLABLE">  
+		<![CDATA[  
+		    {call proc_random_chatRecord }
+		]]>
+	</select>
+	
+	<!-- 更新客户的发货日志 -->
+	<select id="refreshCustomerWayBillLog" statementType="CALLABLE">  
+		<![CDATA[  
+		    {call proc_waybill_log_init(#{startTime}, #{endTime})}
+		]]>
+	</select>
+</mapper>

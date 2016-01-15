@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.PersonalCustomerMapper">
+	<!-- 客户与联系人详细信息 -->
+	<resultMap id="customerResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="sourceId" column="MASTER_SOURCEID"/>
+		<result property="userName" column="MASTER_USERNAME" />
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="detailedAddress" column="MASTER_DETAILEDADDRESS" />
+		<result property="contactName" column="MASTER_CONTACTNAME" />
+		<result property="cellphone" column="MASTER_CELLPHONE" />
+		<result property="telephone" column="MASTER_TELEPHONE" />
+		<result property="email" column="MASTER_EMAIL" />
+		<result property="source" column="MASTER_SOURCE" />
+		<result property="isTurnCustomer" column="MASTER_ISTURNCUSTOMER" />
+		<result property="managePerson" column="MASTER_MANAGEPERSON" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="createUser" column="MASTER_CREATEUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATEDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFYUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFYDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<!-- 个人客户详细信息 -->
+	<sql id="query_customer_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.SOURCEID AS MASTER_SOURCEID,
+		MASTER.USERNAME AS MASTER_USERNAME,
+		MASTER.ENTERPRISENAME AS MASTER_ENTERPRISENAME,
+		MASTER.DETAILEDADDRESS AS MASTER_DETAILEDADDRESS,
+		MASTER.CONTACTNAME AS MASTER_CONTACTNAME,
+		MASTER.CELLPHONE AS MASTER_CELLPHONE,
+		MASTER.TELEPHONE AS	MASTER_TELEPHONE,
+		MASTER.EMAIL AS	MASTER_EMAIL,
+		MASTER.SOURCE AS MASTER_SOURCE,
+		MASTER.ISTURNCUSTOMER AS MASTER_ISTURNCUSTOMER,
+		MASTER.MANAGEPERSON AS MASTER_MANAGEPERSON,
+		MASTER.CREATE_USER AS MASTER_CREATEUSER,
+		MASTER.CREATE_DATE AS MASTER_CREATEDATE,
+		MASTER.MODIFY_USER AS MASTER_MODIFYUSER,
+		MASTER.MODIFY_DATE AS MASTER_MODIFYDATE,
+		MASTER.ACTIVE AS MASTER_ACTIVE
+	</sql>
+
+	<!-- 分页查询客户信息 -->
+	<select id="getPersonalCustomerInfo" parameterType="map" resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_personalcustomer MASTER
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="userName != null and userName != ''">
+				AND MASTER.USERNAME LIKE #{userName}
+			</if>
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME LIKE #{enterpriseName}
+			</if>
+			<if test="contactName != null and contactName != ''">
+				AND MASTER.CONTACTNAME LIKE #{contactName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+				AND MASTER.CELLPHONE LIKE #{cellphone}
+			</if>
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.TELEPHONE LIKE #{telephone}
+			</if>
+			<if test="detailedAddress != null and detailedAddress != ''">
+				AND MASTER.DETAILEDADDRESS like #{detailedAddress}
+			</if>
+			<if test="email != null and email != ''">
+				AND MASTER.EMAIL like #{email}
+			</if>
+			<if test="source != null and source != ''">
+				AND MASTER.SOURCE like #{source}
+			</if>
+			<if test="isTurnCustomer != null and isTurnCustomer != ''">
+				AND MASTER.ISTURNCUSTOMER = #{isTurnCustomer}
+			</if>
+		</where>
+		ORDER BY MASTER.ISTURNCUSTOMER = 'N' DESC,MASTER.CREATE_DATE DESC
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="countPersonalCustomer" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_personalcustomer MASTER
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="userName != null and userName != ''">
+				AND MASTER.USERNAME LIKE #{userName}
+			</if>
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME LIKE #{enterpriseName}
+			</if>
+			<if test="contactName != null and contactName != ''">
+				AND MASTER.CONTACTNAME LIKE #{contactName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+				AND MASTER.CELLPHONE LIKE #{cellphone}
+			</if>
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.TELEPHONE LIKE #{telephone}
+			</if>
+			<if test="detailedAddress != null and detailedAddress != ''">
+				AND MASTER.DETAILEDADDRESS like #{detailedAddress}
+			</if>
+			<if test="email != null and email != ''">
+				AND MASTER.EMAIL like #{email}
+			</if>
+			<if test="source != null and source != ''">
+				AND MASTER.SOURCE like #{source}
+			</if>
+			<if test="isTurnCustomer != null and isTurnCustomer != ''">
+				AND MASTER.ISTURNCUSTOMER = #{isTurnCustomer}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据主键查询客户信息 -->
+	<select id="getPersonalCustomerInfoById" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_personalcustomer MASTER
+		]]>
+		<where>
+			MASTER.sourceId = #{cId}
+		</where>
+	</select>
+
+	<!-- 新增客户信息 -->
+	<insert id="addPersonalCustomer"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerEntity">
+		<![CDATA[
+			insert into t_crm_personalcustomer(
+				ID,
+				SOURCEID,
+				USERNAME,
+				ENTERPRISENAME,
+				DETAILEDADDRESS,
+				CONTACTNAME,
+				CELLPHONE,
+				TELEPHONE,
+				EMAIL,
+				SOURCE,
+				CREATE_USER,
+				CREATE_DATE,
+				ACTIVE
+			) values (
+				#{id,jdbcType=VARCHAR},
+				#{sourceId,jdbcType=INTEGER},
+				#{userName,jdbcType=VARCHAR},
+				#{enterpriseName,jdbcType=VARCHAR},
+				#{detailedAddress,jdbcType=VARCHAR},
+				#{contactName,jdbcType=VARCHAR},
+				#{cellphone,jdbcType=VARCHAR},
+				#{telephone,jdbcType=VARCHAR},
+				#{email,jdbcType=VARCHAR},
+				#{source,jdbcType=VARCHAR},
+				'sysadmin',
+				SYSDATE(),
+				'Y'
+			)
+		]]>
+	</insert>
+
+	<!-- 修改客户信息 -->
+	<update id="updatePersonalCustomerInfo"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerEntity">
+		<![CDATA[
+			UPDATE t_crm_personalcustomer SET 
+				USERNAME = #{userName,jdbcType=VARCHAR},
+				ENTERPRISENAME = #{enterpriseName,jdbcType=VARCHAR},
+				DETAILEDADDRESS = #{detailedAddress,jdbcType=VARCHAR},
+				CONTACTNAME = #{contactName,jdbcType=VARCHAR},
+				CELLPHONE = #{cellphone,jdbcType=VARCHAR},
+				TELEPHONE = #{telephone,jdbcType=VARCHAR},
+				EMAIL = #{email,jdbcType=VARCHAR},
+				MODIFY_USER = "sysadmin",
+				MODIFY_DATE = SYSDATE()
+			WHERE SOURCEID = #{sourceId,jdbcType=INTEGER}
+		]]>
+	</update>
+
+	<!-- 删除客户信息 -->
+	<update id="deletePersonalCustomer" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_personalcustomer CUSTOMER SET
+				CUSTOMER.ACTIVE = 'N',
+				CUSTOMER.MODIFIEDON = SYSDATE(),
+				CUSTOMER.MODIFIEDBY = #{username}
+		]]>
+		<where>
+			CUSTOMER.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+
+	<!-- 判断渠道ID是否存在 -->
+	<select id="isExistBySourceId" parameterType="int" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_personalcustomer CUSTOMER
+			WHERE CUSTOMER.ACTIVE = 'Y' AND CUSTOMER.SOURCEID = #{sourceId,jdbcType=INTEGER}
+		]]>
+	</select>
+	
+	<!-- 新增个人客户联系人 -->
+	<insert id="addPersonalCustomerContact" parameterType="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerContactEntity">
+		<![CDATA[
+			INSERT INTO T_CRM_PERSONALCUSTOMER_CONTACT
+				(
+					ID,
+					SOURCEID,
+					USERID,
+					CONTACTNAME,
+					CELLPHONE,
+					TELEPHONE,
+					DISTRICTNUMBER,
+					TIERCODE,
+					CREATE_DATE,
+					CREATE_USER,
+					ACTIVE
+				)
+			VALUES
+				(
+					#{id,jdbcType=VARCHAR},
+					#{sourceId,jdbcType=INTEGER},
+					#{userId,jdbcType=VARCHAR},
+					#{contactName,jdbcType=VARCHAR},
+					#{cellphone,jdbcType=VARCHAR},
+					#{telephone,jdbcType=VARCHAR},
+					#{districtNumber,jdbcType=VARCHAR},
+					#{tierCode,jdbcType=VARCHAR},
+					SYSDATE(),
+					'sysadmin',
+					'Y'
+				)
+		]]>
+	</insert>
+	
+	<!-- 更新个人客户联系人 -->
+	<update id="updatePersonalCustomerContact" parameterType="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerContactEntity">
+		<![CDATA[
+			UPDATE T_CRM_PERSONALCUSTOMER_CONTACT SET
+				USERID = #{userId,jdbcType=VARCHAR},
+				CONTACTNAME = #{contactName,jdbcType=VARCHAR},
+				CELLPHONE = #{cellphone,jdbcType=VARCHAR},
+				TELEPHONE = #{telephone,jdbcType=VARCHAR},
+				DISTRICTNUMBER = #{districtNumber,jdbcType=VARCHAR},
+				TIERCODE = #{tierCode,jdbcType=VARCHAR},
+				MODIFY_DATE = SYSDATE(),
+				MODIFY_USER = 'sysadmin'
+			WHERE SOURCEID = #{sourceId,jdbcType=INTEGER}
+		]]>
+	</update>
+	
+	<!-- 判断联系人是否存在  -->
+	<select id="isExistContactBySourceId" parameterType="int" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM T_CRM_PERSONALCUSTOMER_CONTACT
+			WHERE SOURCEID = #{sourceId,jdbcType=INTEGER} AND ACTIVE = 'Y'
+		]]>
+	</select>
+	
+	<!-- 个人客户联系人MAP -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerContactEntity" 
+		id="personalCustomerContactMap">
+		<id property="id" column="MASTER_ID"/>
+		<result property="sourceId" column="MASTER_SOURCEID"/>
+		<result property="userId" column="MASTER_USERID"/>
+		<result property="contactName" column="MASTER_CONTACTNAME"/>
+		<result property="cellphone" column="MASTER_CELLPHONE"/>
+		<result property="telephone" column="MASTER_TELEPHONE"/>
+		<result property="districtNumber" column="MASTER_DISTRICTNUMBER"/>
+		<result property="tierCode" column="MASTER_TIERCODE"/>
+		<result property="customerContactId" column="MASTER_CUSTOMERCONTACTID"/>
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="createUser" column="MASTER_CREATEUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATEDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFYUSER"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFYDATE"
+			javaType="Date" jdbcType="TIMESTAMP" />
+	</resultMap>
+	
+	<!-- 查询字段 -->
+	<sql id="personalCustomerContact">
+		MASTER.ID AS MASTER_ID,
+		MASTER.SOURCEID AS MASTER_SOURCEID,
+		MASTER.USERID AS MASTER_USERID,
+		MASTER.CONTACTNAME AS MASTER_CONTACTNAME,
+		MASTER.CELLPHONE AS MASTER_CELLPHONE,
+		MASTER.TELEPHONE AS MASTER_TELEPHONE,
+		MASTER.DISTRICTNUMBER AS MASTER_DISTRICTNUMBER,
+		MASTER.TIERCODE AS MASTER_TIERCODE,
+		MASTER.CUSTOMERCONTACTID AS MASTER_CUSTOMERCONTACTID,
+		MASTER.ACTIVE AS MASTER_ACTIVE,
+		MASTER.CREATE_USER AS MASTER_CREATEUSER,
+		MASTER.CREATE_DATE AS MASTER_CREATEDATE,
+		MASTER.MODIFY_USER AS MASTER_MODIFYUSER,
+		MASTER.MODIFY_DATE AS MASTER_MODIFYDATE
+	</sql>
+	
+	<!-- 查询个人客户联系人信息 -->
+	<select id="getPersonalCustomerContactInfo" parameterType="com.hoau.crm.module.customer.api.shared.domain.PersonalCustomerContactEntity"
+		resultMap="personalCustomerContactMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="personalCustomerContact" />
+		<![CDATA[
+			FROM T_CRM_PERSONALCUSTOMER_CONTACT MASTER
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.USERID = #{userId,jdbcType=VARCHAR}
+		</where>
+	</select>
+	
+	<!-- 更新客户状态 -->
+	<update id="udpatePersonalCustomerStatus" parameterType="map">
+		<![CDATA[
+			UPDATE T_CRM_PERSONALCUSTOMER SET
+				isTurnCustomer = 'Y',
+				customerId = #{customerId,jdbcType=VARCHAR},
+				managePersonCode = #{managePersonCode,jdbcType=VARCHAR},
+				managePerson = #{managePerson,jdbcType=VARCHAR},
+				modify_date = sysdate(),
+				modify_user = 'sysadmin'
+			WHERE SOURCEID = #{sourceId,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 更新联系人状态 -->
+	<update id="updetePersonalCustomerContactStatus">
+		<![CDATA[
+			UPDATE t_crm_personalcustomer_contact SET
+				customerContactId = #{customerContactId,jdbcType=VARCHAR},
+				modify_date = sysdate(),
+				modify_user = 'sysadmin'
+			WHERE SOURCEID = #{sourceId,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+</mapper>

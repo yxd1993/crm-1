@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.BseDepartmentJobMapper">
+     <!--添加最新的部门信息 -->
+    <insert id="insertBaseDept" parameterType="com.hoau.crm.module.job.shared.domain.BseDepartmentBean">
+        <![CDATA[
+        INSERT INTO T_BSE_DEPT(
+        ID,
+        DEPT_CODE,
+        DEPT_NAME,
+        PARENT_DEPT_CODE,
+        PARENT_DEPT_NAME,
+        DEPT_NATURE,
+        BIG_REGION_CODE,
+        LOGIST_CODE,
+        MANAGER_CODE,
+        MANAGER_NAME,
+        PROVINCE,
+        PROVINCE_CODE,
+        CITY,
+        CITY_CODE,
+        COUNTY,
+        COUNTY_CODE,
+        AREA_CODE,
+        PHONE,
+        FAX,
+        ADDRESS_DETAIL,
+        LNG,
+        LAT,
+        IS_SPECIFIED_TIME,
+        IS_SHIPMENT,
+        IS_DELIVERY,
+        IS_PICK_UP,
+        IS_STORE,
+        IS_ROAD,
+        IS_REGION,
+        IS_BUSINESS,
+        ACTIVE,
+        CREATE_TIME,
+        CREATE_USER_CODE,
+        MODIFY_TIME,
+        MODIFY_USER_CODE,
+        VERSION_NO,
+        DEPT_NATURE_NAME
+        )
+        VALUES(
+        #{id,jdbcType=VARCHAR},
+        #{deptCode,jdbcType=VARCHAR},
+        #{deptName,jdbcType=VARCHAR},
+        #{parentDeptCode,jdbcType=VARCHAR},
+        #{parentDeptName,jdbcType=VARCHAR},
+        #{deptNature,jdbcType=INTEGER},
+        #{bigRegionCode,jdbcType=VARCHAR},
+        #{logistCode,jdbcType=VARCHAR},
+        #{managerCode,jdbcType=VARCHAR},
+        #{managerName,jdbcType=VARCHAR},
+        #{province,jdbcType=VARCHAR},
+        #{provinceCode,jdbcType=VARCHAR},
+        #{city,jdbcType=VARCHAR},
+        #{cityCode,jdbcType=VARCHAR},
+        #{county,jdbcType=VARCHAR},
+        #{countyCode,jdbcType=VARCHAR},
+        #{areaCode,jdbcType=VARCHAR},
+        #{phone,jdbcType=VARCHAR},
+        #{fax,jdbcType=VARCHAR},
+        #{addressDetail,jdbcType=VARCHAR},
+        #{lng,jdbcType=DOUBLE},
+        #{lat,jdbcType=DOUBLE},
+        #{isSpecifiedTime,jdbcType=CHAR},
+        #{isShipment,jdbcType=CHAR},
+        #{isDelivery,jdbcType=CHAR}, 
+        #{isPickUp,jdbcType=CHAR},
+        #{isStore,jdbcType=CHAR},
+        #{isRoad,jdbcType=CHAR},
+        #{isRegion,jdbcType=CHAR},
+        #{isBusiness,jdbcType=CHAR},
+        #{active,jdbcType=CHAR},
+        SYSDATE(),
+        #{createUser,jdbcType=VARCHAR},
+        #{modifyDate},
+        #{modifyUser,jdbcType=VARCHAR},
+        #{versionNo,jdbcType=BIGINT},
+        #{deptNatureName,jdbcType=VARCHAR}
+        )
+        ]]>
+    </insert>
+    <!--删除  -->
+    <delete id="delBaseDeptByDeptCode" parameterType="string">
+      	delete  FROM T_BSE_DEPT WHERE DEPT_CODE = #{deptCode}
+    </delete>
+    <!-- 查询T_BSE_DEPT表中最大版本号-->
+    <select id="queryBseDeptByVersionNo" resultType="string">
+        SELECT MAX(VERSION_NO) FROM T_BSE_DEPT
+    </select>
+    <!--按部门编号查询信息  -->
+    <select id="queryBseDetptByDeptCode" parameterType="string" resultType="com.hoau.crm.module.job.shared.domain.BseDepartmentBean">
+        SELECT * FROM T_BSE_DEPT WHERE DEPT_CODE = #{deptCode}
+    </select>
+</mapper>	
+	
+	
+

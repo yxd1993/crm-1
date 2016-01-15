@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.DailyMeetingMapper">
+    
+    
+    <!--资源信息查询 -->
+	<select id="queryDailyMeetingList" parameterType="map"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyMeetingEntity">
+	        <![CDATA[
+            	SELECT 
+	            	v.ID,
+	            	v.HYFORM,
+	            	v.HYTYPE,
+	            	v.HYADDRESS,
+	            	v.HYDATE,
+	            	v.CYEMP,
+	            	v.HYCONTEXT,
+	            	v.MEETINGSIGNID,
+	            	v.CREATE_DATE AS CREATEDATE,
+	            	E.EMPNAME AS CREATEUSER 
+            	FROM T_CRM_DAILYMEETING v
+            	LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+            v.active='Y'
+            <if test="hyform != null and hyform != '' ">
+	            <![CDATA[
+				AND v.hyform = #{hyform}
+			    ]]>
+			</if>
+			
+           <if test=" hyaddress !=null and hyaddress != '' ">
+	            <![CDATA[
+				AND v.hyaddress like #{hyaddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+             <if test=" hyType !=null and hyType != '' ">
+	            <![CDATA[
+				AND v.hyType = #{hyType}
+			    ]]>
+			</if>
+            <if test=" hyDate !=null and hyDate != '' ">
+	            <![CDATA[
+				AND date_format(v.hyDate,'%Y-%m-%d') = #{hyDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+			<if test=" queryCreateTime !=null and queryCreateTime != '' ">
+	            <![CDATA[
+				AND date_format(v.create_date,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+         </where>
+         <choose>
+         	<when test="timeDesc != null and tiemDesc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+         	</when>
+         	<when test="timeAsc != null and timeAsc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE ASC
+		    	]]>
+         	</when>
+         	<otherwise>
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+         	</otherwise>
+         </choose>
+	</select> 
+             
+       <!--分页查询-->
+	<select id="countqueryDailyMeetingList" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             FROM T_CRM_DAILYMEETING v
+             LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+             ]]>
+		<where>
+            v.active='Y'
+            <if test="hyform != null and hyform != '' ">
+	            <![CDATA[
+				AND v.hyform = #{hyform}
+			    ]]>
+			</if>
+			
+           <if test=" hyaddress !=null and hyaddress != '' ">
+	            <![CDATA[
+				AND v.hyaddress like #{hyaddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            <if test=" queryCreateTime !=null and queryCreateTime != '' ">
+	            <![CDATA[
+				AND date_format(v.create_date,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+             <if test=" hyType !=null and hyType != '' ">
+	            <![CDATA[
+				AND v.hyType = #{hyType}
+			    ]]>
+			</if>
+             <if test=" hyDate !=null and hyDate != '' ">
+	            <![CDATA[
+				AND date_format(v.hyDate,'%Y-%m-%d') = #{hyDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+         </where>    
+         </select>
+         
+        <!--删除  -->
+		<update id="deleteDailyMeeting" parameterType="map">
+		    <![CDATA[
+			    UPDATE T_CRM_DAILYMEETING V SET
+				V.ACTIVE = 'N'
+		    ]]>
+			<where>
+				V.ID IN
+				<foreach collection="ids" item="id" open="(" close=")"
+					separator=",">
+					#{id}
+				</foreach>
+			</where>
+		</update>
+	
+	
+	<!--新增App版本信息-->
+	<insert id="addDailyMeeting">
+		<![CDATA[
+			INSERT INTO T_CRM_DAILYMEETING(
+			ID,
+			HYFORM,
+			HYTYPE,
+			HYADDRESS,
+			HYDATE,
+			CYEMP,
+			HYCONTEXT,
+			MEETINGSIGNID,
+			ACTIVE,
+			CREATE_DATE,
+			CREATE_USER
+		) VALUES(
+			UUID(),
+			#{hyform,jdbcType=VARCHAR},
+			#{hyType,jdbcType=VARCHAR},
+			#{hyaddress,jdbcType=VARCHAR},
+			#{hyDate,jdbcType=VARCHAR},
+			#{cyEmp,jdbcType=VARCHAR},
+			#{hycontext,jdbcType=VARCHAR},
+			#{meetingSignId,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE(),
+			#{createUser,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+	
+		<!-- 根据主键查询信息 -->
+	<select id="queryDailyMeetingInfoById" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyMeetingEntity">
+		 <![CDATA[
+            SELECT 
+	            v.ID,
+	            v.HYFORM,
+	            v.HYTYPE,
+	            v.HYADDRESS,
+	            v.HYDATE,
+	            v.CYEMP,
+	            v.HYCONTEXT,
+	            v.MEETINGSIGNID,
+	            v.CREATE_DATE AS CREATEDATE,
+	            E.EMPNAME AS CREATEUSER 
+            FROM T_CRM_DAILYMEETING v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+			v.id = #{cId}
+		</where>
+	</select>
+	
+	<!-- 获取当前会议参与人员 -->
+	<select id="queryEmployeeInfoById" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+		 <![CDATA[
+            SELECT
+				ACCOUNT,
+				EMPNAME
+			FROM
+				T_ORG_EMPLOYEE E
+			WHERE
+				(
+					E.DEPTCODE = (
+						SELECT
+							DEPTCODE
+						FROM
+							T_ORG_EMPLOYEE
+						WHERE
+							ACCOUNT = #{empCode}
+					)
+					OR E.DEPTCODE = (
+						SELECT
+							SUPDEPTCODE
+						FROM
+							T_ORG_DEPARTMENT
+						WHERE
+							DEPTCODE = (
+								SELECT
+									DEPTCODE
+								FROM
+									T_ORG_EMPLOYEE
+								WHERE
+									ACCOUNT = #{empCode}
+							)
+					)
+				)
+			AND E.JOBNAME IN (
+				'客户经理',
+				'团队经理'
+			)
+			AND E.`STATUS` != '5'
+            ]]> 
+	</select>
+	
+	</mapper>

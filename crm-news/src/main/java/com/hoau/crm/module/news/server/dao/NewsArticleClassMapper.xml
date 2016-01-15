@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.news.server.dao.NewsArticleClassMapper">
+    
+	<select id="queryArticleClass" parameterType="string" resultType="com.hoau.crm.module.news.shared.domain.NewsArticleClassEntity">
+   		select 
+    	<![CDATA[
+     		id as classId,
+     		article_class as articleClass 
+		from t_crm_news_article_class
+   		 ]]>
+   		 <choose>
+   		     <when test="id != null and id != '' ">
+  		             WHERE class_parent_id = #{id}
+   		     </when>
+   		     <otherwise>
+  		             WHERE class_parent_id = '-1'
+   		     </otherwise>
+   		 </choose>
+	</select>
+</mapper>

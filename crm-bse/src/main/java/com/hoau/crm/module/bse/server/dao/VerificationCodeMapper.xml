@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.VerificationCodeMapper">
+
+	<!-- 根据手机号查询验证码信息 -->
+	<select id="getValidateCodeByPhone" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.ValidateCodeEntity">
+		<![CDATA[
+			SELECT (CASE WHEN (SYSDATE() - V.MODIFYDATE)/100 < 10 THEN V.MODIFYDATE ELSE NULL END) MODIFYDATE,
+			V.ID,V.PHONE,V.VERIFICATIONCODE as VALIDATECODE FROM T_APP_VERIFICATIONCODE V WHERE V.PHONE = #{phone}
+		]]>
+	</select>
+
+	<!-- 根据手机号创建验证码信息 -->
+	<insert id="createValidateCode"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.ValidateCodeEntity">
+		<![CDATA[
+			INSERT INTO T_APP_VERIFICATIONCODE(PHONE, VERIFICATIONCODE, ISSEND, CREATEDATE, MODIFYDATE) VALUES (#{phone}, #{validateCode},#{isSend},SYSDATE(), SYSDATE())
+		]]>
+	</insert>
+
+	<!-- 根据手机号修改验证码信息 -->
+	<update id="modifyValidateCode"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.ValidateCodeEntity">
+		<![CDATA[
+			UPDATE T_APP_VERIFICATIONCODE V SET V.VERIFICATIONCODE = #{validateCode}, V.ISSEND = #{isSend}, V.MODIFYDATE = SYSDATE() WHERE V.ID = #{id}
+		]]>
+	</update>
+</mapper>

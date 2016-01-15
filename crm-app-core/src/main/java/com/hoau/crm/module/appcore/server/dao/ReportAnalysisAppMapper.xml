@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.ReportAnalysisAppMapper">
+
+	<!-- 自定义报表数据MAP -->
+	<resultMap type="com.hoau.crm.module.appcore.api.shared.domain.ReportAnalysisEntity" id="reportAnalysisMap">
+		<id column="ID" property="id"/>
+		<result column="ORGCODE" property="orgCode"/>
+		<result column="ORGNAME" property="orgName"/>
+		<result column="TOTAL" property="total"/>
+		<result column="PERCENT" property="percent"/>
+		<result column="AVGOFPEOPLE" property="avgOfPeople"/>
+		<result column="ISCLICK" property="isClick"/>
+		<result column="MANAGERNAME" property="managerName"/>
+		<result column="MANAGERCELLPHONE" property="managerCellphone"/>
+		<result column="ORGTYPE" property="orgType"/>
+	</resultMap>
+	
+	<!-- 角色编码获得组织类型功能菜单MAP -->
+	<resultMap type="com.hoau.crm.module.appcore.api.shared.domain.ReportAnalysisAuthEntity" id="reportAnalysisAuthMap">
+		<id column="ID" property="id"/>
+		<result column="ROLECODE" property="roleCode"/>
+		<result column="FUNCTION_CODE" property="functionCode"/>
+		<result column="FUNCTION_NAME" property="functionName"/>
+		<result column="SORT" property="sort"/>
+	</resultMap>
+	
+	<!-- 获得自定义报表数据 -->
+	<select id="getReportAnalysisInfos" parameterType="map" resultMap="reportAnalysisMap">
+		<![CDATA[
+			SELECT
+				REPORT.ID,
+				REPORT.ORGCODE,
+				REPORT.ORGNAME,
+				REPORT.TOTAL,
+				REPORT.AVGOFPEOPLE,
+				REPORT.ORGTYPE,
+				EMP.EMPNAME AS MANAGERNAME,
+				EMP.MOBILE AS MANAGERCELLPHONE,
+		]]>
+		<if test="percent != null and percent != ''">
+			CASE #{percent} WHEN '1' THEN REPORT.PERCENT_1 WHEN '2' THEN REPORT.PERCENT_2 WHEN '3' THEN REPORT.PERCENT_3 END AS PERCENT,
+		</if>
+		<if test="deptCode != null and deptCode !=''">
+			CASE WHEN REPORT.ORGCODE = #{deptCode,jdbcType=VARCHAR} THEN 'Y' ELSE 'N' END AS ISCLICK 
+		</if>
+		<if test="isClick != null and isClick !=''">
+			#{isClick,jdbcType=VARCHAR} AS ISCLICK
+		</if>
+		<![CDATA[
+			FROM t_report_analysis REPORT
+			LEFT JOIN t_org_department ORG ON REPORT.ORGCODE = ORG.DEPTCODE
+			LEFT JOIN t_org_employee EMP ON ORG.MANAGERID = EMP.EMPCODE
+		]]>
+		<where>
+			<if test="dataType != null and dataType != ''">
+				<![CDATA[
+					AND REPORT.DATATYPE = #{dataType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="timeType != null and timeType != ''">
+				<![CDATA[
+					AND REPORT.TIMETYPE = #{timeType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="orgType != null and orgType != ''">
+				<![CDATA[
+					AND REPORT.ORGTYPE = #{orgType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="orgParent != null and orgParent != ''">
+				<![CDATA[
+					AND REPORT.ORGCODE IN(
+					SELECT ORG.four_level_deptcode
+					FROM v_org_department ORG
+					WHERE  ORG.one_level_deptcode = #{orgParent,jdbcType=VARCHAR} OR ORG.two_level_deptcode = #{orgParent,jdbcType=VARCHAR}
+						 OR ORG.three_level_deptcode = #{orgParent,jdbcType=VARCHAR}) 
+				]]>
+			</if>
+			<if test="sale != null and sale != ''">
+				<![CDATA[
+					AND REPORT.ORGCODE IN(SELECT empcode FROM t_org_employee where 
+						deptcode IN( SELECT ORG.four_level_deptcode FROM v_org_department ORG WHERE ORG.one_level_deptcode 
+						= #{sale,jdbcType=VARCHAR} OR ORG.two_level_deptcode = #{sale,jdbcType=VARCHAR} 
+						OR ORG.three_level_deptcode = #{sale,jdbcType=VARCHAR} OR ORG.four_level_deptcode = #{sale,jdbcType=VARCHAR}
+					))
+				]]>			
+			</if>
+			<if test="supOrg != null and supOrg !=''">
+				<![CDATA[
+					AND REPORT.ORGPARENT = #{supOrg,jdbcType=VARCHAR}
+				]]>
+			</if>
+		</where>
+		<if test="(sortType != null and sortType != '') and (percent != null and percent != '')">
+			<![CDATA[
+				ORDER BY
+			]]>
+			CASE #{percent} WHEN '1' THEN REPORT.PERCENT_1 WHEN '2' THEN REPORT.PERCENT_2 WHEN '3' THEN REPORT.PERCENT_3 END
+			<![CDATA[
+				${sortType}
+			]]>
+		</if>
+	</select>
+	
+	<!-- 统计自定义报表数据总数 -->
+	<select id="countReportAnalysisInfos" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_report_analysis REPORT
+		]]>
+		<where>
+			<if test="dataType != null and dataType != ''">
+				<![CDATA[
+					AND REPORT.DATATYPE = #{dataType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="timeType != null and timeType != ''">
+				<![CDATA[
+					AND REPORT.TIMETYPE = #{timeType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="orgType != null and orgType != ''">
+				<![CDATA[
+					AND REPORT.ORGTYPE = #{orgType,jdbcType=VARCHAR}
+				]]>
+			</if>
+			<if test="orgParent != null and orgParent != ''">
+				<![CDATA[
+					AND REPORT.ORGCODE IN(
+					SELECT ORG.four_level_deptcode
+					FROM v_org_department ORG
+					WHERE  ORG.one_level_deptcode = #{orgParent,jdbcType=VARCHAR} OR ORG.two_level_deptcode = #{orgParent,jdbcType=VARCHAR}
+						 OR ORG.three_level_deptcode = #{orgParent,jdbcType=VARCHAR}) 
+				]]>
+			</if>
+			<if test="sale != null and sale != ''">
+				<![CDATA[
+					AND REPORT.ORGCODE IN(SELECT empcode FROM t_org_employee where deptcode IN(
+						SELECT ORG.four_level_deptcode
+					FROM v_org_department ORG
+					WHERE  ORG.one_level_deptcode = #{sale,jdbcType=VARCHAR} OR ORG.two_level_deptcode = #{sale,jdbcType=VARCHAR}
+						 OR ORG.three_level_deptcode = #{sale,jdbcType=VARCHAR}
+					))
+				]]>			
+			</if>
+			<if test="supOrg != null and supOrg !=''">
+				<![CDATA[
+					AND REPORT.ORGPARENT = #{supOrg,jdbcType=VARCHAR}
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据角色编码获得组织类型功能菜单 -->
+	<select id="getReportAnalysisAuthByRoleCode" parameterType="string" resultMap="reportAnalysisAuthMap">
+		<![CDATA[
+			SELECT
+				AUTH.ID,
+				AUTH.ROLECODE,
+				AUTH.FUNCTION_CODE,
+				AUTH.FUNCTION_NAME,
+				AUTH.SORT
+			FROM t_report_analysis_auth AUTH
+		]]>
+		<where>
+			AUTH.ROLECODE = #{roleCode,jdbcType=VARCHAR}
+		</where>
+		<![CDATA[
+			ORDER BY AUTH.SORT ASC
+		]]>
+	</select>
+	
+	<!-- 根据用户名查询角色编码 -->
+	<select id="getRoleCodeByUserCode" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT ROlE_CODE
+			FROM t_auth_userrole USER
+			WHERE USER.USER_CODE = #{userCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 获取当前部门的负责人信息 -->
+	<select id="getManagerInfo" parameterType="string" resultType="map">
+		<![CDATA[
+			SELECT
+				EMP.empname,
+				EMP.mobile
+			FROM t_org_employee EMP
+			WHERE EMP.EMPCODE = #{empCode}
+		]]>
+	</select>
+	
+	<!-- 是否默认管理组织 -->
+	<select id="isDefaultOrgType" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_report_analysis_auth
+			WHERE roleCode = #{roleCode} and function_code = #{orgType} and sort = '1' and active = 'Y'
+		]]>
+	</select>
+	
+	<!-- orgType在当前角色菜单中的排序 -->
+	<select id="getSortNumInMenu" parameterType="map" resultType="string">
+		<![CDATA[
+			SELECT SORT
+			FROM t_report_analysis_auth
+			WHERE roleCode = #{roleCode} and function_code = #{orgType}
+		]]>
+	</select>
+	
+	<!-- 所占百分比 -->
+	<select id="execPercent" statementType="CALLABLE" parameterType="map">
+		<![CDATA[
+			{call ${procName}(#{supOrgCode,jdbcType=VARCHAR,mode=IN},#{orgType,jdbcType=VARCHAR,mode=IN},#{timeType,jdbcType=VARCHAR,mode=IN},#{dataType,jdbcType=VARCHAR,mode=IN})}
+		]]>
+	</select>
+	
+	<!-- 获得上级的部门编码 -->
+	<select id="getSupOrgCode" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT supdeptcode FROM t_org_department WHERE deptcode = #{orgCode}
+		]]>
+	</select>
+	
+</mapper>

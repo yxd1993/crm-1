@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.CustomerLatlngJobMapper">
+	<!-- 批量新增客户坐标信息 -->
+	<insert id="addBatchCustomerLatlng" parameterType="java.util.List">
+	  insert into t_crm_customer_latlng ( id, type, lng,lat ,customerId,precise,confidence) values
+	  <foreach collection="list" item="item" index="index"
+	  separator=",">
+	  ( #{item.id}, #{item.type}, #{item.lng},#{item.lat},#{item.customerId},#{item.precise},#{item.confidence} )
+  </foreach>
+  </insert>
+	<resultMap id="customerResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="id" />
+		<result property="detailedAddress" column="detailedAddress" />
+	</resultMap>
+	
+	<!-- 初始化客户信息 -->
+	<select id="getinitializeCustomerLatLng" parameterType="map" resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+				id,
+				convert(AES_DECRYPT(UNHEX(a.detailedAddress),'CRM') using utf8) as detailedAddress
+			FROM
+				t_crm_account a
+			WHERE 
+			a.detailedAddress is not null 
+			AND LENGTH(trim(a.detailedAddress)) > 0
+			AND a.ACTIVE = 'Y'
+			AND a.IsUpdate IS NULL 
+			AND	NOT EXISTS (
+					SELECT
+						customerid
+					FROM
+						t_crm_customer_latlng l
+					WHERE
+						type = '1'
+					AND l.customerid = a.id
+				)
+			ORDER BY
+				CREATEDON DESC 
+		]]>
+	</select>
+	
+	<resultMap id="customerPoolResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity">
+		<id property="id" column="id" />
+		<result property="cityCode" column="citycode" />
+		<result property="city" column="city" />
+		<result property="companyAddress" column="companyAddress" />
+	</resultMap>
+	<!-- 获得未分配的客户 -->
+	<select id="getCustomerNotdistributionInfo" parameterType="map" resultMap="customerPoolResultMap">
+		<![CDATA[
+			SELECT
+				a.id,
+				a.city as citycode,
+				a.companyAddress as companyAddress,
+				d.DISTRICT_NAME as city
+			FROM
+				t_upload_account a
+			LEFT JOIN t_bse_district d ON d.DISTRICT_CODE = a.city
+			WHERE
+				a.companyAddress IS NOT NULL
+			AND a.ACTIVE = 'Y'
+			AND a.dispenseStatus = '1'
+			AND NOT EXISTS (
+				SELECT
+					customerid
+				FROM
+					t_crm_customer_latlng l
+				WHERE
+					type = '0'
+				AND l.customerid = a.id
+			)
+			ORDER BY
+				a.create_date DESC 
+		]]>
+	</select>
+	
+	<resultMap id="userScopeResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.UserScopeEntity">
+		<id property="id" column="ID" />
+		<result property="maxlength" column="maxlength" />
+		<result property="lngA" column="lngA" />
+		<result property="latA" column="latA" />
+		<result property="lngB" column="lngB" />
+		<result property="latB" column="latB" />
+		<result property="centerlng" column="centerlng" />
+		<result property="centerlat" column="centerlat" />
+		<result property="minLat" column="centerlat" />
+		<result property="minLng" column="centerlat" />
+		<result property="maxLat" column="centerlat" />
+		<result property="maxLng" column="centerlat" />
+		<result property="user_id" column="user_id" />
+		<result property="user_name" column="user_name" />
+		<result property="ploygongeo" column="ploygongeo" />
+	</resultMap>
+	
+	<!-- 获得客户在哪个用户的范围 
+	<select id="queryCustomerByUserScopeInfo" parameterType="map"
+		resultMap="userScopeResultMap">
+		<![CDATA[
+		SELECT
+			id,
+			user_id,
+			user_name,
+			maxlength,
+			lngA,
+			lngB,
+			latA,
+			latB,
+			centerlat,
+			centerlng,
+			minLat,
+			minLng,
+			maxLat,
+			maxLng,
+			ploygongeo
+		FROM
+			t_crm_userscope
+		WHERE
+			#{lng}  > minLat and #{lng} < maxLat and #{lat} > minLng and #{lat} < maxLng and ACTIVE = 'Y'
+		]]>
+	</select>-->
+	
+	<!-- 获取公司所有用户服务范围 -->
+	<select id="queryByUserScopeInfo" resultMap="userScopeResultMap">
+		<![CDATA[
+		SELECT
+			u.id,
+			u.user_id,
+			u.user_name,
+			u.maxlength,
+			u.lngA,
+			u.lngB,
+			u.latA,
+			u.latB,
+			u.centerlat,
+			u.centerlng,
+			u.minLat,
+			u.minLng,
+			u.maxLat,
+			u.maxLng,
+			u.ploygongeo,
+			a.role_code
+		FROM
+			t_crm_userscope u left join t_auth_userrole a on a.user_code = u.user_id
+		WHERE u.ACTIVE = 'Y' and (a.role_code = '1006' or a.role_code = '1007')
+		]]>
+	</select>
+	
+	<!-- 批量修改客户负责人 
+	<update id="updateBatchCustomerManagePerson"  parameterType="java.util.List">  
+	    <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+	        update t_upload_account
+	        <set>
+	            manageEmpCode=#{item.manageEmpCode,jdbcType=VARCHAR},
+	            managePerson=#{item.managePerson,jdbcType=VARCHAR},
+	            dispenseStatus=#{item.dispenseStatus,jdbcType=VARCHAR}
+	        </set>
+	        where id = #{item.id,jdbcType=VARCHAR}
+	    </foreach>      
+	</update>-->
+	
+	<update id="updateBatchCustomerManagePerson"  parameterType="java.util.List">  
+	     update t_upload_account
+            <trim prefix="set" suffixOverrides=",">
+             <trim prefix="manageEmpCode =case" suffix="end,">
+                 <foreach collection="list" item="i" index="index">
+                         <if test="i.manageEmpCode!=null">
+                          when id=#{i.id} then #{i.manageEmpCode}
+                         </if>
+                 </foreach>
+              </trim>
+              <trim prefix="managePerson =case" suffix="end,">
+                 <foreach collection="list" item="i" index="index">
+                         <if test="i.managePerson!=null">
+                          when id=#{i.id} then #{i.managePerson}
+                         </if>
+                 </foreach>
+              </trim>
+              
+              <trim prefix="dispenseStatus =case" suffix="end," >
+                 <foreach collection="list" item="i" index="index">
+                         <if test="i.dispenseStatus!=null">
+                          when id=#{i.id} then #{i.dispenseStatus}
+                         </if>
+                 </foreach>
+              </trim>
+             </trim>
+            where
+            <foreach collection="list" separator="or" item="i" index="index" >
+              id=#{i.id}
+          </foreach>    
+	</update>
+	
+	<!-- 批量更新客户得不到坐标的客户下次不再扫描 -->
+	<update id="updateBatchCustomerIsUpdate"  parameterType="java.util.List">  
+		 update t_crm_account set IsUpdate = 'N' where 
+	    <foreach collection="list" item="id" index="index" open="" close="" separator="or">
+	       id = #{id,jdbcType=VARCHAR} 
+	    </foreach>      
+	</update>
+	
+	
+	<!-- 根据用户ID获得门店产值最高的的用户 -->
+	<select id="getMaxStoresOutputUsers" parameterType="java.util.List" resultType="String">
+		<![CDATA[
+		SELECT
+				CONCAT_WS(
+					';',
+					TEMP.LOGIN_NAME,
+					TEMP.EMPNAME
+				) AS USERS
+			FROM
+				(
+					SELECT
+						U.LOGIN_NAME,
+						E.EMPNAME,
+						(
+							SELECT
+								SUM(Y.OUTPUTNUM)
+							FROM
+								T_CRM_ACCOUNT_OUTPUT Y
+							WHERE
+								Y. YEAR = YEAR (NOW())
+							AND Y. MONTH < MONTH (NOW())
+							AND Y. MONTH >= (MONTH(NOW()) - 2)
+							AND Y.DCACCOUNT IN (
+								SELECT DISTINCT
+									C.DCACCOUNT
+								FROM
+									T_CRM_ACCOUNT C
+								WHERE
+									C.TIERCODE IN (
+										SELECT
+											D.LOGISTCODE
+										FROM
+											T_ORG_DEPARTMENT D
+										WHERE
+											D.DEPTCODE IN (
+												SELECT
+													E.DEPTCODE
+												FROM
+													T_ORG_EMPLOYEE E
+												WHERE
+													E.EMPCODE IN (
+														SELECT
+															EMP_CODE
+														FROM
+															T_AUTH_USER A
+														WHERE
+															A.LOGIN_NAME = U.LOGIN_NAME
+													)
+											)
+									)
+								AND C.DCACCOUNT IS NOT NULL
+								AND C.DCACCOUNT != ''
+							)
+						) AS OUTPUTNUM
+					FROM
+						T_AUTH_USER U
+					LEFT JOIN T_ORG_EMPLOYEE E ON U.EMP_CODE = E.EMPCODE ]]>
+					<where>
+						U.LOGIN_NAME IN 
+						<foreach collection="list" item="id" open="(" close=")"
+							separator=",">
+							#{id}
+						</foreach>
+					</where>
+		<![CDATA[
+				) TEMP WHERE TEMP.OUTPUTNUM > 0
+			ORDER BY
+				TEMP.OUTPUTNUM DESC
+			LIMIT 1
+		]]>
+	</select>
+	
+	
+	<!-- 根据用户ID获得客户经理产值最高的的用户 -->
+	<select id="getMaxSalesManagerOutputUsers" parameterType="java.util.List" resultType="String">
+		<![CDATA[
+		SELECT
+				CONCAT_WS(
+					';',
+					TEMP.LOGIN_NAME,
+					TEMP.EMPNAME
+				) AS USERS
+			FROM
+				(
+					SELECT
+						U.LOGIN_NAME,
+						E.EMPNAME,
+						(
+							SELECT
+								SUM(Y.OUTPUTNUM)
+							FROM
+								T_CRM_ACCOUNT_OUTPUT Y
+							WHERE
+								Y. YEAR = YEAR (NOW())
+							AND Y. MONTH < MONTH (NOW())
+							AND Y. MONTH >= (MONTH(NOW()) - 2)
+							AND Y.DCACCOUNT IN (
+								SELECT DISTINCT
+									C.DCACCOUNT
+								FROM
+									T_CRM_ACCOUNT C
+								WHERE
+									C.ManageEmpCode IN (
+										SELECT
+											EMP_CODE
+										FROM
+											T_AUTH_USER A
+										WHERE
+											A.LOGIN_NAME = U.LOGIN_NAME
+									)
+								AND C.DCACCOUNT IS NOT NULL
+								AND C.DCACCOUNT != ''
+							)
+						) AS OUTPUTNUM
+					FROM
+						T_AUTH_USER U
+					LEFT JOIN T_ORG_EMPLOYEE E ON U.EMP_CODE = E.EMPCODE ]]>
+					<where>
+						U.LOGIN_NAME IN 
+						<foreach collection="list" item="id" open="(" close=")"
+							separator=",">
+							#{id}
+						</foreach>
+					</where>
+		<![CDATA[
+				) TEMP WHERE TEMP.OUTPUTNUM > 0
+			ORDER BY
+				TEMP.OUTPUTNUM DESC
+			LIMIT 1
+		]]>
+	</select>
+	
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.bse.server.dao.WasMeetingSignEntityMapper">
+	    <!--新增被扫描人信息  -->
+	    <insert id="addWasMeetingSignEntity" parameterType="com.hoau.crm.module.sales.api.shared.domain.WasMeetingSignEntity">
+	         INSERT INTO t_sale_meeting_wassweep(
+				ID,
+				WASSWEEPPEOPSIGNID,
+				WASSWEEPPEOP,
+				WASSWEEPPEOPNAME,
+				WASSWEEPPEOPJOBCODE,
+				WASSWEEPPEOPJOBNAME,
+				WASSWEEPPEOPDEPTCODE,
+				WASSWEEPPEOPDEPTNAME,
+				CREATE_USER,
+				ACTIVE,
+			    CREATE_DATE) VALUES	
+			(
+				#{id, jdbcType=VARCHAR},
+			    #{wasSweepPeopSignId, jdbcType=VARCHAR},
+			    #{wasSweepPeop, jdbcType=VARCHAR},
+			    #{wasSweepPeopName, jdbcType=VARCHAR},
+			    #{wasSweepPeopJobCode, jdbcType=VARCHAR},
+			    #{wasSweepPeopJobName, jdbcType=VARCHAR},
+			    #{wasSweepPeopDeptCode, jdbcType=VARCHAR},
+			    #{wasSweepPeopDeptName, jdbcType=VARCHAR},
+				#{createUser, jdbcType=VARCHAR},
+				'Y',
+			    SYSDATE()
+			)
+	    </insert>
+	    
+	</mapper>
+	
+	

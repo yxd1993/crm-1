@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.news.server.dao.NewsArticleMapper">
+    <!--按条件查询文章列表  -->
+	<select id="queryNews"  parameterType="map" resultMap="artileListMap">
+	    	SELECT 
+	    <include refid="query_param"/>
+	    <![CDATA[
+	    	FROM t_crm_news_article tna
+	    	LEFT JOIN t_crm_news_article_class tnac on tnac.id = tna.article_class_id
+	    ]]>
+	    <choose>
+	        <when test="parentId!=null and parentId!='' ">
+	            where tnac.class_parent_id = #{parentId} 
+	        </when>
+	        <otherwise>
+	            where tnac.id = #{type}
+	        </otherwise>
+	    </choose>
+	     <if test="searchValue!=null and searchValue!=''">
+	        AND tna.article_title LIKE #{searchValue} OR tnac.article_class LIKE #{searchValue}
+	     </if>
+	     	ORDER BY (case WHEN tnac.id='999' then 0 ELSE 1 END) desc, tna.article_hits DESC
+	</select>
+	
+	<!-- 按类型查询文章总数  -->
+	<select id="queryNewsCount"  parameterType="map" resultType="long">
+	    SELECT count(1)
+	    <![CDATA[
+	    	FROM t_crm_news_article tna 
+	    	LEFT JOIN t_crm_news_article_class tnac on tnac.id = tna.article_class_id
+	    ]]>
+	    <where>
+	        tna.active = 'Y'
+	        <if test="type!=null and type!=''">
+	            and tnac.id = #{type}
+	        </if>
+	    </where>
+	    order by tna.create_date desc
+	</select>
+	
+	<!--按id查询文章内容  -->
+	<select id="queryNewsContent"  parameterType="string" resultMap="articleMap">
+	    SELECT 
+	    <include refid="query_param_byId"/>
+	    <![CDATA[
+	    	FROM t_crm_news_article tna
+	    	LEFT JOIN t_crm_news_article_class tnac on tnac.id = tna.article_class_id
+	    ]]>
+	    <where>
+	        tna.active = 'Y' and tna.id = #{id}
+	    </where>
+	</select>
+	<!--添加文章  -->
+	<insert id="addArticle" parameterType="com.hoau.crm.module.news.shared.domain.NewsArticleEntity">
+	    insert into t_crm_news_article (
+	    	id,article_class_id,article_type,article_title,article_summary,article_content,article_hits,
+	    	create_user,create_date,active
+	    )value(
+	    	#{id},#{newsArticleClass.id},#{articleType},#{articleTitle},#{articleSummary},#{articleContent},0,'sysadmin',SYSDATE(),'Y'
+	    )
+	</insert>
+	<sql id="query_param">
+	    tna.id as id,
+	    tna.article_title as articleTitle,
+	    tna.article_hits as articleHits,
+	    tna.article_summary as articleSummary,
+	    tna.create_date as createDate,
+	    tnac.id as articleClassId,
+	    tnac.article_class articleClass
+	</sql>
+	
+	<sql id="query_param_byId">
+	    tna.id as id,
+	    tna.article_type as articleType,
+	    tna.article_title as articleTitle,
+	    tna.article_summary as articleSummary,
+	    tna.article_content as articleContent,
+	    tna.article_hits as articleHits,
+	    tna.content_path as contentPath,
+	    tna.create_user as createUser,
+	    tna.create_date as createDate,
+	    tna.active as active,
+	    tnac.id as articleClassId,
+	    tnac.article_class articleClass
+	</sql>
+	
+	<resultMap type="com.hoau.crm.module.news.shared.domain.NewsArticleEntity" id="artileListMap">
+	    <id column="id" property="id"/>
+	    <result column="articleTitle" property="articleTitle"/>
+	    <result column="articleSummary" property="articleSummary"/>
+	    <result column="articleHits" property="articleHits"/>
+	    <result column="createDate" property="createDate"/>
+	    <association property="newsArticleClass" javaType="com.hoau.crm.module.news.shared.domain.NewsArticleClassEntity">
+	        <id column="articleClassId" property="id"/>
+			<result column="articleClass" property="articleClass"/>
+     	</association>
+	</resultMap>
+	
+	
+	<resultMap type="com.hoau.crm.module.news.shared.domain.NewsArticleEntity" id="articleMap">
+	    <id column="id" property="id"/>
+	    <result column="articleType" property="articleType"/>
+	    <result column="articleTitle" property="articleTitle"/>
+	    <result column="articleSummary" property="articleSummary"/>
+   	    <result column="articleContent" property="articleContent"/>
+   	    <result column="contentPath" property="contentPath"/>
+	    <result column="articleHits" property="articleHits"/>
+	    <result column="createUser" property="createUser"/>
+	    <result column="createDate" property="createDate"/>
+	    <result column="active" property="active"/>
+	    <association property="newsArticleClass" javaType="com.hoau.crm.module.news.shared.domain.NewsArticleClassEntity">
+	        <id column="articleClassId" property="id"/>
+			<result column="articleClass" property="articleClass"/>
+     	</association>
+	</resultMap>
+	
+	<!--更新浏览数  -->
+	<update id="updateArticleHits" parameterType="string">
+	    <![CDATA[
+	     	update t_crm_news_article set article_hits = article_hits +1 where id = #{id}
+	    ]]>
+	</update>
+	
+</mapper>

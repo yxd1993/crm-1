@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.SignAppMapper">
+
+    <!-- 保存签到记录 -->
+	<insert id="addSignInfo" parameterType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+	    <![CDATA[
+			INSERT
+			INTO
+			    t_sale_sign
+			    (
+			        ID,
+			        CUSTOMERID,
+			        LONGITUDE,
+			        LATITUDE,
+			        SIGNADDRESS,
+			        IMGNAME,
+			        IMGURL,
+			        CREATE_USER,
+			        CREATE_DATE,
+			        ACTIVE
+			    )
+			    VALUES
+			    (
+			    	#{id,jdbcType=VARCHAR},
+			        #{customerId,jdbcType=VARCHAR},
+			        #{longitude,jdbcType=NUMERIC},
+			        #{latitude,jdbcType=NUMERIC},
+			        #{signAddress,jdbcType=VARCHAR},
+			        #{imgName,jdbcType=VARCHAR},
+			        #{imgUrl,jdbcType=VARCHAR},
+			        #{createUser,jdbcType=VARCHAR},
+			        #{createDate},
+			        'Y'
+			    )
+	    ]]>
+	</insert>
+	
+	<!-- 判断当前ID签到信息是否存在 -->
+	<select id="isHasThereSign" parameterType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity" resultType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+	    <![CDATA[
+			SELECT isRelationChat as isRelationChat FROM T_SALE_SIGN S WHERE S.ID = #{id}
+	    ]]>
+	</select>
+	
+	 <!--统计未关联的签到信息 -->
+	    <select id="queryNoRelationSignList" parameterType="map" resultType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+		    <![CDATA[
+		    SELECT
+				tss.id as id,
+				tss.signAddress AS signAddress,
+				tss.create_date AS createDate
+			FROM
+				t_sale_sign tss
+			WHERE
+				tss.customerId = #{accountId}
+			AND tss.isRelationChat = 'N'
+			AND tss.active = 'Y'
+			AND tss.create_user = #{loginName}
+			ORDER BY
+				tss.create_date DESC
+		    ]]>
+		</select>
+		
+	 	<!--统计未关联的签到数量  -->
+		<select id="countQueryNoRelationSignList" parameterType="map" resultType="long">
+		    SELECT
+				count(1)
+			FROM
+				t_sale_sign tss
+			WHERE
+				tss.customerId = #{accountId}
+			AND tss.isRelationChat = 'N'
+			AND tss.active = 'Y'
+			AND tss.create_user = #{loginName}
+			ORDER BY
+				tss.create_date DESC
+		</select>
+		
+		 <!-- 更新已绑定的签到地址 -->
+	    <update id="updateRelationChatStatus" parameterType="string">
+	    	<![CDATA[
+	    		UPDATE t_sale_sign SET isRelationChat = 'Y',modify_date=sysdate(),modify_user='sysadmin'
+	    		WHERE ID = #{signId}
+	    	]]>
+	    </update>
+		    
+	     <!-- 保存签到陪同人记录 -->
+		<insert id="addScanAccompany" parameterType="map">
+	 		 <![CDATA[
+			INSERT
+				INTO
+		    t_sale_sign_accompany
+		    (
+		        id,
+		        sign_id,
+		        scan_accompany_empcode,
+		        scan_accompany_empname,
+		        scan_accompany_jobcode,
+		        scan_accompany_jobname,
+		        scan_accompany_deptcode,
+		        scan_accompany_deptname,
+		        create_user,
+		        create_date,
+		        active
+		    )
+		    VALUES
+		   ]]>
+		    <foreach collection="signAccompanyList" item="obj" index="index" separator=",">  
+		        (
+		    	UUID(),
+		        #{obj.signId,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyEmpCode,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyEmpName,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyJobCode,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyJobName,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyDeptCode,jdbcType=VARCHAR},
+		        #{obj.scanAccompanyDeptName,jdbcType=VARCHAR},
+		        #{obj.createUser,jdbcType=VARCHAR},
+		        SYSDATE(),
+		        'Y'
+		   		 )
+			</foreach>
+		</insert>
+</mapper>

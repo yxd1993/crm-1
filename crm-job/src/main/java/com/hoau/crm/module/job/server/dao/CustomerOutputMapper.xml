@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.CustomerOutputMapper">
+
+	<!-- 给新增的有DC账号的客户增加产值数据 -->
+	<insert id="addCustomerOutput" parameterType="map">
+		<![CDATA[
+			INSERT INTO T_CRM_ACCOUNT_OUTPUT (ID, ACCOUNTID, DCACCOUNT, YEAR, MONTH, outputNum) SELECT
+				UUID(),
+				C.ID,
+				C.DCaccount,
+				#{year},
+				#{month},
+				NULL
+			FROM
+				T_CRM_ACCOUNT C
+			LEFT JOIN T_CRM_ACCOUNT_OUTPUT O ON (
+				C.ID = O.accountId
+				AND O.`year` = #{year}
+				AND O.`month` = #{month}
+			)
+			WHERE
+				C.DCaccount IS NOT NULL
+			AND C.DCaccount != ''
+			AND O.accountId IS NULL;
+		]]>
+	</insert>
+
+	<!-- 刷新客户的产值 -->
+	<update id="refreshCustomerOutput" parameterType="map">
+		<![CDATA[
+			UPDATE T_CRM_ACCOUNT_OUTPUT O
+				SET O.OUTPUTNUM = (
+					SELECT
+						SUM(W.billingAmount)
+					FROM
+						T_CRM_WAYBILL W
+					WHERE
+						W.BILLINGDATE >= #{startDate}
+					AND W.BILLINGDATE < #{endDate}
+					AND W.DCACCOUNT = O.DCACCOUNT
+				)
+				WHERE O.`year` = #{year} AND O.`month` = #{month}
+		]]>
+	</update>
+
+	<!-- 查询上月产值小于前三月平均产值的客户与负责人 -->
+	<select id="getCutProductionCustomer" parameterType="map"
+		resultType="map">
+		<![CDATA[
+			SELECT
+				a.enterpriseName,
+				a.manageEmpCode,
+				a.dCaccount
+			FROM
+				(
+					SELECT
+						o.dcaccount,
+						avg(o.outputNum) anum
+					FROM
+						t_crm_account_output o
+					WHERE
+		]]>
+					<foreach collection="beforeMonth" item="item" 
+						separator=" OR ">
+						(o.year = #{item.year} and o.`month` = #{item.month})
+					</foreach>
+		<![CDATA[
+					GROUP BY
+						o.dcaccount
+					HAVING
+						count(1) = 3
+				) o
+			LEFT JOIN t_crm_account_output t ON t.dcaccount = o.dcaccount
+			AND t.`month` = #{month} and t.year = #{year}
+			LEFT JOIN t_crm_account a ON o.dcaccount = a.DCaccount
+			WHERE
+				o.anum > t.outputNum
+			AND a.ManageEmpCode IS NOT NULL
+			AND LENGTH(trim(a.ManageEmpCode)) > 0;
+		]]>
+	</select>
+	
+	<!-- 给新增的客户有负责人且dc账号不为空的添加产值 -->
+	<insert id="addManageEmpOutput" parameterType="map">
+		<![CDATA[
+			INSERT INTO T_CRM_MANAGE_OUTPUT (MANAGEEMPCODE, ID, YEAR, MONTH, OUTPUTVALUE) SELECT DISTINCT
+				A.MANAGEEMPCODE,
+				UUID(),
+				#{year},
+				#{month},
+				NULL
+			FROM
+				T_CRM_ACCOUNT A
+			WHERE
+				A.DCACCOUNT IS NOT NULL
+			AND A.DCACCOUNT != ''
+			AND A.MANAGEEMPCODE IS NOT NULL
+			AND A.MANAGEEMPCODE NOT in (
+				SELECT
+					C.MANAGEEMPCODE
+				FROM
+					T_CRM_MANAGE_OUTPUT C
+				WHERE
+					C.`YEAR` = #{year}
+				AND C.`MONTH` = #{month}
+			)
+		]]>
+	</insert>
+
+	<!-- 刷新负责人产值数据 -->
+	<update id="refreshManageEmpOutput" parameterType="map">
+		<![CDATA[
+			UPDATE T_CRM_MANAGE_OUTPUT O
+				SET O.OUTPUTVALUE = (
+					SELECT
+						SUM(W.BILLINGAMOUNT)
+					FROM
+						T_CRM_ACCOUNT A
+					LEFT JOIN T_CRM_WAYBILL W ON W.DCACCOUNT = A.DCACCOUNT
+					WHERE
+						A.DCACCOUNT IS NOT NULL
+					AND A.DCACCOUNT != ''
+					AND A.MANAGEEMPCODE IS NOT NULL
+					AND W.BILLINGDATE >= #{startDate}
+					AND W.BILLINGDATE < #{endDate}
+					AND A.MANAGEEMPCODE = O.MANAGEEMPCODE
+					GROUP BY
+						A.MANAGEEMPCODE
+				)
+				WHERE O.`year` = #{year} AND O.`month` = #{month}
+		]]>
+	</update>
+	
+	<!-- 刷新客户表近三个月产值  -->
+	<update id="refreshCustomerProductValueOfThreeMonth" statementType="CALLABLE">
+		<![CDATA[
+			{call proc_refreshCustomerProductValueOfThreeMonth}
+		]]>
+	</update>
+	
+</mapper>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.FeedBackInfoMapper">
+
+	<!--分页查询用户反馈信息 -->
+	<select id="getFeedBackInfo" parameterType="map"
+		resultType="com.hoau.crm.module.appcore.api.shared.domain.FeedBackEntity">
+	        <![CDATA[
+			SELECT e.empname as userName,FEEDBACKINFO.FBTITLE,FEEDBACKINFO.FBTYPE,FEEDBACKINFO.FBCONTENT,FEEDBACKINFO.FBDATE as fbTime
+		    ]]>
+	        <![CDATA[
+	        FROM t_app_feedbackinfo FEEDBACKINFO
+	        left join t_auth_user u on FEEDBACKINFO.USERID = u.login_name
+            left join t_org_employee e on u.emp_code = e.empcode
+	        ]]>
+		<where>
+			FEEDBACKINFO.ID !=''
+			<if test=" userName !=null and userName != '' ">
+	                <![CDATA[
+					AND e.empname like #{userName,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbTitle !=null and fbTitle != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBTITLE like #{fbTitle,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbType !=null and fbType != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBTYPE = #{fbType,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbContent !=null and fbContent != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBCONTENT like #{fbContent}
+				    ]]>
+			</if>
+			<if test=" fbTime !=null and fbTime != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBDATE >= #{fbTime}
+				    ]]>
+			</if>
+			<if test=" fbEndTime !=null and fbEndTime != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBDATE < #{fbEndTime}
+				    ]]>
+			</if>
+		</where>
+	        <![CDATA[
+			ORDER BY FEEDBACKINFO.FBDATE DESC
+		    ]]>
+	</select>
+
+	<!-- 分页查询用户反馈信息总数 -->
+	<select id="countFeedBackInfo" parameterType="map" resultType="long">
+	        <![CDATA[
+			SELECT
+				COUNT(1)
+			 FROM t_app_feedbackinfo FEEDBACKINFO
+	         left join t_auth_user u on FEEDBACKINFO.USERID = u.login_name
+             left join t_org_employee e on u.emp_code = e.empcode
+		    ]]>
+		<where>
+			FEEDBACKINFO.ID !=''
+			<if test=" userName !=null and userName != '' ">
+	                <![CDATA[
+					AND e.empname like #{userName,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbTitle !=null and fbTitle != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBTITLE like #{fbTitle,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbType !=null and fbType != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBTYPE = #{fbType,jdbcType=VARCHAR}
+				    ]]>
+			</if>
+			<if test=" fbContent !=null and fbContent != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBCONTENT like #{fbContent}
+				    ]]>
+			</if>
+			<if test=" fbTime !=null and fbTime != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBDATE >= #{fbTime}
+				    ]]>
+			</if>
+			<if test=" fbEndTime !=null and fbEndTime != '' ">
+	                <![CDATA[
+					AND FEEDBACKINFO.FBDATE < #{fbEndTime}
+				    ]]>
+			</if>
+		</where>
+	        <![CDATA[
+			ORDER BY FEEDBACKINFO.FBDATE DESC
+		    ]]>
+	</select>
+
+</mapper>
+	

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="ISO-8859-1">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-app-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-app-itf" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-bse" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-bse-api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-config" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-customer" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-job" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-login" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-news" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-news-web" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-sales" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-util" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crm-web" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

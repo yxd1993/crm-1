@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.AppVersionMapper">
+    
+    
+    <!--分页查询App版本信息 -->
+	<select id="getAPPVersion" parameterType="map"
+		resultType="com.hoau.crm.module.appcore.api.shared.domain.AppVersionEntity">
+	        <![CDATA[
+            SELECT id,versioncode,apkname,url,ismust,isnow,description,createdate
+            ]]> 
+	        <![CDATA[
+	        	from t_app_version v
+	        ]]>
+		<where>
+            v.active='Y'
+            <if test="versionCode!= null ">
+	            <![CDATA[
+				AND v.versioncode = #{versionCode,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+           <if test=" apkName !=null and apkName != '' ">
+	            <![CDATA[
+				AND v.apkname like #{apkName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+             <if test=" createDate !=null and createDate != '' ">
+	            <![CDATA[
+				AND v.createDate >= #{createDate}
+			    ]]>
+			</if>
+            <if test=" createEndDate !=null and createEndDate != '' ">
+                <![CDATA[
+				AND v.createDate < #{createEndDate}
+			    ]]>
+			</if>
+         </where>    
+	        <![CDATA[
+			ORDER BY v.createDate DESC
+		    ]]>
+	</select> 
+             
+    <!-- 分页查询App版本信息总数 -->
+	<select id="countAppVersion" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             from t_app_version v
+             
+             ]]>
+		  <where>
+            v.active='Y'
+            <if test="versionCode != null  ">
+	            <![CDATA[
+				AND v.versioncode = #{versionCode,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			
+           <if test=" apkName !=null and apkName != '' ">
+	            <![CDATA[
+				AND v.apkname like #{apkName,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+           <if test=" createDate !=null and createDate != '' ">
+	            <![CDATA[
+				AND v.createDate >= #{createDate}
+			    ]]>
+			</if>
+            <if test=" createEndDate !=null and createEndDate != '' ">
+                <![CDATA[
+				AND v.createDate < #{createEndDate}
+			    ]]>
+			</if>
+         </where>    
+	        <![CDATA[
+			ORDER BY v.createDate DESC
+		    ]]>
+         </select>
+         
+        <!--删除app版本信息  -->
+		<update id="deleteAppVersion" parameterType="map">
+		    <![CDATA[
+			    UPDATE t_app_version V SET
+				V.ACTIVE = 'N'
+		    ]]>
+			<where>
+				V.ID IN
+				<foreach collection="ids" item="id" open="(" close=")"
+					separator=",">
+					#{id}
+				</foreach>
+			</where>
+		</update>
+	
+	
+    <!--查询最大App版本号 -->
+	  <select id="getMaxAppVersionCode" resultType="int">
+	        <![CDATA[
+            SELECT max(versioncode)
+            ]]> 
+	        <![CDATA[
+	        	from t_app_version v
+	        ]]>
+		<where>
+            v.active='Y'
+         </where>    
+	</select> 
+	
+	<!--新增App版本信息-->
+	<insert id="addAppVersion">
+		<![CDATA[
+			INSERT INTO t_app_version(
+			ID,
+			VERSIONCODE,
+			APKNAME,
+			URL,
+			USERHEADURL,
+			ISMUST,
+			ISNOW,
+			DESCRIPTION,
+			ACTIVE,
+			CREATEDATE
+		) VALUES(
+			UUID(),
+			#{versionCode,jdbcType=VARCHAR},
+			#{apkName,jdbcType=VARCHAR},
+			#{url,jdbcType=VARCHAR},
+            'http://10.39.251.177:80/resources/head',
+			#{isMust,jdbcType=VARCHAR},
+			#{isNow,jdbcType=VARCHAR},
+			#{description,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE()
+		)
+		]]>
+	</insert>
+	
+	<!-- 设置当前数据库中App版本为过去版本 -->
+	<update id="updateAppVersionIsNow">
+	    <![CDATA[
+	    UPDATE t_app_version 
+	    set ISNOW ='2'
+	    ]]>
+	    <where>
+	      ID != ''  
+	    </where>
+	</update>
+	
+	<!-- 通过最大版本号设置当前数据库中App版本为当前版本-->
+	<update id="setIsNowFromMaxCode">
+	    <![CDATA[
+	    UPDATE t_app_version 
+	    set ISNOW ='1'
+	    ]]>
+	    <where>
+	      VERSIONCODE = #{i}
+	      and  ACTIVE='Y'
+	    </where>
+	</update>
+	
+	  <!--获取当前版本的App的url -->
+	  <select id="getUrlFromIsNow" resultType="string">
+	        <![CDATA[
+            SELECT url
+            ]]> 
+	        <![CDATA[
+	        	from t_app_version v
+	        ]]>
+		<where>
+            v.isNow='1'
+         </where>    
+	</select> 
+	
+	  <!--获取当前版本的App的apkName -->
+	  <select id="getApkNameFromIsNow" resultType="string">
+	        <![CDATA[
+            SELECT apkName
+            ]]> 
+	        <![CDATA[
+	        	from t_app_version v
+	        ]]>
+		<where>
+            v.isNow='1'
+         </where>    
+	</select> 
+	
+	  <!--获取当前版本的App的apkName -->
+	  <select id="getUrlFromId"  resultType="string">
+	        <![CDATA[
+            SELECT url
+            ]]> 
+	        <![CDATA[
+	        	from t_app_version v
+	        ]]>
+		<where>
+            v.id= #{id,jdbcType=CHAR}
+         </where>    
+	</select> 
+	  
+	</mapper>

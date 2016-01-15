@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.ServerStatusMapper">
+      <!--添加nginx服务器状态信息 -->
+    <insert id="insertServerLog" parameterType="com.hoau.crm.module.bse.shared.domain.ServerStatusEntity">
+        <![CDATA[
+        INSERT INTO T_LOG_SERVER_STATUS(
+        ID,
+        ACTIVE_CONNECTIONS,
+        HANDLED_CONNECTIONS,
+        HANDLED_SUCCESS,
+        HANDLED_REQUEST,
+        READING,
+        WRITING,
+        WAITING,
+        CREATE_DATE
+        )
+        VALUES(
+        #{id,jdbcType=VARCHAR},
+        #{activeConnections,jdbcType=VARCHAR},
+        #{handledConnections,jdbcType=VARCHAR},
+        #{handledSuccess,jdbcType=VARCHAR},
+        #{handledRequest,jdbcType=VARCHAR},
+        #{reading,jdbcType=VARCHAR},
+        #{writing,jdbcType=VARCHAR},
+        #{waiting,jdbcType=VARCHAR},
+        SYSDATE()
+        )
+        ]]>
+    </insert>
+     <!--查询nginx服务器在线连接数 -->
+    <select id="queryServerConnects" parameterType="map" resultType="com.hoau.crm.module.bse.shared.domain.ServerStatusEntity">
+        <![CDATA[
+        	SELECT T.createDate,
+	        	T.activeConnections,
+	        	T.writing 
+	        	FROM (SELECT
+						SS.CREATE_DATE AS createDate,
+						SS.ACTIVE_CONNECTIONS AS activeConnections,
+						SS.writing AS writing
+					  FROM
+						T_LOG_SERVER_STATUS SS
+					  WHERE DATE_FORMAT(create_date,'%Y-%m-%d') = #{createDate}
+					  ORDER BY
+						SS.CREATE_DATE DESC
+					  LIMIT 150) T
+			ORDER BY T.createDate ASC
+        ]]>
+    </select>
+</mapper>	
+	
+	
+

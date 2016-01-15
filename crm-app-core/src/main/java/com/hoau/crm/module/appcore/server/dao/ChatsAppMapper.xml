@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.appcore.server.dao.ChatsAppMapper">
+    <!-- 按id查询洽谈信息 -->
+	<select id="queryChatsById" parameterType="string"
+		resultMap="chatsMapById">
+				<![CDATA[
+					select
+				]]>
+				<include refid="query_paramByid" />
+				<![CDATA[
+					from t_sale_chats tsc
+					left join t_crm_account tca on tsc.account_id = tca.id
+					left join t_crm_contact tcc on tsc.contact_id = tcc.id
+					left join t_sale_reserve tsr on tsc.relation_reserve_id = tsr.id
+					left join t_org_employee tier on tsc.com_tier_emp_code = tier.empcode
+					left join t_org_employee road on tsc.com_road_emp_code = road.empcode
+					left join t_org_employee regions on tsc.com_regions_emp_code = regions.empcode
+					left join t_org_employee business on tsc.com_business_emp_code = business.empcode
+					left join t_org_employee od on tsc.com_od_emp_code = od.empcode
+					left join t_org_employee ceo on tsc.com_ceo_emp_code = ceo.empcode
+					left join t_org_employee team on tsc.team_manager_emp_code = team.empcode
+					left join t_org_employee sale on tsc.sale_man_emp_code = sale.empcode
+					left join t_sale_sign tss on tss.id = tsc.relation_sign_id
+				]]>
+		<where>
+			tsc.id = #{id}
+		</where>
+	</select>
+	<!--按id查询洽谈信息 -->
+	<sql id="query_paramByid">
+		tsc.id as chatsId,
+		tsc.chat_start_time as chatStartTime,
+		tsc.chat_end_time as chatEndTime,
+		tsc.chat_type as chatType,
+		tsc.reserve_address as reserveAddress,
+		tsc.chat_theme as chatTheme,
+		tsc.chat_contents as chatContents,
+		tsc.com_tier_emp_code as comTierEmpCode,
+		tsc.com_road_emp_code as comRoadEmpCode,
+		tsc.com_regions_emp_code as comRegionsEmpCode,
+		tsc.com_business_emp_code as comBusinessEmpCode,
+		tsc.com_od_emp_code as comOdEmpCode,
+		tsc.com_ceo_emp_code as comCeoEmpCode,
+		tsc.team_manager_emp_code as teamManagerEmpCode,
+		tsc.sale_man_emp_code as saleManEmpCode,
+		tier.empname as tierEmpName,
+		road.empname as roadEmpName,
+		regions.empname as regionsEmpName,
+		business.empname as businessEmpName,
+		od.empname as odEmpName,
+		ceo.empname as ceoEmpName,
+		team.empname as teamManagerEmpName,
+		sale.empname as saleManEmpName,
+		tca.id as accountId,
+		tca.EnterpriseName as enterpriseName,
+		convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		tcc.ContactName as contactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) as Telephone,
+		concat('开始:',DATE_FORMAT(tsr.reserve_start_time,'%Y-%m-%d %H:%i'),
+		' 主题:',tsr.reserve_theme) as reserveInfo,
+		tss.id as signId,
+		tss.signAddress as signAddress	
+	</sql>
+	<!--洽谈信息映射(old)  -->
+	<resultMap type="com.hoau.crm.module.appcore.api.shared.vo.ChatsAppVo"
+		id="chatsMapById">
+		<result property="tierEmpName" column="tierEmpName" />
+		<result property="roadEmpName" column="roadEmpName" />
+		<result property="regionsEmpName" column="regionsEmpName" />
+		<result property="businessUnitEmpName" column="businessEmpName" />
+		<result property="odEmpName" column="odEmpName" />
+		<result property="ceoEmpName" column="ceoEmpName" />
+		<result property="teamManagerEmpName" column="teamManagerEmpName" />
+		<result property="saleManEmpName" column="saleManEmpName" />
+		<result property="reserveInfo" column="reserveInfo"/>
+		<association property="chatsEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity">
+			<id property="id" column="chatsId" />
+			<result property="chatStartTime" column="chatStartTime" />
+			<result property="chatEndTime" column="chatEndTime" />
+			<result property="comTierEmpCode" column="comTierEmpCode"/>
+			<result property="comRoadEmpCode" column="comRoadEmpCode"/>
+			<result property="comRegionsEmpCode" column="comRegionsEmpCode"/>
+			<result property="comBusinessEmpCode" column="comBusinessEmpCode"/>
+			<result property="comOdEmpCode" column="comOdEmpCode"/>
+			<result property="comCeoEmpCode" column="comCeoEmpCode"/>
+			<result property="teamManagerEmpCode" column="teamManagerEmpCode" />
+			<result property="saleManEmpCode" column="saleManEmpCode" />
+			<result property="chatType" column="chatType" />
+			<result property="chatTheme" column="chatTheme" />
+			<result property="reserveAddress" column="reserveAddress"/>
+			<result property="chatContents" column="chatContents" />
+			<association property="customerEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="enterpriseName" />
+				<result property="detailedAddress" column="DetailedAddress" />
+			</association>
+			<association property="contactEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="contactName" />
+				<result property="cellphone" column="Cellphone" />
+				<result property="telephone" column="Telephone"/>
+			</association>
+			<association property="sign" javaType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+			    <id property="id" column="signId"/>
+			    <result property="signAddress" column="signAddress"/>
+			    <collection property="signAccopmanyList" column="{id = signId}" select="queryAccompanyList"/>
+			</association>
+		</association>
+	</resultMap>
+	
+	<!--查询陪同人员  -->
+	<select id="queryAccompanyList" parameterType="map" resultType="com.hoau.crm.module.bse.api.shared.domain.SignAccompanyEntity">
+	     select
+	    	tssa.id as id,
+	    	tssa.scan_accompany_empcode as scanAccompanyEmpCode,
+	    	tssa.scan_accompany_empname as scanAccompanyEmpName
+	    from 
+			t_sale_sign_accompany tssa
+	    where
+	    	tssa.sign_id = #{id}
+	</select>
+</mapper>

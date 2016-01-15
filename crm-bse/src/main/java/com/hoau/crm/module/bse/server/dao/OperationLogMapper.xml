@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.OperationLogMapper">
+	
+	<!-- 新增操作日志 -->
+	<insert id="saveOperationLog" parameterType="com.hoau.crm.module.bse.api.shared.domain.OperationLogEntity">
+		<![CDATA[
+			INSERT INTO t_log_operation (
+				ID,
+				OPERATION_TYPE,
+				OPERATION_USER,
+				WasAuthorizedPerson,
+				OPERATION_TIME,
+				OPERATION_IP,
+				CREATE_USER,
+				CREATE_DATE,
+				ACTIVE	
+			)
+			VALUES(
+				UUID(),
+				#{operationType,jdbcType=VARCHAR},
+				#{operationUser,jdbcType=VARCHAR},
+				#{wasAuthorizedPerson,jdbcType=VARCHAR},
+				#{operationTime,jdbcType=VARCHAR},
+				#{operationIp,jdbcType=VARCHAR},
+				'sysadmin',
+				NOW(),
+				'Y'
+			)
+		]]>
+	</insert>
+</mapper>

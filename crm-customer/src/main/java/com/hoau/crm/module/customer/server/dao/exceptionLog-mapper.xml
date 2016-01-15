@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 异常日志实体的MyBatis映射文件 -->		
+<mapper namespace="com.deppon.pda.module.bamCode.shared.util.ExceptionLog"><!-- 最好是实体的地址 -->
+	<insert id="saveExceptionLog"
+		parameterType="com.deppon.pda.module.bamCode.shared.util.ExceptionLog">
+		<!-- 自动生成ID -->
+		<selectKey keyProperty="id" order="BEFORE" resultType="string">
+		   select sys_guid() id from dual
+		</selectKey>
+		<![CDATA[
+		insert into T_BAM_EXCEPTIONLOG(
+		    ID                ,
+  		    EXCEPTION_POSITION,
+  		    EXCEPTION_DESCRIP ,
+  		    OPERATOR          ,
+  		    EXCEPTION_TIME
+  		    
+		) values (
+		]]>
+			#{id},
+			<choose>
+				<when test="exceptionPosition != null">
+					#{exceptionPosition},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="exceptionDescrip != null">
+					#{exceptionDescrip},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="operator != null">
+					#{operator},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>			
+			sysdate
+		<![CDATA[
+		)
+		]]>
+	</insert>
+</mapper>

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.DailyProblemMapper">
+    
+    
+    <!--资源信息查询 -->
+	<select id="queryDailyProblemList" parameterType="map"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyProblemEntity">
+	        <![CDATA[
+            SELECT 
+	            v.ID,
+	            v.YLTIME,
+	            v.YLADDRESS,
+	            v.CYEMP,
+	            v.YLWAY,
+	            v.WTDESCRIBE,
+	            v.JCDESCRIBE,
+	            v.MEETINGSIGNID,
+	            v.CREATE_DATE AS CREATEDATE,
+	            E.EMPNAME AS CREATEUSER  
+            FROM T_CRM_DAILYPROBLEM v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+            v.active='Y'
+            <if test="yltime != null and yltime != ''">
+	            <![CDATA[
+				AND date_format(v.yltime,'%Y-%m-%d') = #{yltime}
+			    ]]>
+			</if>
+			<if test="queryCreateTime != null and queryCreateTime != ''">
+	            <![CDATA[
+				AND date_format(v.CREATE_DATE,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+           <if test=" wtdescribe !=null and wtdescribe != '' ">
+	            <![CDATA[
+				AND v.wtdescribe like #{wtdescribe,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            
+             <if test=" ylway !=null and ylway != '' ">
+	            <![CDATA[
+				AND v.ylway = #{ylway}
+			    ]]>
+			</if>
+             <if test=" jcdescribe !=null and jcdescribe != '' ">
+	            <![CDATA[
+				AND v.jcdescribe like #{jcdescribe,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+         </where>
+         <choose>
+         	<when test="timeDesc != null and timeDesc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+         	</when>
+         	<when test="timeAsc != null and timeAsc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE ASC
+		    	]]>
+         	</when>
+         	<otherwise>
+         		 <![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+         	</otherwise>
+         </choose>  
+	</select> 
+             
+       <!--分页查询-->
+	<select id="countqueryDailyProblemList" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             from T_CRM_DAILYPROBLEM v
+             LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+             ]]>
+		 <where>
+            v.active='Y'
+            <if test="yltime != null and yltime != ''">
+	            <![CDATA[
+				AND date_format(v.yltime,'%Y-%m-%d') = #{yltime}
+			    ]]>
+			</if>
+			
+           <if test=" wtdescribe !=null and wtdescribe != '' ">
+	            <![CDATA[
+				AND v.wtdescribe like #{wtdescribe,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            <if test="queryCreateTime != null and queryCreateTime != ''">
+	            <![CDATA[
+				AND date_format(v.CREATE_DATE,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+             <if test=" ylway !=null and ylway != '' ">
+	            <![CDATA[
+				AND v.ylway = #{ylway}
+			    ]]>
+			</if>
+             <if test=" jcdescribe !=null and jcdescribe != '' ">
+	            <![CDATA[
+				AND v.jcdescribe like #{jcdescribe,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+         </where>    
+         </select>
+         
+        <!--删除  -->
+		<update id="deleteDailyProblem" parameterType="map">
+		    <![CDATA[
+			    UPDATE T_CRM_DAILYPROBLEM V SET
+				V.ACTIVE = 'N'
+		    ]]>
+			<where>
+				V.ID IN
+				<foreach collection="ids" item="id" open="(" close=")"
+					separator=",">
+					#{id}
+				</foreach>
+			</where>
+		</update>
+	
+	
+	<!--新增App版本信息-->
+	<insert id="addDailyProblem">
+		<![CDATA[
+			INSERT INTO T_CRM_DAILYPROBLEM(
+			ID,
+			YLTIME,
+			YLADDRESS,
+			CYEMP,
+			YLWAY,
+			WTDESCRIBE,
+			JCDESCRIBE,
+			MEETINGSIGNID,
+			ACTIVE,
+			CREATE_DATE,
+			CREATE_USER
+		) VALUES(
+			#{id,jdbcType=VARCHAR},
+			#{yltime,jdbcType=VARCHAR},
+			#{yladdress,jdbcType=VARCHAR},
+			#{cyEmp,jdbcType=VARCHAR},
+			#{ylway,jdbcType=VARCHAR},
+			#{wtdescribe,jdbcType=VARCHAR},
+			#{jcdescribe,jdbcType=VARCHAR},
+			#{meetingSignId,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE(),
+			#{createUser,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+	
+		<!-- 根据主键查询信息 -->
+	<select id="queryDailyProblemInfoById" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyProblemEntity">
+		 <![CDATA[
+            SELECT 
+	            v.ID,
+	            v.YLTIME,
+	            v.YLADDRESS,
+	            v.CYEMP,
+	            v.YLWAY,
+	            v.WTDESCRIBE,
+	            v.JCDESCRIBE,
+	            v.MEETINGSIGNID,
+	            v.CREATE_DATE AS CREATEDATE,
+	            E.EMPNAME AS CREATEUSER  
+            FROM T_CRM_DAILYPROBLEM v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+			v.id = #{cId}
+		</where>
+	</select>
+	</mapper>

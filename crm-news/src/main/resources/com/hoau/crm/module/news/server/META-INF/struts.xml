@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="news" namespace="/news" extends="crm-default">
+	    <!-- 进入页面 -->
+		<action name="*" class="newsAction" method="commonMethod">
+			<result name="success">{1}.jsp</result>
+		</action>
+		<!--常见问题查看内容  -->
+		<action name="lookFaqsContent" class="newsAction" method="lookFaqsContent">
+		    <result name="success">lookFaqsContent.jsp</result>
+		</action>
+		<!-- 表格查询方法  -->
+		<action name="queryNews" class="newsAction" method="queryNews"/>
+		<!--通用 action  -->
+		<action name="newsAction" class="newsAction">
+			<result name="success" type="json"/>
+			<result name="error" type="json"/>
+		</action>
+	</package>
+</struts>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 操作日志实体的MyBatis映射文件 -->		
+<mapper namespace="com.hoau.crm.module.customer.server.dao.QueryCreateSqlMapper"><!-- 最好是实体的地址 -->
+   <!-- 定义实体与数据库的映射结果集 -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.QueryCreateSql" id="querySqlResultMap">
+		<id property="id" column="ID"/>
+        <result property="num" column="NUM"/>
+        <result property="createSql" column="CREATESQL"/>
+        <result property="createType" column="CREATETYPE"/>
+        <result property="execTime" column="EXECTIME"/>
+        <result property="lastTime" column="LASTTIME"/>
+        <result property="tablename" column="TABLENAME"/>
+        <result property="tablenum" column="TABLENUM"/>
+        <result property="remark" column="REMARK"/>
+        <result property="createUser" column="CREATOR"/>
+        <result property="createDate" column="CREATE_DATE"/>
+        <result property="modifyUser" column="MODIFIER"/> 
+        <result property="modifyDate" column="MODIFY_DATE"/>
+	</resultMap>
+	<!-- 查询所有的创建表自定义SQL -->	
+	<select id="selectPageQuerySql" resultMap="querySqlResultMap"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.QueryCreateSql">
+		<![CDATA[
+			SELECT
+				T.ID,
+				convert(T.CREATESQL using utf8) as CREATESQL,
+				T.CREATETYPE,
+				T.CREATE_DATE,
+				T.CREATOR,
+				T.EXECTIME,
+				T.LASTTIME,
+				T.MODIFIER,
+				T.MODIFY_DATE,
+				T.TABLENAME,
+				T.TABLENUM,
+				T.NUM,
+				T.REMARK
+			FROM
+				T_BAM_CREATESQL T
+		]]>
+		<where>
+			1=1
+			<if test="tablenum!=null and tablenum!=''">
+				AND T.TABLENUM = #{tablenum,jdbcType=VARCHAR}
+			</if>
+			<if test="tablename!=null and tablename!=''">
+				AND instr(T.TABLENAME ,#{tablename,jdbcType=VARCHAR})>0 
+			</if>
+			<if test="remark!=null and remark!=''">
+				AND instr(T.REMARK ,#{remark,jdbcType=VARCHAR})>0 
+			</if>
+			<if test="createType!=null and createType!=''">
+				AND T.CREATETYPE = #{createType,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>	
+	<!-- 分页查询所有自定义查询SQL总数	 -->	
+    <select id="totalQuerySqlCount" resultType="long" parameterType="com.hoau.crm.module.customer.api.shared.domain.QueryCreateSql">
+		<![CDATA[
+			SELECT 
+			count(T.ID)
+			FROM T_BAM_CREATESQL T
+		]]>
+		<where>
+			1=1
+			<if test="tablenum!=null and tablenum!=''">
+				AND T.TABLENUM = #{tablenum,jdbcType=VARCHAR}
+			</if>
+			<if test="tablename!=null and tablename!=''">
+				AND instr(T.TABLENAME ,#{tablename,jdbcType=VARCHAR})>0 
+			</if>
+			<if test="remark!=null and remark!=''">
+				AND instr(T.REMARK ,#{remark,jdbcType=VARCHAR})>0 
+			</if>
+			<if test="createType!=null and createType!=''">
+				AND T.CREATETYPE = #{createType,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 新增自定义查询SQL-->	
+	<insert id="insertQuerySql" parameterType="com.hoau.crm.module.customer.api.shared.domain.QueryCreateSql">
+		<![CDATA[
+			insert into T_BAM_CREATESQL(
+				ID,
+				CREATESQL,
+				CREATETYPE,
+				CREATE_DATE,
+				CREATOR,
+				EXECTIME,
+				LASTTIME,
+				MODIFIER,
+				MODIFY_DATE,
+				TABLENAME,
+				TABLENUM,
+				NUM,
+				REMARK
+			) values (
+		]]>
+			#{id},
+			<choose>
+				<when test="createSql != null">
+					#{createSql,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="createType != null">
+					#{createType,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			SYSDATE(),
+			#{createUser,jdbcType=VARCHAR},
+			<choose>
+				<when test="execTime != null">
+					#{execTime,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="lastTime != null">
+					#{lastTime,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="modifyUser != null">
+					#{modifyUser,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+				SYSDATE(),
+			<choose>
+				<when test="tablename != null">
+					#{tablename,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="tablenum != null">
+					#{tablenum,jdbcType=VARCHAR},
+				</when>
+				<otherwise>
+					null,
+				</otherwise>
+			</choose>
+			#{num,jdbcType=VARCHAR},
+			<choose>
+				<when test="remark != null">
+					#{remark,jdbcType=VARCHAR}
+				</when>
+				<otherwise>
+					null
+				</otherwise>
+			</choose>
+		<![CDATA[
+			)
+		]]>
+	</insert>
+	
+	<update id="updateCreateSql" parameterType="map">
+		${sql}
+	</update>
+	
+	<!-- 更改修改后的sql -->
+	<update id="updateCreateSqlInfo" parameterType="com.hoau.crm.module.customer.api.shared.domain.QueryCreateSql">
+		update T_BAM_CREATESQL set createSql = #{createSql} where id = #{id}
+	</update>
+	
+	<!-- 批量删除自定义查询SQL-->	
+	<delete id="deleteQuerySql" parameterType="java.util.List">
+		DELETE FROM T_BAM_CREATESQL
+		WHERE ID IN 
+		<foreach collection="list" open="(" close=")" 
+			item="item" separator="," index="index" > 
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

@@ -1,0 +1,1323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.CustomerMapper">
+	<!-- 客户与联系人详细信息 -->
+	<resultMap id="customerResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="accountType" column="MASTER_ACCOUNTTYPE" />
+		<result property="accountCode" column="MASTER_ACCOUNTCODE" />
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="enterpriseShortName" column="MASTER_ENTERPRISESHORTNAME" />
+		<result property="enterpriseBillHead" column="MASTER_ENTERPRISEBILLHEAD" />
+		<result property="parentCompany" column="MASTER_PARENTCOMPANY" />
+		<result property="parentCompanyName" column="MASTER1_PARENTCOMPANYNAME" />
+		<result property="enterpriseType" column="MASTER_ENTERPRISETYPE" />
+		<result property="accountSub" column="MASTER_ACCOUNTSUB" />
+		<result property="statusCode" column="MASTER_STATUSCODE" />
+		<result property="tierCode" column="MASTER_TIERCODE" />
+		<result property="industryCode" column="MASTER_INDUSTRYCODE" />
+		<result property="accountRatingCode" column="MASTER_ACCOUNTRATINGCODE" />
+		<result property="startingTime" column="MASTER_STARTINGTIME" />
+		<result property="detailedAddress" column="MASTER_DETAILEDADDRESS" />
+		<result property="detailedAddressPostalCode" column="MASTER_DETAILEDADDRESSPOSTALCODE" />
+		<result property="deliveryAddress" column="MASTER_DELIVERYADDRESS" />
+		<result property="deliveryAddressPostalCode" column="MASTER_DELIVERYADDRESSPOSTALCODE" />
+		<result property="discountRate" column="MASTER_DISCOUNTRATE" />
+		<result property="accountRemark" column="MASTER_ACCOUNTREMARK" />
+		<result property="marketActiveType" column="MASTER_MARKETACTIVETYPE" />
+		<result property="marketActiveRemark" column="MASTER_MARKETACTIVEREMARK" />
+		<result property="mainGoodsName" column="MASTER_MAINGOODSNAME" />
+		<result property="typeOfPackage" column="MASTER_TYPEOFPACKAGE" />
+		<result property="dcAccount" column="MASTER_DCACCOUNT" />
+		<result property="manageEmpCode" column="MASTER_MANAGEEMPCODE" />
+		<result property="managePerson" column="MASTER_MANAGEPERSON" />
+		<result property="businessUnitCode" column="MASTER_BUSINESSUNITCODE" />
+		<result property="regionsCode" column="MASTER_REGIONSCODE" />
+		<result property="roadAreaCode" column="MASTER_ROADAREACODE" />
+		<result property="accountCreditGrade" column="MASTER_ACCOUNTCREDITGRADE" />
+		<result property="accountChannel" column="MASTER_ACCOUNTCHANNEL" />
+		<result property="accountPeriod" column="MASTER_ACCOUNTPERIOD" />
+		<result property="contractStartTime" column="MASTER_CONTRACTSTARTTIME" />
+		<result property="contractEndTime" column="MASTER_CONTRACTENDTIME" />
+		<result property="waybillLog" column="WAYBILLLOG" />
+		<result property="active" column="MASTER_ACTIVE" />
+		<result property="signTierCode" column="MASTER_SIGNTIERCODE" />
+		<result property="customerOfOrg" column="MASTER_CUSTOMEROFORG" />
+		<result property="isCreateObhAccount" column="MASTER_ISCREATEOBHACCOUNT" />
+		<result property="obhUserId" column="MASTER_OBHUSERID" />
+		<result property="obhAccount" column="MASTER_OBHACCOUNT" />
+		<result property="createUser" column="MASTER_CREATEDBY"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="MASTER_CREATEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MASTER_MODIFIEDBY"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MASTER_MODIFIEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<association property="contactEntity" column="CONTACT_ACCOUNTID"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="CONTACT_ID" />
+			<result property="accountId" column="CONTACT_ACCOUNTID" />
+			<result property="contactName" column="CONTACT_CONTACTNAME" />
+			<result property="districtNumber" column="CONTACT_DISTRICTNUMBER" />
+			<result property="telephone" column="CONTACT_TELEPHONE" />
+			<result property="eMailAddress" column="CONTACT_EMAILADDRESS" />
+			<result property="cellphone" column="CONTACT_CELLPHONE" />
+			<result property="createUser" column="CONTACT_CREATEDBY"
+				javaType="String" jdbcType="VARCHAR" />
+			<result property="createDate" column="CONTACT_CREATEDON"
+				javaType="Date" jdbcType="TIMESTAMP" />
+			<result property="modifyUser" column="CONTACT_MODIFIEDBY"
+				javaType="String" jdbcType="VARCHAR" />
+			<result property="modifyDate" column="CONTACT_MODIFIEDON"
+				javaType="Date" jdbcType="TIMESTAMP" />
+		</association>
+	</resultMap>
+
+	<!-- 客户基本信息 -->
+	<resultMap id="customerComboResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="accountType" column="MASTER_ACCOUNTTYPE"/>
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="detailedAddress" column="MASTER_DETAILEDADDRESS" />
+		<result property="deliveryAddress" column="MASTER_DELIVERYADDRESS"/>
+		<result property="deliveryAddressPostalCode" column="MASTER_DELIVERYADDRESSPOSTALCODE"/>
+		<result property="tierCode" column="MASTER_TIERCODE" />
+		<association property="contactEntity" column="CONTACT_ACCOUNTID"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="ID" />
+			<result property="accountId" column="CONTACT_ACCOUNTID" />
+			<result property="contactName" column="CONTACT_CONTACTNAME" />
+		</association>
+	</resultMap>
+
+	<!-- 客户与联系人详细信息 -->
+	<sql id="query_customer_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.ACCOUNTTYPE AS
+		MASTER_ACCOUNTTYPE,
+		MASTER.ACCOUNTCODE AS MASTER_ACCOUNTCODE,
+		MASTER.ENTERPRISENAME AS
+		MASTER_ENTERPRISENAME,
+		MASTER.ENTERPRISESHORTNAME AS MASTER_ENTERPRISESHORTNAME,
+		MASTER.ENTERPRISEBILLHEAD AS
+		MASTER_ENTERPRISEBILLHEAD,
+		MASTER.PARENTCOMPANY AS
+		MASTER_PARENTCOMPANY,
+		MASTER.ENTERPRISETYPE AS
+		MASTER_ENTERPRISETYPE,
+		MASTER.ACCOUNTSUB AS
+		MASTER_ACCOUNTSUB,
+		MASTER.STATUSCODE AS
+		MASTER_STATUSCODE,
+		MASTER.TIERCODE AS
+		MASTER_TIERCODE,
+		MASTER.INDUSTRYCODE AS
+		MASTER_INDUSTRYCODE,
+		MASTER.ACCOUNTRATINGCODE AS
+		MASTER_ACCOUNTRATINGCODE,
+		MASTER.STARTINGTIME AS
+		MASTER_STARTINGTIME,
+		convert(AES_DECRYPT(UNHEX(MASTER.DETAILEDADDRESS),'CRM') using utf8) AS MASTER_DETAILEDADDRESS,
+		MASTER.DETAILEDADDRESSPOSTALCODE AS MASTER_DETAILEDADDRESSPOSTALCODE,
+		MASTER.DELIVERYADDRESS AS
+		MASTER_DELIVERYADDRESS,
+		MASTER.DELIVERYADDRESSPOSTALCODE AS MASTER_DELIVERYADDRESSPOSTALCODE,
+		MASTER.DISCOUNTRATE AS MASTER_DISCOUNTRATE,
+		MASTER.ACCOUNTREMARK AS
+		MASTER_ACCOUNTREMARK,
+		MASTER.MARKETACTIVETYPE AS MASTER_MARKETACTIVETYPE,
+		MASTER.MARKETACTIVEREMARK AS MASTER_MARKETACTIVEREMARK,
+		MASTER.MAINGOODSNAME AS MASTER_MAINGOODSNAME,
+		MASTER.TYPEOFPACKAGE AS MASTER_TYPEOFPACKAGE,
+		MASTER.ManageEmpCode AS
+		MASTER_MANAGEEMPCODE,
+		MASTER.DCACCOUNT AS MASTER_DCACCOUNT,
+		MASTER.MANAGEPERSON AS MASTER_MANAGEPERSON,
+		MASTER.BUSINESSUNITCODE AS
+		MASTER_BUSINESSUNITCODE,
+		MASTER.REGIONSCODE AS MASTER_REGIONSCODE,
+		MASTER.ROADAREACODE AS MASTER_ROADAREACODE,
+		MASTER.ACCOUNTCREDITGRADE AS
+		MASTER_ACCOUNTCREDITGRADE,
+		MASTER.ACCOUNTCHANNEL AS
+		MASTER_ACCOUNTCHANNEL,
+		MASTER.ACCOUNTPERIOD AS
+		MASTER_ACCOUNTPERIOD,
+		MASTER.CONTRACTSTARTTIME AS MASTER_CONTRACTSTARTTIME,
+		MASTER.CONTRACTENDTIME AS MASTER_CONTRACTENDTIME,
+		MASTER.CREATEDBY AS MASTER_CREATEDBY,
+		MASTER.CREATEDON AS
+		MASTER_CREATEDON,
+		MASTER.MODIFIEDBY AS
+		MASTER_MODIFIEDBY,
+		MASTER.MODIFIEDON AS MASTER_MODIFIEDON,
+		MASTER.ACTIVE AS MASTER_ACTIVE,
+		MASTER.CUSTOMEROFORG AS MASTER_CUSTOMEROFORG,
+		MASTER.SIGNTIERCODE AS MASTER_SIGNTIERCODE,
+		MASTER.ISCREATEOBHACCOUNT AS MASTER_ISCREATEOBHACCOUNT,
+		MASTER.OBHUSERID AS MASTER_OBHUSERID,
+		MASTER.OBHACCOUNT AS MASTER_OBHACCOUNT,
+		CONTACT.ID AS CONTACT_ID,
+		CONTACT.ACCOUNTID AS CONTACT_ACCOUNTID,
+		CONTACT.CONTACTNAME AS
+		CONTACT_CONTACTNAME,
+		CONTACT.DISTRICTNUMBER AS
+		CONTACT_DISTRICTNUMBER,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS CONTACT_TELEPHONE,
+		CONTACT.EMAILADDRESS AS
+		CONTACT_EMAILADDRESS,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM') using utf8) AS
+		CONTACT_CELLPHONE,
+		CONTACT.CREATEDBY AS CONTACT_CREATEDBY,
+		CONTACT.CREATEDON AS
+		CONTACT_CREATEDON,
+		CONTACT.MODIFIEDBY AS
+		CONTACT_MODIFIEDBY,
+		CONTACT.MODIFIEDON AS CONTACT_MODIFIEDON,
+		MASTER1.ENTERPRISENAME AS
+		MASTER1_PARENTCOMPANYNAME
+	</sql>
+
+	<!-- 客户与联系人分页表格信息 -->
+	<resultMap id="customerGridResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="accountType" column="MASTER_ACCOUNTTYPE" />
+		<result property="dcAccount" column="MASTER_DCACCOUNT" />
+		<result property="accountCode" column="MASTER_ACCOUNTCODE" />
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="industryCode" column="MASTER_INDUSTRYCODE" />
+		<result property="detailedAddress" column="MASTER_DETAILEDADDRESS" />
+		<result property="manageEmpCode" column="MASTER_MANAGEEMPCODE" />
+		<result property="managePerson" column="MASTER_MANAGEPERSON" />
+		<result property="regionsName" column="VS_REGIONSNAME" />
+		<result property="tierCode" column="MASTER_TIERCODE" />
+		<result property="isCreateObhAccount" column="MASTER_ISCREATEOBHACCOUNT" />
+		<result property="createDate" column="MASTER_CREATEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<association property="contactEntity" column="CONTACT_ACCOUNTID"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="ID" />
+			<result property="accountId" column="CONTACT_ACCOUNTID" />
+			<result property="contactName" column="CONTACT_CONTACTNAME" />
+			<result property="districtNumber" column="CONTACT_DISTRICTNUMBER" />
+			<result property="telephone" column="CONTACT_TELEPHONE" />
+			<result property="cellphone" column="CONTACT_CELLPHONE" />
+		</association>
+	</resultMap>
+
+	<!-- 客户与联系人分页表格信息 -->
+	<sql id="query_customer_grid_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.ACCOUNTTYPE AS
+		MASTER_ACCOUNTTYPE,
+		MASTER.DCACCOUNT AS
+		MASTER_DCACCOUNT,
+		MASTER.ACCOUNTCODE AS
+		MASTER_ACCOUNTCODE,
+		MASTER.ENTERPRISENAME AS
+		MASTER_ENTERPRISENAME,
+		MASTER.INDUSTRYCODE AS MASTER_INDUSTRYCODE,
+		convert(AES_DECRYPT(UNHEX(MASTER.DETAILEDADDRESS),'CRM') using utf8) AS
+		MASTER_DETAILEDADDRESS,
+		MASTER.ManageEmpCode AS
+		MASTER_MANAGEEMPCODE,
+		MASTER.MANAGEPERSON AS MASTER_MANAGEPERSON,
+		MASTER.CREATEDON AS
+		MASTER_CREATEDON,
+		convert(AES_DECRYPT(UNHEX(MASTER.DETAILEDADDRESS),'CRM') using utf8) AS
+		MASTER_DETAILEDADDRESS,
+		MASTER.DELIVERYADDRESS AS MASTER_DELIVERYADDRESS,
+		MASTER.DELIVERYADDRESSPOSTALCODE AS MASTER_DELIVERYADDRESSPOSTALCODE,
+		MASTER.TIERCODE AS
+		MASTER_TIERCODE,
+		VS.regionsname AS VS_REGIONSNAME,
+		CONTACT.ACCOUNTID AS CONTACT_ACCOUNTID,
+		CONTACT.CONTACTNAME AS
+		CONTACT_CONTACTNAME,
+		CONTACT.DISTRICTNUMBER AS
+		CONTACT_DISTRICTNUMBER,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS CONTACT_TELEPHONE,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM') using utf8) AS
+		CONTACT_CELLPHONE,
+		MASTER.ISCREATEOBHACCOUNT AS MASTER_ISCREATEOBHACCOUNT
+	</sql>
+
+	<sql id="query_customer_combo_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.ACCOUNTTYPE AS MASTER_ACCOUNTTYPE,
+		MASTER.ENTERPRISENAME AS
+		MASTER_ENTERPRISENAME,
+		convert(AES_DECRYPT(UNHEX(MASTER.DETAILEDADDRESS),'CRM') using utf8) AS
+		MASTER_DETAILEDADDRESS,
+		MASTER.DELIVERYADDRESS AS MASTER_DELIVERYADDRESS,
+		MASTER.DELIVERYADDRESSPOSTALCODE AS MASTER_DELIVERYADDRESSPOSTALCODE,
+		MASTER.TIERCODE AS
+		MASTER_TIERCODE,
+		CONTACT.ACCOUNTID AS CONTACT_ACCOUNTID,
+		CONTACT.CONTACTNAME AS CONTACT_CONTACTNAME
+	</sql>
+
+	<!-- 分页查询客户信息 -->
+	<select id="getCustomerInfo" parameterType="map"
+		resultMap="customerGridResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_grid_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+			LEFT JOIN v_org_storedepartment VS ON MASTER.TIERCODE = VS.logistcode
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '0'
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCACCOUNT = #{dcAccount}
+			</if>
+			<if test="industryCode != null and industryCode != ''">
+				AND MASTER.INDUSTRYCODE = #{industryCode}
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+				<!-- AND EXISTS (SELECT C.AccountId FROM t_crm_contact C WHERE MASTER.ID = C.AccountId AND C.CELLPHONE = HEX(AES_ENCRYPT(#{cellphone}, 'CRM')) AND C.ACTIVE = 'Y') -->
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.CELLPHONE = HEX(AES_ENCRYPT(#{cellphone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND (MASTER.ManagePerson = #{managePerson} OR
+				MASTER.ManageEmpCode = #{managePerson})
+			</if>
+			<if test="regionsName != null and regionsName != ''">
+				AND (VS.regionsname like #{regionsName} OR VS.roadareaname like #{regionsName})
+			</if>
+			<if test="tierCode != null and tierCode != ''">
+				AND MASTER.TIERCODE = #{tierCode}
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON < #{endDate}
+				]]>
+			</if>
+			<if test="selectorParam != null and selectorParam != ''">
+				AND MASTER.ENTERPRISENAME like #{selectorParam}
+			</if>
+			<if test="storeAuth != null and storeAuth !=''">
+				<![CDATA[
+					AND (MASTER.TIERCODE = #{storeAuth} AND MASTER.CUSTOMEROFORG = '0')
+				]]>
+			</if>
+			<if test="roadDeptcode !=null and roadDeptcode !=''">
+				<![CDATA[
+					AND (((MASTER.TIERCODE IN (
+						SELECT v.logistcode 
+						FROM v_org_storedepartment v 
+						WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+								OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+						)
+						OR ( MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+							OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+						)) AND MASTER.CUSTOMEROFORG = '0')
+				]]>
+			</if>
+			<if test="userDeptcode !=null and userDeptcode !=''">
+				<![CDATA[
+					AND ((MASTER.TIERCODE IN (
+						SELECT v.logistcode 
+						FROM v_org_storedepartment v 
+						WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+								OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+						)
+						OR ( MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+							OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+						))
+				]]>
+			</if>
+			<if test="salePerson != null and salePerson !=''">
+				<![CDATA[
+					AND MASTER.MANAGEEMPCODE = #{salePerson}
+				]]>
+			</if>
+			<if test="newStoreData != null and newStoreData != ''">
+				<![CDATA[
+					AND MASTER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+			<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+				<![CDATA[
+					AND ((MASTER.ACCOUNTRATINGCODE = '1') OR (
+						MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+					))
+				]]>
+			</if>
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND ((
+						MASTER.ACCOUNTRATINGCODE != '1'
+					) AND (
+						MASTER.MANAGEEMPCODE NOT IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+						
+					) AND (
+						MASTER.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+		</where>
+		ORDER BY MASTER.CREATEDON DESC
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="countCustomer" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_account MASTER
+		]]>
+		<if test="regionsName != null and regionsName != ''">
+			<![CDATA[
+				LEFT JOIN v_org_storedepartment VS ON MASTER.TIERCODE = VS.logistcode
+			]]>
+		</if>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '0'
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCACCOUNT = #{dcAccount}
+			</if>
+			<if test="industryCode != null and industryCode != ''">
+				AND MASTER.INDUSTRYCODE = #{industryCode}
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+				<!-- AND EXISTS (SELECT C.AccountId FROM t_crm_contact C WHERE MASTER.ID = C.AccountId AND C.CELLPHONE = HEX(AES_ENCRYPT(#{cellphone}, 'CRM')) AND C.ACTIVE = 'Y') -->
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.CELLPHONE = HEX(AES_ENCRYPT(#{cellphone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND (MASTER.ManagePerson = #{managePerson} OR
+				MASTER.ManageEmpCode = #{managePerson})
+			</if>
+			<if test="regionsName != null and regionsName != ''">
+				AND (VS.regionsname like #{regionsName} OR VS.roadareaname like #{regionsName})
+			</if>
+			<if test="tierCode != null and tierCode != ''">
+				AND MASTER.TIERCODE = #{tierCode}
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON < #{endDate}
+				]]>
+			</if>
+			<if test="selectorParam != null and selectorParam != ''">
+				AND MASTER.ENTERPRISENAME like #{selectorParam}
+			</if>
+			<if test="storeAuth != null and storeAuth !=''">
+				AND (MASTER.TIERCODE = #{storeAuth} AND MASTER.CUSTOMEROFORG = '0')
+			</if>
+			<if test="roadDeptcode !=null and roadDeptcode !=''">
+				<![CDATA[
+					AND (((MASTER.TIERCODE IN (
+						SELECT v.logistcode 
+						FROM v_org_storedepartment v 
+						WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+								OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+						)
+						OR ( MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+							OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+						)) AND MASTER.CUSTOMEROFORG = '0')
+				]]>
+			</if>
+			<if test="userDeptcode !=null and userDeptcode !=''">
+				<![CDATA[
+					AND ((MASTER.TIERCODE IN (
+						SELECT v.logistcode 
+						FROM v_org_storedepartment v 
+						WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+								OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+						)
+						OR ( MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+							OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+						))
+				]]>
+			</if>
+			<if test="salePerson != null and salePerson !=''">
+				<![CDATA[
+					AND MASTER.MANAGEEMPCODE = #{salePerson}
+				]]>
+			</if>
+			<if test="newStoreData != null and newStoreData != ''">
+				<![CDATA[
+					AND MASTER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+			<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+				<![CDATA[
+					AND ((MASTER.ACCOUNTRATINGCODE = '1') OR (
+						MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+					))
+				]]>
+			</if>
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND ((
+						MASTER.ACCOUNTRATINGCODE != '1'
+					) AND (
+						MASTER.MANAGEEMPCODE NOT IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+						
+					) AND (
+						MASTER.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+		</where>
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="getCustomerInfoByCombo" parameterType="map"
+		resultMap="customerComboResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_combo_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="selectorParam != null and selectorParam != ''">
+				AND MASTER.ENTERPRISENAME like #{selectorParam}
+			</if>
+		</where>
+		ORDER BY MASTER.CREATEDON DESC
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="countCustomerByCombo" parameterType="map"
+		resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_account MASTER
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y'
+			<if test="selectorParam != null and selectorParam != ''">
+				AND MASTER.ENTERPRISENAME like #{selectorParam}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据主键查询客户信息 -->
+	<select id="getCustomerInfoById" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_account MASTER1 ON MASTER.PARENTCOMPANY = MASTER1.ID
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+		]]>
+		<where>
+			MASTER.id = #{cId}
+		</where>
+	</select>
+	
+	<!-- 根据主键查询所有客户信息，包括客户运单日志，最多返回10000条 -->
+	<select id="getAllCustomerInfoById" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT SUBSTRING_INDEX(L.waybillLog, '。', 10000) AS WAYBILLLOG,
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_account MASTER1 ON MASTER.PARENTCOMPANY = MASTER1.ID
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+			LEFT JOIN t_crm_waybill_log L ON MASTER.DCACCOUNT = L.dcAccount
+		]]>
+		<where>
+			MASTER.id = #{cId}
+		</where>
+	</select>
+	
+	<!-- 根据CRM账号查询客户信息 -->
+	<select id="queryCustomerInfoByCrmAcconut" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_account MASTER1 ON MASTER.PARENTCOMPANY = MASTER1.ID
+			LEFT JOIN t_crm_contact CONTACT ON MASTER.ID = CONTACT.ACCOUNTID
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y' AND
+			MASTER.accountcode = #{crmAccount,jdbcType=VARCHAR}
+		</where>
+	</select>
+	
+	<!-- 根据CRM账号查询客户信息 -->
+	<select id="queryCustomerInfoByDcAcconut" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_account MASTER1 ON MASTER.PARENTCOMPANY = MASTER1.ID
+			LEFT JOIN t_crm_contact CONTACT ON MASTER.ID = CONTACT.ACCOUNTID
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y' AND
+			MASTER.DCACCOUNT = #{dcAccount,jdbcType=VARCHAR}
+		</where>
+	</select>
+
+	<!-- 新增客户信息 -->
+	<insert id="addCustomerInfo"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<![CDATA[
+			insert into t_crm_account(
+				ID,
+				ACCOUNTTYPE,
+				ACCOUNTCODE,
+				ENTERPRISENAME,
+				ENTERPRISESHORTNAME,
+				ENTERPRISEBILLHEAD,
+				PARENTCOMPANY,
+				ENTERPRISETYPE,
+				ACCOUNTSUB,
+				STATUSCODE,
+				TIERCODE,
+				INDUSTRYCODE,
+				ACCOUNTRATINGCODE,
+				STARTINGTIME,
+				DETAILEDADDRESS,
+				DETAILEDADDRESSPOSTALCODE,
+				DELIVERYADDRESS,
+				DELIVERYADDRESSPOSTALCODE,
+				DISCOUNTRATE,
+				ACCOUNTREMARK,
+				MARKETACTIVETYPE,
+				MARKETACTIVEREMARK,
+				MAINGOODSNAME,
+				TYPEOFPACKAGE,
+				DCACCOUNT,
+				ManageEmpCode,
+				MANAGEPERSON,
+				BUSINESSUNITCODE,
+				REGIONSCODE,
+				ROADAREACODE,
+				ACCOUNTCREDITGRADE,
+				ACCOUNTCHANNEL,
+				ACCOUNTPERIOD,
+				CONTRACTSTARTTIME,
+				CONTRACTENDTIME,
+				CREATEDBY,
+				CREATEDON,
+				MODIFIEDBY,
+				MODIFIEDON,
+				CUSTOMEROFORG,
+				SIGNTIERCODE,
+				ISCREATEOBHACCOUNT,
+				OBHUSERID,
+				OBHACCOUNT,
+				ACTIVE
+			) values (
+				#{id},
+				#{accountType},
+				#{accountCode},
+				#{enterpriseName},
+				#{enterpriseShortName},
+				#{enterpriseBillHead},
+				#{parentCompany},
+				#{enterpriseType},
+				#{accountSub},
+				#{statusCode},
+				#{tierCode},
+				#{industryCode},
+				#{accountRatingCode},
+				#{startingTime},
+				HEX(AES_ENCRYPT(#{detailedAddress}, 'CRM')),
+				#{detailedAddressPostalCode},
+				#{deliveryAddress},
+				#{deliveryAddressPostalCode},
+				#{discountRate},
+				#{accountRemark},
+				#{marketActiveType},
+				#{marketActiveRemark},
+				#{mainGoodsName},
+				#{typeOfPackage},
+				#{dcAccount},
+				#{manageEmpCode},
+				#{managePerson},
+				#{businessUnitCode},
+				#{regionsCode},
+				#{roadAreaCode},
+				#{accountCreditGrade},
+				#{accountChannel},
+				#{accountPeriod},
+				#{contractStartTime},
+				#{contractEndTime},
+				#{createUser},
+				SYSDATE(),
+				NULL,
+				NULL,
+				#{customerOfOrg},
+				#{signTierCode},
+				#{isCreateObhAccount},
+				#{obhUserId},
+				#{obhAccount},
+				'Y'
+			)
+		]]>
+	</insert>
+
+	<!-- 新增客户联系人信息 -->
+	<insert id="addCustomerContactInfo"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+		<![CDATA[
+			insert into t_crm_contact(
+				ID,
+				ACCOUNTID,
+				CONTACTNAME,
+				DISTRICTNUMBER,
+				TELEPHONE,
+				EMAILADDRESS,
+				CELLPHONE,
+				CREATEDBY,
+				CREATEDON,
+				MODIFIEDBY,
+				MODIFIEDON,
+				ACTIVE,
+				ISDEFAULT,
+				JOB
+			) values (
+				#{id},
+				#{accountId},
+				#{contactName},
+				#{districtNumber},
+				HEX(AES_ENCRYPT(#{telephone}, 'CRM')),
+				#{eMailAddress},
+				HEX(AES_ENCRYPT(#{cellphone}, 'CRM')),
+				#{createUser},
+				SYSDATE(),
+				NULL,
+				NULL,
+				'Y',
+				#{isDefault},
+				#{job}
+			)
+		]]>
+	</insert>
+
+	<!-- 修改客户信息 -->
+	<insert id="updateCustomerInfo"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<![CDATA[
+			update t_crm_account set 
+				ACCOUNTTYPE = #{accountType},
+				ENTERPRISENAME = #{enterpriseName},
+				ENTERPRISESHORTNAME = #{enterpriseShortName},
+				ENTERPRISEBILLHEAD = #{enterpriseBillHead},
+				PARENTCOMPANY = #{parentCompany},
+				ENTERPRISETYPE = #{enterpriseType},
+				ACCOUNTSUB = #{accountSub},
+				STATUSCODE = #{statusCode},
+				TIERCODE = #{tierCode},
+				INDUSTRYCODE = #{industryCode},
+				ACCOUNTRATINGCODE = #{accountRatingCode},
+				STARTINGTIME = #{startingTime},
+				DETAILEDADDRESS = HEX(AES_ENCRYPT(#{detailedAddress}, 'CRM')),
+				DETAILEDADDRESSPOSTALCODE = #{detailedAddressPostalCode},
+				DELIVERYADDRESS = #{deliveryAddress},
+				DELIVERYADDRESSPOSTALCODE = #{deliveryAddressPostalCode},
+				DISCOUNTRATE = #{discountRate},
+				ACCOUNTREMARK = #{accountRemark},
+				MARKETACTIVETYPE = #{marketActiveType},
+				MARKETACTIVEREMARK = #{marketActiveRemark},
+				MAINGOODSNAME = #{mainGoodsName},
+				TYPEOFPACKAGE = #{typeOfPackage},
+				DCACCOUNT = #{dcAccount},
+				ManageEmpCode = #{manageEmpCode},
+				MANAGEPERSON = #{managePerson},
+				BUSINESSUNITCODE = #{businessUnitCode},
+				REGIONSCODE = #{regionsCode},
+				ROADAREACODE = #{roadAreaCode},
+				ACCOUNTCREDITGRADE = #{accountCreditGrade},
+				ACCOUNTCHANNEL = #{accountChannel},
+				MODIFIEDBY = #{modifyUser},
+				MODIFIEDON = SYSDATE()
+			WHERE ID = #{id}
+		]]>
+	</insert>
+
+	<!-- 修改客户联系人信息 -->
+	<insert id="updateCustomerContactInfo"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+		<![CDATA[
+			update t_crm_contact set
+				CONTACTNAME = #{contactName},
+				DISTRICTNUMBER = #{districtNumber},
+				TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')),
+				EMAILADDRESS = #{eMailAddress},
+				CELLPHONE = HEX(AES_ENCRYPT(#{cellphone}, 'CRM')),
+				JOB = #{job},
+				MODIFIEDBY = #{modifyUser},
+				MODIFIEDON = SYSDATE()
+			WHERE id = #{id}
+		]]>
+	</insert>
+
+	<!-- 判断当前信息是否重名,是否可以新增或修改 -->
+	<select id="isAllowCustomer" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1) 
+			FROM t_crm_account CUSTOMER 
+		]]>
+		<choose>
+			<when test="cellPhone != null and cellPhone !='' and telephone != null and telephone !=''">
+				inner join (select contact.AccountId from t_crm_contact contact where
+					(CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+					OR CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')))
+					AND CONTACT.ACTIVE = 'Y'
+				) C ON CUSTOMER.id = C.AccountId
+			</when>
+			<when test="cellPhone != null and cellPhone !=''">
+				inner join (select contact.AccountId from t_crm_contact contact where
+					CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+					AND CONTACT.ACTIVE = 'Y'
+				) C ON CUSTOMER.id = C.AccountId
+			</when>
+			<when test="telephone != null and telephone !=''">
+				inner join (select contact.AccountId from t_crm_contact contact where
+					CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM'))
+					AND CONTACT.ACTIVE = 'Y'
+				) C ON CUSTOMER.id = C.AccountId
+			</when>
+		</choose>
+		<where>
+			CUSTOMER.ACTIVE = 'Y'
+			<if test="id != null and id != '' ">
+				AND CUSTOMER.ID != #{id,jdbcType=VARCHAR}
+			</if>
+			<if test="enterpriseName != null and enterpriseName !=''">
+				AND CUSTOMER.ENTERPRISENAME = #{enterpriseName,jdbcType=VARCHAR}
+			</if>
+			<!-- <if test="cellPhone != null and cellPhone !=''">
+				AND CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+			</if>
+			<choose>
+				<when test="districtNumber != null and districtNumber !='' and telephone != null and telephone !=''">
+					AND CONTACT.DISTRICTNUMBER = #{districtNumber}
+					AND CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM'))
+				</when>
+				<when test="telephone != null and telephone !=''">
+					AND CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM'))
+				</when>
+			</choose> -->
+		</where>
+	</select>
+	
+	<!-- 判断当前信息是否重名,是否可以新增或修改 -->
+	<select id="isAllowContact" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1) 
+			FROM t_crm_contact CONTACT 
+		]]>
+		<where>
+			CONTACT.ACTIVE = 'Y'
+			<if test="id != null and id != '' ">
+				AND CONTACT.ID != #{id,jdbcType=VARCHAR}
+			</if>
+			<!-- <if test="cellPhone != null and cellPhone !=''">
+				AND CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+			</if> -->
+			<choose>
+				<when test="cellPhone != null and cellPhone !='' and telephone != null and telephone !=''">
+					AND (CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+					OR CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')))
+				</when>
+				<when test="cellPhone != null and cellPhone !=''">
+					AND CONTACT.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone,jdbcType=VARCHAR}, 'CRM'))
+				</when>
+				<when test="telephone != null and telephone !=''">
+					AND CONTACT.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM'))
+				</when>
+			</choose>
+		</where>
+	</select>
+
+	<!-- 删除客户信息 -->
+	<update id="deleteCustomer" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_account CUSTOMER SET
+				CUSTOMER.ACTIVE = 'N',
+				CUSTOMER.DEL_DESC = #{delDesc},
+				CUSTOMER.MODIFIEDON = SYSDATE(),
+				CUSTOMER.MODIFIEDBY = #{username}
+		]]>
+		<where>
+			CUSTOMER.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 联系人返回信息 -->
+	<resultMap id="contactResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+		<id property="id" column="CONTACT_ID" />
+		<result property="accountId" column="CONTACT_ACCOUNTID" />
+		<result property="contactName" column="CONTACT_CONTACTNAME" />
+		<result property="districtNumber" column="CONTACT_DISTRICTNUMBER" />
+		<result property="telephone" column="CONTACT_TELEPHONE" />
+		<result property="eMailAddress" column="CONTACT_EMAILADDRESS" />
+		<result property="cellphone" column="CONTACT_CELLPHONE" />
+		<result property="job" column="CONTACT_JOB" />
+		<result property="isDefault" column="CONTACT_ISDEFAULT" />
+		<result property="active" column="CONTACT_ACTIVE" />
+		<result property="manageEmpCode" column="ACCOUNT_MANAGEEMPCODE"/>
+		<result property="createUser" column="CONTACT_CREATEDBY"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="createDate" column="CONTACT_CREATEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="CONTACT_MODIFIEDBY"
+			javaType="String" jdbcType="VARCHAR" />
+		<result property="modifyDate" column="CONTACT_MODIFIEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+	</resultMap>
+	
+	<!-- 联系人详细信息 -->
+	<sql id="query_contact_param">
+		CONTACT.ID AS CONTACT_ID,
+		CONTACT.ACCOUNTID AS CONTACT_ACCOUNTID,
+		CONTACT.CONTACTNAME AS
+		CONTACT_CONTACTNAME,
+		CONTACT.DISTRICTNUMBER AS
+		CONTACT_DISTRICTNUMBER,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS CONTACT_TELEPHONE,
+		CONTACT.EMAILADDRESS AS
+		CONTACT_EMAILADDRESS,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM') using utf8) AS
+		CONTACT_CELLPHONE,
+		CONTACT.JOB AS
+		CONTACT_JOB,
+		CONTACT.isdefault as CONTACT_ISDEFAULT,
+		CONTACT.active as CONTACT_ACTIVE,
+		CONTACT.CREATEDBY AS CONTACT_CREATEDBY,
+		CONTACT.CREATEDON AS
+		CONTACT_CREATEDON,
+		CONTACT.MODIFIEDBY AS
+		CONTACT_MODIFIEDBY,
+		CONTACT.MODIFIEDON AS CONTACT_MODIFIEDON,
+		ACCOUNT.ManageEmpCode AS
+		ACCOUNT_MANAGEEMPCODE
+	</sql>
+	
+	<!-- 根据客户查询联系人信息 -->
+	<select id="getContactList" parameterType="map"
+		resultMap="contactResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_contact_param" />
+		<![CDATA[
+			FROM t_crm_contact CONTACT 
+			LEFT JOIN t_crm_account ACCOUNT 
+			ON CONTACT.AccountId = ACCOUNT.id
+		]]>
+		<where>
+			CONTACT.ACTIVE = 'Y'
+			<if test="accountId != null and accountId !=''">
+				AND CONTACT.AccountId = #{accountId}
+			</if>
+		</where>
+		ORDER BY CONTACT.ISDEFAULT DESC
+	</select>
+	
+	<!-- 根据客户ID删除联系人信息 -->
+	<update id="deleteContactByAccountId" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_contact CONTACT SET
+				CONTACT.ACTIVE = 'N',
+				CONTACT.MODIFIEDON = SYSDATE(),
+				CONTACT.MODIFIEDBY = #{username}
+		]]>
+		<where>
+			CONTACT.ACCOUNTID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 删除联系人信息 -->
+	<update id="deleteContact" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_contact CONTACT SET
+				CONTACT.ACTIVE = 'N',
+				CONTACT.MODIFIEDON = SYSDATE(),
+				CONTACT.MODIFIEDBY = #{username}
+		]]>
+		<where>
+			CONTACT.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 根据主键查询联系人信息 -->
+	<select id="getContactById" parameterType="string"
+		resultMap="contactResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_contact_param" />
+		<![CDATA[
+			FROM t_crm_contact CONTACT
+			LEFT JOIN t_crm_account ACCOUNT 
+			ON CONTACT.AccountId = ACCOUNT.id
+			WHERE CONTACT.id = #{id}
+		]]>	
+	</select>
+	
+	<!-- 设置联系人为默认 -->
+	<update id="updateContactIsDefault" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_contact CONTACT SET
+				CONTACT.ISDEFAULT = 'Y',
+				CONTACT.MODIFIEDON = SYSDATE(),
+				CONTACT.MODIFIEDBY = #{username}
+			WHERE CONTACT.ID = #{id}
+		]]>
+	</update>
+	
+	<!-- 取消所有联系人为默认 -->
+	<update id="removeContactIsDefault" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_contact CONTACT SET
+				CONTACT.ISDEFAULT = 'N'
+			WHERE CONTACT.ACCOUNTID = #{accountId}
+		]]>
+	</update>
+	
+	<!-- 更新客户账期 和客户性质-->
+	<update id="updateCustomerInfoInfoById" parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<![CDATA[
+			UPDATE t_crm_account CUSTOMER SET
+				CUSTOMER.ACCOUNTPERIOD = #{accountPeriod},
+				CUSTOMER.CONTRACTSTARTTIME = #{contractStartTime},
+				CUSTOMER.CONTRACTENDTIME = #{contractEndTime},
+				CUSTOMER.MODIFIEDON = SYSDATE(),
+				CUSTOMER.MODIFIEDBY = #{modifyUser}
+			WHERE CUSTOMER.ID = #{id}
+		]]>
+	</update>
+	
+	<!-- 查看二级物流代码 -->
+	<select id="queryTierManagerIdByName" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT DEPARTMENT.MANAGERID
+			FROM t_org_department DEPARTMENT
+			WHERE DEPARTMENT.LOGISTCODE = #{tierName,jdbcType=VARCHAR} AND DEPARTMENT.CANCELED = '0'
+		]]>
+	</select>
+	
+	
+	<!-- 根据客户ID查询默认的区号 -->
+	<select id="queryDefaultDistrictNumberByAccountId" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT CONTACT.DistrictNumber 
+			FROM t_crm_account CUSTOMER 
+				LEFT JOIN t_crm_contact CONTACT ON CUSTOMER.ID = CONTACT.AccountId
+			WHERE CUSTOMER.ID = #{accountId,jdbcType=VARCHAR} 
+				AND CONTACT.Active = 'Y' AND CONTACT.ISDEFAULT = 'Y'
+		]]>
+	</select>
+	
+	<!-- 修改客户第一单与最后一单发货时间 -->
+	<update id="updateCustomerShipmentsTime" parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<![CDATA[
+			UPDATE T_CRM_ACCOUNT A
+				SET A.STARTINGTIME =
+				IF (
+					A.STARTINGTIME IS NULL,
+					SYSDATE(),
+					A.STARTINGTIME
+				),
+				A.AccountType = 
+						 /*意向客户，变成发货客户*/
+				(CASE WHEN A.AccountType = '3' THEN '7'
+						 /*流失状态，无合同，变成发货客户7*/
+						 WHEN (A.AccountType = '4' AND A.contractStartTime IS NULL) THEN '7'
+						 /*流失状态，有合同，变成签约客户5*/
+						 WHEN (A.AccountType = '4' AND A.contractStartTime IS NOT NULL) THEN '5'
+				ELSE A.AccountType
+				END),
+				A.LastShipmentsTime = SYSDATE()
+			WHERE
+				A.DCaccount = #{dcAccount};
+		]]>
+	</update>
+	
+	<!-- 根据门店代码查询客户信息 -->
+	<select id="queryCustomerInfosByTierCode" parameterType="string" resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_account MASTER1 ON MASTER.PARENTCOMPANY = MASTER1.ID
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+		]]>
+		<where>
+			MASTER.TierCode = #{TierCode} AND MASTER.CUSTOMEROFORG = '0'
+		</where>
+	</select>
+
+	<!-- 客户历史记录备份的所有字段 -->
+	<sql id="insert_customer_history_param">
+		AccountCode,
+		DCaccount,
+		ManageEmpCode,
+		ManagePerson,
+		BusinessUnitCode,
+		RegionsCode,
+		RoadAreaCode,
+		TierCode,
+		AccountRatingCode,
+		AccountType,
+		StatusCode,
+		AccountCreditGrade,
+		AccountChannel,
+		IndustryCode,
+		EnterpriseName,
+		EnterpriseShortName,
+		EnterpriseBillHead,
+		EnterpriseType,
+		AccountSub,
+		ParentUnit,
+		ParentCompany,
+		DetailedAddress,
+		DetailedAddressPostalCode,
+		MainGoodsName,
+		DeliveryAddress,
+		DeliveryAddressPostalCode,
+		TypeOfPackage,
+		StartingTime,
+		LastShipmentsTime,
+		DiscountRate,
+		accountPeriod,
+		AccountRemark,
+		MarketActiveType,
+		MarketActiveRemark,
+		contractStartTime,
+		contractEndTime,
+		CreatedBy,
+		CreatedOn,
+		ModifiedBy,
+		ModifiedOn,
+		Active,
+		IsUpdate,
+		customerOfOrg,
+		del_desc,
+		saleSignType,
+		isCustomerResourcePool,
+		flowDate,
+		claimDate,
+		customerResourceDeliveryAddress,
+		signTierCode,
+		transferPerson,
+		transferDate
+	</sql>
+	
+	<!-- 将批量修改客户负责人的老数据备份到客户历史记录备份表 -->
+	<insert id="backupUpdateCustomerManagerId" parameterType="map">
+		<![CDATA[
+			INSERT INTO t_crm_account_history (id,accountId,backupTime,
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			) SELECT uuid(),id,sysdate(),
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			FROM t_crm_account CUSTOMER WHERE
+			CUSTOMER.active = 'Y' AND
+			CUSTOMER.customerOfOrg = '0' AND
+			CUSTOMER.TierCode = #{tierCode}
+		]]>
+	</insert>
+	
+	<!-- 将客户信息负责人进行批量修改 -->
+	<update id="updateCustomerManagerId" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_account CUSTOMER SET
+				CUSTOMER.ManageEmpCode = #{manageEmpCode},
+				CUSTOMER.ManagePerson = #{managePerson}
+		]]>
+		<where>
+			CUSTOMER.active = 'Y' AND
+			CUSTOMER.customerOfOrg = '0' AND
+			CUSTOMER.TierCode = #{tierCode}
+		</where>
+	</update>
+	
+	<!-- 新增客户性质转换记录-->
+	<insert id="addCustomerConvertRecord" 
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerNatureConvertEntity">
+		<![CDATA[
+			INSERT INTO t_crm_account_convert(
+				ID,
+				ACCOUNT_ID,
+				OLD_STATUS,
+				NEW_STATUS,
+				CONVERT_USER,
+				CONVERT_DATE	
+			)
+			VALUES(
+				#{id,jdbcType=VARCHAR},
+				#{accountId,jdbcType=VARCHAR},
+				#{oldStatus,jdbcType=VARCHAR},
+				#{newStatus,jdbcType=VARCHAR},
+				#{convertUser,jdbcType=VARCHAR},
+				SYSDATE()
+			)
+		]]>
+	</insert>
+	
+	<!-- 获取部门的是否门店属性 -->
+	<select id="getIsStoreInfo" parameterType="string" resultType="map">
+		<![CDATA[
+			SELECT ORG.isStore,ORG.logistCode
+			FROM t_org_department ORG
+			WHERE ORG.DEPTCODE = #{deptCode} AND ORG.CANCELED = '0'
+		]]>
+	</select>
+	
+	<!-- 判断是否路区 -->
+	<select id="isRoadByDeptCode" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_bse_dept
+			WHERE DEPT_CODE = #{deptCode} AND IS_ROAD = 'Y' AND ACTIVE = 'Y'
+		]]>
+	</select>
+	
+	<!-- 更新改签门店 -->
+	<update id="updateSignTierCode" parameterType="map">
+		<![CDATA[
+			update t_crm_account set SIGNTIERCODE = #{signTierCode} WHERE ID = #{id}
+		]]>
+	</update>
+	
+	<!-- 更新转让客户负责人 -->
+	<update id="updateTransferCustomerManager" parameterType="map">
+		<![CDATA[
+			update t_crm_account set manageEmpCode = #{empCode},managePerson = #{empName},
+				transferPerson = #{userName},transferDate = sysdate(),customerOfOrg = '1'
+		]]>
+		<where>
+			id IN
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 将批量转发客户的老数据备份到客户历史记录备份表 -->
+	<insert id="backupSaleTransferCustomer" parameterType="java.util.List">
+		<![CDATA[
+			INSERT INTO t_crm_account_history (id,accountId,backupTime,
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			) SELECT uuid(),id,sysdate(),
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			FROM t_crm_account CUSTOMER
+		]]>
+		<where>
+			 CUSTOMER.id IN
+			<foreach collection="list" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</insert>
+	
+	<!-- 注册官网账号成功,更新对应状态 -->
+	<update id="updateCustomerOfObhAccountStatus" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_account SET
+				isCreateObhAccount = 'Y',
+				obhUserId = #{userId},
+				obhAccount = #{obhAccount}
+			WHERE ID = #{id}
+		]]>
+	</update>
+	
+</mapper>

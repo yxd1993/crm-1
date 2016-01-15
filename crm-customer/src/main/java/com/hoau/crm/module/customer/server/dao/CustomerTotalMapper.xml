@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.CustomerTotalMapper">
+
+	<!-- 查询所有拥有角色的用户工号 -->
+	<select id="queryAllUserCode" resultType="string">
+		<![CDATA[
+			SELECT user_code FROM t_auth_userrole
+		]]>
+	</select>
+	
+	<!-- 根据工号查询客户总数 -->
+	<select id="queryCustomerTotalByUserCode" parameterType="string" 
+		resultType="com.hoau.crm.module.customer.api.shared.domain.CustomerTotalEntity">
+		<![CDATA[
+			SELECT
+				userCode,
+				customerTotal,
+				customerResourceTotal,
+				customerPoolTotal
+			FROM t_crm_customertotal
+		]]>
+		<where>
+			USERCODE = #{userCode}
+		</where>
+	</select>
+	
+	<!-- 新增 -->
+	<insert id="addCustomerTotal" parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerTotalEntity">
+		<![CDATA[
+			INSERT INTO t_crm_customertotal
+				(id,
+				 userCode,
+				 customerTotal,
+				 customerResourceTotal,
+				 customerPoolTotal,
+				 create_date)
+			VALUES
+				(#{id},
+				 #{userCode},
+				 #{customerTotal},
+				 #{customerResourceTotal},
+				 #{customerPoolTotal},
+				 sysdate())
+		]]>
+	</insert>
+	
+	<!-- 修改  -->
+	<update id="updateCustomerTotal" parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerTotalEntity">
+		<![CDATA[
+			UPDATE t_crm_customertotal SET
+				id = #{id},
+				customerTotal = #{customerTotal},
+				customerResourceTotal = #{customerResourceTotal},
+				customerPoolTotal = #{customerPoolTotal},
+				create_date = sysdate()
+		]]>
+		<where>
+			userCode = #{userCode}
+		</where>
+	</update>
+	
+	<!-- 判断是否存在 -->
+	<select id="isExistUserCode" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_crm_customertotal
+		]]>
+		<where>
+			USERCODE = #{userCode}
+		</where>
+	</select>
+	
+</mapper>

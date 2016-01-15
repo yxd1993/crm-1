@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+	<package name="bse" namespace="/bse" extends="crm-default">
+	
+		<!-- 进入主页面 -->
+		<action name="homepage">
+			<result name="success">homePage.jsp</result>
+		</action>
+
+		<!-- 根据父节点查询子节点菜单信息 -->
+		<action name="queryTreeNodeList" class="functionAction" method="queryTreeNodeList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 根据角色查询权限树信息 -->
+		<action name="loadFunctionChooseAllTree" class="functionAction" method="loadFunctionChooseAllTree">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		
+		<!-- 新增用户角色信息 -->
+		<action name="insertUserRole" class="userAction" method="insertUserRole">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 分页查询用户信息 -->
+		<action name="queryUserList" class="userAction" method="queryUserList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+
+		
+		<!-- 分页查询角色信息 -->
+		<action name="toRole" class="roleAction">
+			<result name="success">role.jsp</result>
+		</action>
+		<!-- 分页查询角色信息 -->
+		<action name="queryRoleList" class="roleAction" method="queryRoleList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 新增角色信息 -->
+		<action name="addRole" class="roleAction" method="addRole">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 修改角色信息 -->
+		<action name="updateRole" class="roleAction" method="updateRole">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 删除角色信息 -->
+		<action name="deleteRole" class="roleAction" method="deleteRole">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 根据角色ID查询角色信息 -->
+		<action name="queryRoleById" class="roleAction" method="queryRoleById">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 新增角色权限信息 -->
+		<action name="addRoleFun" class="roleAction" method="addRoleFun">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 查询用户待分配角色信息 -->
+		<action name="queryLeftRoles" class="roleAction" method="queryLeftRoles">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 查询用户已分配角色信息 -->
+		<action name="queryAuthedRoles" class="roleAction" method="queryAuthedRoles">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+
+
+		<!-- 根据父节点查询子部门信息 -->
+		<action name="queryChildDeptList" class="departmentAction" method="queryChildDeptList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 分页查询部门信息 -->
+		<action name="queryDeptList" class="departmentAction" method="queryDeptList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 根据部门编号查询部门信息 -->
+		<action name="queryDeptByDeptCode" class="departmentAction" method="queryDeptByDeptCode">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 查询当前组织的路区、大区、事业部信息 -->
+		<action name="queryDeptSuperiorDept" class="departmentAction" method="queryDeptSuperiorDept">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 客户模块查询当前组织的路区、大区、事业部信息 -->
+		<action name="queryDeptSuperiorDeptByCustomer" class="departmentAction" method="queryDeptSuperiorDeptByCustomer">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<action name="index" class="departmentAction" method="index">
+			<result name="success">deptemp.jsp</result>
+		</action>
+		
+		<!-- 分页查询人员信息 -->
+		<action name="queryEmpList" class="employeeAction" method="queryEmpList">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 根据工号查询人员信息 -->
+		<action name="queryEmployeeByEmpcode" class="employeeAction" method="queryEmployeeByEmpcode">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 查询客户经理及团队经理人员信息 -->
+		<action name="querySaleEmpsByDeptCode" class="employeeAction" method="querySaleEmpsByDeptCode">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 进入消息列表页 -->
+		<action name="message">
+			<result name="success">message.jsp</result>
+		</action>		
+		<!-- 消息列表 -->
+		<action name="queryMessage" class="messageAction" method="queryMessageInfo">
+		    <result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 消息 -->
+		<action name="messageAction" class="messageAction">
+		    <result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 数据字典页面 -->
+		<action name="dataDictionary" class="dataDictionaryAction">
+			<result name="success">dataDictionary.jsp</result>
+		</action>
+		<!-- 根据条件查询数据字典 -->
+		<action name="dataDictionaryAction" class="dataDictionaryAction">
+		    <result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--用户反馈页面  -->
+		<action name="feedBack">
+			<result name="success">feedBackInfoMain.jsp</result>
+		</action>
+		<!--用户反馈信息查询  -->	
+		<action name="feedBackInfo" class="feedBackInfoAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!--客户操作信息页面  -->
+		<action name="userOperation">
+			<result name="success">userOperationMain.jsp</result>
+		</action>
+		<!--客户操作信息查询  -->	
+		<action name="userOperationAction" class="userOperationAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--App版本信息页面  -->
+		<action name="appVersion">
+			<result name="success">appVersionMain.jsp</result>
+		</action>
+		<!--App版本信息查询  -->	
+		<action name="appVersionAction" class="appVersionAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 服务器状态报表 -->
+		<action name="serverConnects">
+			<result name="success">serverStatusMain.jsp</result>
+		</action>
+		<!--服务器报表  -->
+		<action name="queryServerConnects" class="serverStatusAction" method="queryServerConnects">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 业绩表盘 -->
+		<action name="resultsDial">
+			<result name="success">resultsDial.jsp</result>
+		</action>
+		
+		<!-- 资源需求 -->
+		<action name="resDemand">
+			<result name="success">resDemand.jsp</result>
+		</action>
+		
+		<!-- 资源需求查询 -->
+		<action name="resDemandAction" class = "resDemandAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 每日会议-->
+		<action name="dailyMeeting">
+			<result name="success">dailyMeeting.jsp</result>
+		</action>
+		
+		<!-- 每日会议查询-->
+		<action name="dailyMeetingAction" class = 'dailyMeetingAction'>
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		
+		<!-- 每日问题 -->
+		<action name="dailyProblem">
+			<result name="success">dailyProblem.jsp</result>
+		</action>
+		
+		<!-- 每日问题查询-->
+		<action name="dailyProblemAction" class = 'dailyProblemAction'>
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 每日培训 -->
+		<action name="dailyTrain">
+			<result name="success">dailyTrain.jsp</result>
+		</action>
+		
+		<!-- 每日培训查询-->
+		<action name="dailyTrainAction" class = 'dailyTrainAction'>
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--附件操作  -->
+		<action name="addAttachment" class="attachmentAction" >
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!--授权信息页面  -->
+		<action name="authorization">
+			<result name="success">authorizationMain.jsp</result>
+		</action>
+		<!--App版本信息查询  -->
+		<action name="authorizationAction" class="authorizationAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+	</package>
+</struts>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.EmployeeMapper">
+	
+	<!-- 新增人员信息 -->
+	<insert id="insert" parameterType="com.hoau.crm.module.job.shared.domain.EmpBean">
+		<![CDATA[
+			INSERT INTO T_ORG_EMPLOYEE (
+				ID,
+				EMPCODE,
+				EMPNAME,
+				GENDER,
+				PINYINNAME,
+				PINYINSHORTNAME,
+				ACCOUNT,
+				PASSWORD,
+				DEPTCODE,
+				DEPTNAME,
+				JOBCODE,
+				JOBNAME,
+				MANAGERCODE,
+				MOBILE,
+				EMAIL,
+				TELEPHONE,
+				STATUS,
+				CREATE_USER,
+				CREATE_DATE
+			)
+			VALUES (
+				UUID(),
+				#{workcode,jdbcType=VARCHAR},
+				#{name,jdbcType=VARCHAR},
+				#{gender,jdbcType=VARCHAR},
+				#{pinYinName,jdbcType=VARCHAR},
+				#{pinYinShortName,jdbcType=VARCHAR},
+				#{account,jdbcType=VARCHAR},
+				#{password,jdbcType=VARCHAR},
+				#{deptcode,jdbcType=VARCHAR},
+				#{deptname,jdbcType=VARCHAR},
+				#{jobcode,jdbcType=VARCHAR},
+				#{jobname,jdbcType=VARCHAR},
+				#{managerCode,jdbcType=VARCHAR},
+				#{mobile,jdbcType=VARCHAR},
+				#{email,jdbcType=VARCHAR},
+				#{telePhone,jdbcType=VARCHAR},
+				#{status,jdbcType=VARCHAR},
+				"sysadmin",
+				NOW()
+			)
+		]]>
+	</insert>
+	
+	<!-- 更新人员信息 -->
+	<update id="update" parameterType="com.hoau.crm.module.job.shared.domain.EmpBean">
+		<![CDATA[
+			UPDATE T_ORG_EMPLOYEE EMP SET
+				EMP.EMPNAME = #{name,jdbcType=VARCHAR},
+				EMP.GENDER = #{gender,jdbcType=VARCHAR},
+				EMP.PINYINNAME = #{pinYinName,jdbcType=VARCHAR},
+				EMP.PINYINSHORTNAME = #{pinYinShortName,jdbcType=VARCHAR},
+				EMP.ACCOUNT = #{account,jdbcType=VARCHAR},
+				EMP.PASSWORD = #{password,jdbcType=VARCHAR},
+				EMP.DEPTCODE = #{deptcode,jdbcType=VARCHAR},
+				EMP.DEPTNAME = #{deptname,jdbcType=VARCHAR},
+				EMP.JOBCODE = #{jobcode,jdbcType=VARCHAR},
+				EMP.JOBNAME = #{jobname,jdbcType=VARCHAR},
+				EMP.MANAGERCODE = #{managerCode,jdbcType=VARCHAR},
+				EMP.MOBILE = #{mobile,jdbcType=VARCHAR},
+				EMP.EMAIL = #{email,jdbcType=VARCHAR},
+				EMP.TELEPHONE = #{telePhone,jdbcType=VARCHAR},
+				EMP.STATUS = #{status,jdbcType=VARCHAR},
+				EMP.MODIFY_DATE = NOW(),
+				EMP.MODIFY_USER = 'sysadmin'
+			WHERE EMP.EMPCODE = #{workcode,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 根据人员编码更新人员信息 -->
+	<select id="queryByEmpcode" parameterType="String" resultType="com.hoau.crm.module.job.shared.domain.EmpBean">
+		<![CDATA[
+			SELECT
+				EMP.EMPCODE AS workcode,
+				EMP.EMPNAME AS name,
+				EMP.GENDER AS gender,
+				EMP.PINYINNAME AS pinYinName,
+				EMP.PINYINSHORTNAME AS pinYinShortName,
+				EMP.ACCOUNT AS account,
+				EMP.PASSWORD AS password,
+				EMP.DEPTCODE AS deptcode,
+				EMP.DEPTNAME AS deptname,
+				EMP.JOBCODE AS jobcode,
+				EMP.JOBNAME AS jobname,
+				EMP.MANAGERCODE AS managerCode,
+				EMP.MOBILE AS mobile,
+				EMP.EMAIL AS email,
+				EMP.TELEPHONE AS telephone,
+				EMP.STATUS AS status
+			FROM T_ORG_EMPLOYEE EMP
+			WHERE EMP.EMPCODE = #{workcode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 如果离职,更新用户信息表 -->
+	<update id="updateUser" parameterType="map">
+		<![CDATA[
+			UPDATE t_auth_user USER SET
+			USER.ACTIVE = #{active},
+			USER.MODIFY_USER = 'sysadmin',
+			USER.PASSWORD = #{password},
+			USER.MODIFY_DATE = NOW()
+			WHERE USER.EMP_CODE = #{workcode,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 新增用户信息表 -->
+	<insert id="insertUser" parameterType="com.hoau.crm.module.job.shared.domain.EmpBean">
+		<![CDATA[
+			INSERT INTO t_auth_user (
+				ID,
+				EMP_CODE,
+				LOGIN_NAME,
+				PASSWORD,
+				CREATE_USER,
+				CREATE_DATE,
+				ACTIVE
+			)
+			VALUES (
+				UUID(),
+				#{workcode,jdbcType=VARCHAR},
+				#{account,jdbcType=VARCHAR},
+				#{password,jdbcType=VARCHAR},
+				'sysadmin',
+				NOW(),
+				'Y'
+			)
+		]]>
+	</insert>
+	
+	<!-- 查看岗位是否拥有角色 -->
+	<select id="isExistRole" parameterType="map" resultType="string">
+		<![CDATA[
+			SELECT ROLE_CODE
+			FROM t_auth_userrole 
+			WHERE USER_CODE = #{account,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	<!-- 系统自动分配角色  -->
+	<insert id="autoInsertRole" parameterType="map">
+		<![CDATA[
+			INSERT INTO t_auth_userrole
+			(
+				ID,
+				ROLE_CODE,
+				USER_CODE
+			)
+			VALUES (
+				UUID(),
+				#{roleCode,jdbcType=VARCHAR},
+				#{account,jdbcType=VARCHAR}
+			)
+		]]>
+	</insert>
+	
+	<!-- 根据角色名字查询角色编码 -->
+	<select id="getRoleCodeByName" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT ROLE_CODE
+			FROM t_auth_role
+			WHERE ROLE_NAME = #{roleName,jdbcType=VARCHAR} 
+		]]>
+	</select>
+	
+	<!-- 删除用户角色 -->
+	<delete id="deleteRole" parameterType="map">
+		<![CDATA[
+			DELETE FROM t_auth_userrole WHERE USER_CODE = #{account,jdbcType=VARCHAR} 
+		]]>
+	</delete>
+	
+</mapper>

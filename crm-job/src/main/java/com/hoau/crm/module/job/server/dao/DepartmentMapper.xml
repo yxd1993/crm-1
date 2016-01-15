@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.DepartmentMapper">
+
+	<!-- 新增组织信息 -->
+	<insert id="insert" parameterType="com.hoau.crm.module.job.shared.domain.OrgBean">
+		<![CDATA[
+			INSERT INTO T_ORG_DEPARTMENT (
+			 ID,
+			 DEPTNAME,
+			 DEPTCODE,
+			 CANCELED,
+			 SUPDEPTCODE,
+			 SUPDEPTNAME,
+			 DEPTNATURE,
+			 LOGISTCODE,
+			 MANAGERID,
+			 LASTNAME,
+			 SUBCOMPANYID,
+			 SUBCOMPANYNAME,
+			 ISSTORE,
+			 CREATE_USER,
+			 CREATE_DATE
+			)
+			VALUES(
+			 UUID(),
+			 #{deptname,jdbcType=VARCHAR},
+			 #{deptcode,jdbcType=VARCHAR},
+			 #{canceled,jdbcType=VARCHAR},
+			 #{supdeptcode,jdbcType=VARCHAR},
+			 #{supdeptname,jdbcType=VARCHAR},
+			 #{deptnature,jdbcType=VARCHAR},
+			 #{logistcode,jdbcType=VARCHAR},
+			 #{managerid,jdbcType=VARCHAR},
+			 #{lastname,jdbcType=VARCHAR},
+			 #{subcompanyid,jdbcType=VARCHAR},
+			 #{subcompanyname,jdbcType=VARCHAR},
+			 #{isStore,jdbcType=VARCHAR},
+			 "sysadmin",
+			 NOW()
+			)
+		]]>
+	</insert>
+	
+	<!--  更新组织信息  -->
+	<update id="update" parameterType="com.hoau.crm.module.job.shared.domain.OrgBean">
+		<![CDATA[
+			UPDATE T_ORG_DEPARTMENT DEPT SET 
+				DEPT.DEPTNAME = #{deptname,jdbcType=VARCHAR},
+				DEPT.CANCELED = #{canceled,jdbcType=VARCHAR},
+				DEPT.SUPDEPTCODE = #{supdeptcode,jdbcType=VARCHAR},
+				DEPT.SUPDEPTNAME = #{supdeptname,jdbcType=VARCHAR},
+				DEPT.DEPTNATURE = #{deptnature,jdbcType=VARCHAR},
+				DEPT.LOGISTCODE = #{logistcode,jdbcType=VARCHAR},
+				DEPT.MANAGERID = #{managerid,jdbcType=VARCHAR},
+				DEPT.LASTNAME = #{lastname,jdbcType=VARCHAR},
+				DEPT.SUBCOMPANYID = #{subcompanyid,jdbcType=VARCHAR},
+				DEPT.SUBCOMPANYNAME = #{subcompanyname,jdbcType=VARCHAR},
+				DEPT.ISSTORE = #{isStore,jdbcType=VARCHAR},
+				DEPT.MODIFY_USER = 'sysadmin',
+				DEPT.MODIFY_DATE = NOW()
+			 WHERE DEPT.DEPTCODE = #{deptcode,jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+	<!-- 根据部门编码查询组织信息 -->
+	<select id="queryByDeptcode" parameterType="String" resultType="com.hoau.crm.module.job.shared.domain.OrgBean">
+		<![CDATA[
+			SELECT 
+				DEPT.DEPTNAME AS deptname,
+			    DEPT.DEPTCODE AS deptcode,
+			    DEPT.CANCELED AS canceled,
+			    DEPT.SUPDEPTCODE AS supdeptcode,
+			    DEPT.SUPDEPTNAME AS supdeptname,
+			    DEPT.DEPTNATURE AS deptnature,
+			    DEPT.LOGISTCODE AS logistcode,
+			    DEPT.MANAGERID	AS managerid,
+			    DEPT.LASTNAME AS lastname,
+			    DEPT.SUBCOMPANYID AS subcompanyid,
+			    DEPT.SUBCOMPANYNAME AS subcompanyname,
+			    DEPT.ISSTORE AS isStore
+			FROM T_ORG_DEPARTMENT DEPT
+			WHERE DEPT.DEPTCODE = #{deptcode,jdbcType=VARCHAR}
+		]]>
+	</select>
+</mapper>

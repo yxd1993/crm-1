@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.bse.server.dao.AttachmentMapper">
+	    
+	    <!--新增附件信息-->
+	    <insert id="addAttachment" parameterType="com.hoau.crm.module.appcore.api.shared.domain.AttachmentEntity">
+	         INSERT INTO T_CRM_ATTACHMENT(
+				ID,
+				FILEID,
+				FILENAME,
+				FILEURL,
+				FILESIZE,
+				DESCRIP,
+				REORDER,
+				POSTFIX,
+				CREATE_USER,
+				ACTIVE,
+			    CREATE_DATE) VALUES	
+			(
+				#{id, jdbcType=VARCHAR},
+				#{fileId, jdbcType=VARCHAR},
+				#{fileName, jdbcType=VARCHAR},
+				#{fileUrl, jdbcType=VARCHAR},
+				#{fileSize, jdbcType=VARCHAR},
+				#{descrip, jdbcType=VARCHAR},
+				#{reorder, jdbcType=INTEGER},
+				#{postfix, jdbcType=VARCHAR},
+				#{createUser, jdbcType=VARCHAR},
+				'Y',
+			    SYSDATE()
+			)
+	    </insert>
+	    
+	    <!-- 根据fileId查询附件信息 -->
+	    <select id="getAttachmentByfileId" parameterType="string" resultType="com.hoau.crm.module.appcore.api.shared.domain.AttachmentEntity">
+	        <![CDATA[
+			SELECT id,fileId,fileName,fileUrl,fileSize,descrip,reorder,postfix,create_user  createUser,create_date  createDate,modify_user  modifyUser,modify_date  modifyDate
+		    ]]>
+	        FROM T_CRM_ATTACHMENT a
+	        WHERE  a.fileId= #{fileId}
+	        
+	    </select>
+	    
+	</mapper>
+	
+	

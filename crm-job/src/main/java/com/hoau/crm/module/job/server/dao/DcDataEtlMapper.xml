@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.DcDataEtlMapper">
+
+	<!-- 查询结束时间 -->
+	<select id="queryEndTime" resultType="string">
+		<![CDATA[
+			SELECT endTime FROM t_etl_record
+		]]>
+	</select>
+	
+	<!-- 更新开始时间  -->
+	<update id="updateBeginTime" >
+		<![CDATA[
+			UPDATE t_etl_record SET beginTime  = SYSDATE()
+		]]>
+	</update>
+	
+	<!-- 更新结束时间  -->
+	<update id="updateEndTime" >
+		<![CDATA[
+			UPDATE t_etl_record SET endTime  = beginTime
+		]]>
+	</update>
+	
+	<!-- 更新抽取状态  -->
+	<update id="updateStatus" parameterType="map">
+		<![CDATA[
+			UPDATE t_etl_record SET isSuccess  = #{isSuccess,jdbcType=VARCHAR},
+				exception_descr = #{descr,jdbcType=VARCHAR} 
+		]]>
+	</update>
+
+</mapper>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.DailyTrainMapper">
+    
+    
+    <!--资源信息查询 -->
+	<select id="queryDailyTrainList" parameterType="map"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyTrainEntity">
+	        <![CDATA[
+            SELECT 
+	            v.ID,
+	            v.PXTYPE,
+	            v.HYADDRESS,
+	            v.HYDATE,
+	            v.CYEMP,
+	            v.PXCONTEXT,
+	            v.MEETINGSIGNID,
+	            v.CREATE_DATE AS CREATEDATE,
+	            E.EMPNAME AS CREATEUSER 
+            FROM T_CRM_DAILYTRAIN v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+            v.active='Y'
+            <if test="pxType != null and pxType != '' ">
+	            <![CDATA[
+				AND v.pxType = #{pxType}
+			    ]]>
+			</if>
+			
+           <if test=" hyaddress !=null and hyaddress != '' ">
+	            <![CDATA[
+				AND v.hyaddress like #{hyaddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+            <if test=" queryCreateTime !=null and queryCreateTime != '' ">
+	            <![CDATA[
+				AND date_format(v.create_date,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+             <if test=" hyDate !=null and hyDate != '' ">
+	            <![CDATA[
+				AND date_format(v.hyDate,'%Y-%m-%d') = #{hyDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+         </where>
+         <choose>
+         	<when test="timeDesc != null and timeDesc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+			    ]]>
+         	</when>
+         	<when test="timeAsc != null and timeAsc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE ASC
+			    ]]>
+         	</when>
+         	<otherwise>
+	         	<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+			    ]]>
+         	</otherwise>
+         </choose>
+	</select> 
+             
+       <!--分页查询-->
+	<select id="countqueryDailyTrainList" parameterType="map" resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             from T_CRM_DAILYTRAIN v
+             LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+             ]]>
+		 <where>
+            v.active='Y'
+            <if test="pxType != null ">
+	            <![CDATA[
+				AND v.pxType = #{pxType}
+			    ]]>
+			</if>
+			
+           <if test=" hyaddress !=null and hyaddress != '' ">
+	            <![CDATA[
+				AND v.hyaddress like #{hyaddress,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+           <if test=" queryCreateTime !=null and queryCreateTime != '' ">
+	            <![CDATA[
+				AND date_format(v.create_date,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+             <if test=" hyDate !=null and hyDate != '' ">
+	            <![CDATA[
+				AND date_format(v.hyDate,'%Y-%m-%d') = #{hyDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+         </where>    
+	        <![CDATA[
+			ORDER BY v.CREATE_DATE DESC
+		    ]]>
+         </select>
+         
+        <!--删除  -->
+		<update id="deleteDailyTrain" parameterType="map">
+		    <![CDATA[
+			    UPDATE T_CRM_DAILYTRAIN V SET
+				V.ACTIVE = 'N'
+		    ]]>
+			<where>
+				V.ID IN
+				<foreach collection="ids" item="id" open="(" close=")"
+					separator=",">
+					#{id}
+				</foreach>
+			</where>
+		</update>
+	
+	
+	<!--新增App版本信息-->
+	<insert id="addDailyTrain">
+		<![CDATA[
+			INSERT INTO T_CRM_DAILYTRAIN(
+			ID,
+			PXTYPE,
+			HYADDRESS,
+			HYDATE,
+			CYEMP,
+			PXCONTEXT,
+			MEETINGSIGNID,
+			ACTIVE,
+			CREATE_DATE,
+			CREATE_USER
+		) VALUES(
+			UUID(),
+			#{pxType,jdbcType=VARCHAR},
+			#{hyaddress,jdbcType=VARCHAR},
+			#{hyDate,jdbcType=VARCHAR},
+			#{cyEmp,jdbcType=VARCHAR},
+			#{pxcontext,jdbcType=VARCHAR},
+			#{meetingSignId,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE(),
+			#{createUser,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+	
+		<!-- 根据主键查询信息 -->
+	<select id="queryDailyTrainInfoById" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.DailyTrainEntity">
+		 <![CDATA[
+            SELECT 
+	            v.ID,
+	            v.PXTYPE,
+	            v.HYADDRESS,
+	            v.HYDATE,
+	            v.CYEMP,
+	            v.PXCONTEXT,
+	            v.MEETINGSIGNID,
+	            v.CREATE_DATE AS CREATEDATE,
+	            E.EMPNAME AS CREATEUSER 
+            FROM T_CRM_DAILYTRAIN v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]> 
+		<where>
+			v.id = #{cId}
+		</where>
+	</select>
+	
+	<!-- 查询人员 -->
+	<select id="queryEmpNames" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT
+				MASTER .EMPNAME AS empName
+			FROM
+				T_ORG_EMPLOYEE MASTER
+			WHERE
+				MASTER .JOBNAME IN (
+					'客户经理',
+					'团队经理'
+				)
+			AND MASTER . STATUS != '5'
+			AND (
+				MASTER .EMPCODE LIKE #{selectorParam}
+				OR MASTER .EMPNAME LIKE #{selectorParam}
+			)
+		]]>
+	</select>
+	
+	<!-- 查询部门 -->
+	<select id="queryDeptNames" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT
+				MASTER .deptname AS deptName
+			FROM
+				t_org_department MASTER
+			WHERE
+				MASTER .deptname LIKE #{selectorParam} AND `MASTER`.canceled = '0' AND `MASTER`.deptname LIKE '%销售团队%'
+		]]>
+	</select>
+	 	
+</mapper>

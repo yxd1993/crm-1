@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.ResDemandMapper">
+
+
+	<!--资源信息查询 -->
+	<select id="queryResDemandList" parameterType="map"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.ResDemandEntity">
+	        <![CDATA[
+            SELECT 
+            v.ID,
+            v.SOLVETIME,
+            v.RESOURCES,
+            v.ISGT,
+            v.REGVIEWS,
+            v.ISREPLY,
+            v.GROUPOPIN,
+            v.CREATE_DATE as createDate,
+            E.EMPNAME AS CREATEUSER 
+            FROM T_CRM_RESDEMAND v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]>
+		<where>
+			v.active='Y'
+			<if test="solvetime != null ">
+	            <![CDATA[
+				AND DATE_FORMAT(v.solvetime,'%Y-%m-%d') = #{solvetime}
+			    ]]>
+			</if>
+			<if test=" resources !=null and resources != '' ">
+	            <![CDATA[
+				AND v.resources like #{resources,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			<if test="isreply != null and isreply !='' ">
+            	<![CDATA[
+            	AND v.isreply = #{isreply,jdbcType=VARCHAR}
+            	]]>
+			</if>
+			<if test=" createDate !=null and createDate != '' ">
+	            <![CDATA[
+				AND v.CREATE_DATE >= #{createDate}
+			    ]]>
+			</if>
+			<if test=" createEndDate !=null and createEndDate != '' ">
+                <![CDATA[
+				AND v.CREATE_DATE < #{createEndDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+			<if test="queryCreateTime != null and queryCreateTime != ''">
+	            <![CDATA[
+				AND DATE_FORMAT(v.CREATE_DATE,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+		</where>
+		<choose>
+			<when test="timeDesc != null and timeDesc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+			</when>
+			<when test="timeAsc != null and timeAsc != ''">
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE ASC
+		    	]]>
+			</when>
+			<otherwise>
+         		<![CDATA[
+					ORDER BY v.CREATE_DATE DESC
+		    	]]>
+			</otherwise>
+		</choose>
+	</select>
+
+	<!--分页查询 -->
+	<select id="countqueryResDemandList" parameterType="map"
+		resultType="long">
+	         <![CDATA[
+			SELECT
+				COUNT(1)     
+             from T_CRM_RESDEMAND v
+             LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+             ]]>
+		<where>
+			v.active='Y'
+			<if test="solvetime != null ">
+	            <![CDATA[
+				AND DATE_FORMAT(v.solvetime,'%Y-%m-%d') = #{solvetime}
+			    ]]>
+			</if>
+			<if test="queryCreateTime != null and queryCreateTime != ''">
+	            <![CDATA[
+				AND DATE_FORMAT(v.CREATE_DATE,'%Y-%m-%d') = #{queryCreateTime}
+			    ]]>
+			</if>
+			<if test=" resources !=null and resources != '' ">
+	            <![CDATA[
+				AND v.resources like #{resources,jdbcType=VARCHAR}
+			    ]]>
+			</if>
+			<if test="isreply != null and isreply !='' ">
+            	<![CDATA[
+            	AND v.isreply = #{isreply,jdbcType=VARCHAR}
+            	]]>
+			</if>
+			<if test=" createDate !=null and createDate != '' ">
+	            <![CDATA[
+				AND v.CREATE_DATE >= #{createDate}
+			    ]]>
+			</if>
+			<if test=" createEndDate !=null and createEndDate != '' ">
+                <![CDATA[
+				AND v.CREATE_DATE < #{createEndDate}
+			    ]]>
+			</if>
+			<if test="createUser !=null and createUser != '' ">
+	            <![CDATA[
+				AND (e.empcode like #{createUser} or e.empname like #{createUser} or e.deptname like #{createUser})
+			    ]]>
+			</if>
+			<if test=" createdBy !=null and createdBy != '' ">
+	            <![CDATA[
+				AND v.create_user = #{createdBy}
+			    ]]>
+			</if>
+		</where>
+	</select>
+
+	<!--删除 -->
+	<update id="deleteResDemand" parameterType="map">
+		    <![CDATA[
+			    UPDATE T_CRM_RESDEMAND V SET
+				V.ACTIVE = 'N'
+		    ]]>
+		<where>
+			V.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+
+
+	<!--新增App版本信息 -->
+	<insert id="addResDemand">
+		<![CDATA[
+			INSERT INTO T_CRM_RESDEMAND(
+			ID,
+			SOLVETIME,
+			RESOURCES,
+			ISGT,
+			REGVIEWS,
+			ISREPLY,
+			ACTIVE,
+			CREATE_DATE,
+			CREATE_USER
+		) VALUES(
+			UUID(),
+			#{solvetime,jdbcType=VARCHAR},
+			#{resources,jdbcType=VARCHAR},
+			#{isgt,jdbcType=VARCHAR},
+			#{regviews,jdbcType=VARCHAR},
+			#{isreply,jdbcType=VARCHAR},
+			'Y',
+			SYSDATE(),
+			#{createUser,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+
+
+	<!-- 根据主键查询信息 -->
+	<select id="queryResDemandInfoById" parameterType="string"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.ResDemandEntity">
+		 <![CDATA[
+            SELECT
+	            v.ID,
+	            v.SOLVETIME,
+	            v.RESOURCES,
+	            v.ISGT,
+	            v.REGVIEWS,
+	            v.ISREPLY,
+	            v.GROUPOPIN,
+	            v.CREATE_DATE as createDate,
+	            E.EMPNAME AS CREATEUSER 
+	        FROM T_CRM_RESDEMAND v
+            LEFT JOIN T_ORG_EMPLOYEE E ON V.CREATE_USER = E.ACCOUNT
+            ]]>
+		<where>
+			v.id = #{cId}
+		</where>
+	</select>
+
+	<!-- 更新资源需求 -->
+	<update id="updateResDemandInfoById"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.ResDemandEntity">
+		<![CDATA[
+			UPDATE T_CRM_RESDEMAND v SET
+			
+				v.SOLVETIME = #{solvetime},
+				v.RESOURCES = #{resources},
+				v.ISGT = #{isgt},
+				v.REGVIEWS = #{regviews},
+				v.modify_date = SYSDATE(),
+				v.modify_user = #{modifyUser}
+			WHERE v.ID = #{id}
+		]]>
+	</update>
+
+	<!-- 更新资源需求是否已答复 -->
+	<update id="updateResDemandInfoByIsreply"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.ResDemandEntity">
+		<![CDATA[
+			UPDATE T_CRM_RESDEMAND v SET
+				v.GROUPOPIN= #{groupopin},
+				v.ISREPLY = '2'
+			WHERE v.ID = #{id}
+		]]>
+	</update>
+
+</mapper>

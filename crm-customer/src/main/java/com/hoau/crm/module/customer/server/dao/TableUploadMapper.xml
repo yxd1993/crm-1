@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.TableUploadMapper">
+	<!-- 上传实体结果集 -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.TableUploadEntity" 
+		id="tableUploadEntityMap">
+		<result property="tableName" column="table_Name" jdbcType="VARCHAR" />
+		<result property="remark" column="remark" jdbcType="VARCHAR" />
+		<result property="active" column="active" jdbcType="VARCHAR" />
+		<association property="columns" column="table_Name"
+			select="queryTableUploadDetail" />
+	</resultMap>
+
+	<!-- 查询上传明细 -->
+	<select id="queryTableUploadDetail" parameterType="string"
+		resultType="com.hoau.crm.module.customer.api.shared.domain.TableUploadDetailEntity">
+		<![CDATA[
+			SELECT column_name as columnName,column_type as columnType
+			FROM t_upload_table_detail
+			WHERE table_name = #{tableName, jdbcType=VARCHAR} AND active='Y'
+			ORDER BY sort_number
+		]]>
+	</select>
+	
+	<select id="queryTableUploadInfoByTableName" resultMap="tableUploadEntityMap"
+		parameterType="string">
+		<![CDATA[
+			SELECT table_Name,remark,active
+			FROM t_upload_table
+			WHERE table_name = #{tableName, jdbcType=VARCHAR} AND active='Y' 
+		]]>
+	</select>
+	
+	<insert id="tableImport" parameterType="map">
+		insert into ${tableName}
+		<foreach collection="columns" index="index" item="item" open="("
+			separator="," close=")">
+			${item.columnName}
+		</foreach>
+		values
+		<foreach collection="columnValues" index="index" item="column"
+			separator=",">
+			<foreach collection="column" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</foreach>
+	</insert>
+		
+	<!-- 清除重复数据 -->
+	<delete id="clearRepeatData">
+		<![CDATA[
+			DELETE FROM t_upload_account
+			WHERE ID NOT IN (
+				SELECT * from (SELECT MAX(ID) FROM t_upload_account where active='Y' GROUP BY CONTACTWAY) as tmp
+			)
+		]]>
+	</delete>
+	
+</mapper>

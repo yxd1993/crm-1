@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.CustomerInfoPoolMapper">
+	<!-- 客户信息 -->
+	<resultMap id="customerResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity">
+		<id property="id" column="ID" />
+		<result property="companyName" column="COMPANYNAME" />
+		<result property="contactPerson" column="CONTACTPERSON" />
+		<result property="contactWay" column="CONTACTWAY" />
+		<result property="business" column="BUSINESS" />
+		<result property="email" column="EMAIL" />
+		<result property="province" column="PROVINCE" />
+		<result property="provinceCode" column="PROVINCE_CODE" />
+		<result property="city" column="CITY" />
+		<result property="cityCode" column="CITY_CODE" />
+		<result property="area" column="AREA" />
+		<result property="areaCode" column="AREA_CODE" />
+		<result property="companyAddress" column="COMPANYADDRESS" />
+		<result property="managePerson" column="MANAGEPERSON" />
+		<result property="manageEmpCode" column="MANAGEEMPCODE" />
+		<result property="dispenseStatus" column="DISPENSESTATUS" />
+		<result property="backReason" column="BACKREASON" />
+		<result property="active" column="ACTIVE" />
+		<result property="regions" column="REGIONS" />
+		<result property="regionsCode" column="REGIONS_CODE" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<association property="employeeEntity" 	javaType="com.hoau.crm.module.bse.api.shared.domain.EmployeeEntity">
+			<id property="id" column="EMP_ID" />
+			<result property="empCode" column="empCode" />
+			<result property="empName" column="empName" />
+			<result property="deptname" column="deptname" />
+			<result property="jobname" column="jobname" />
+		</association>
+	</resultMap>
+
+	<sql id="query_customer_param">
+		CUSTOMER.ID,
+		CUSTOMER.COMPANYNAME,
+		CUSTOMER.CONTACTPERSON,
+		CUSTOMER.CONTACTWAY as CONTACTWAY,
+		CUSTOMER.BUSINESS,
+		CUSTOMER.EMAIL,
+		PROVINCE.DISTRICT_NAME AS PROVINCE,
+		PROVINCE.DISTRICT_CODE AS PROVINCE_CODE,
+		CITY.DISTRICT_NAME AS CITY,
+		CITY.DISTRICT_CODE AS CITY_CODE,
+		AREA.DISTRICT_NAME AS AREA,
+		AREA.DISTRICT_CODE AS AREA_CODE,
+		CUSTOMER.COMPANYADDRESS as COMPANYADDRESS,
+		CUSTOMER.MANAGEPERSON,
+		CUSTOMER.MANAGEEMPCODE,
+		CUSTOMER.DISPENSESTATUS,
+		CUSTOMER.BACKREASON,
+		CUSTOMER.CREATE_USER,
+		CUSTOMER.CREATE_DATE,
+		CUSTOMER.MODIFY_USER,
+		CUSTOMER.MODIFY_DATE,
+		CUSTOMER.ACTIVE,
+		CUSTOMER.REGIONS AS REGIONS_CODE,
+		REGIONS.DEPTNAME AS REGIONS,
+		EMP.ID AS EMP_ID,
+		EMP.EMPCODE,
+		EMP.EMPNAME,
+		EMP.DEPTNAME,
+		EMP.JOBNAME
+	</sql>
+
+	<!-- 分页查询客户信息 -->
+	<select id="queryUploadCustomer" parameterType="map"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_upload_account CUSTOMER 
+			LEFT JOIN t_bse_district PROVINCE ON CUSTOMER.PROVINCE = PROVINCE.DISTRICT_CODE
+			LEFT JOIN t_bse_district CITY ON CUSTOMER.CITY = CITY.DISTRICT_CODE
+			LEFT JOIN t_bse_district AREA ON CUSTOMER.AREA = AREA.DISTRICT_CODE
+			LEFT JOIN t_org_employee EMP ON CUSTOMER.CREATE_USER = EMP.ACCOUNT
+			LEFT JOIN t_org_department REGIONS ON CUSTOMER.REGIONS = REGIONS.DEPTCODE
+		]]>
+		<where>
+			CUSTOMER.ACTIVE = 'Y' AND (CUSTOMER.ISPOTENTIAL IS NULL OR trim(CUSTOMER.ISPOTENTIAL) = '')
+			<if test="uploadDept != null and uploadDept != ''">
+				AND EMP.DEPTNAME like #{uploadDept}
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND CUSTOMER.COMPANYNAME like #{companyName}
+			</if>
+			<if test="contactPerson != null and contactPerson != ''">
+				AND CUSTOMER.CONTACTPERSON like #{contactPerson}
+			</if>
+			<if test="contactWay != null and contactWay != ''">
+				AND CUSTOMER.CONTACTWAY like #{contactWay}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND REGIONS.DEPTNAME like #{regions}
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND CUSTOMER.MANAGEPERSON like #{managePerson}
+			</if>
+			<if test="companyAddress != null and companyAddress != ''">
+				AND (CUSTOMER.PROVINCE like #{companyAddress} OR
+				CUSTOMER.CITY like #{companyAddress}
+				OR CUSTOMER.AREA like #{companyAddress} OR CUSTOMER.COMPANYADDRESS 
+				like #{companyAddress})
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE <= #{endDate}
+				]]>
+			</if>
+			<if test="dispenseStatus != null and dispenseStatus != ''">
+				AND CUSTOMER.DISPENSESTATUS = #{dispenseStatus}
+			</if>
+			<!-- 大区权限 -->
+			<if test="createUser !=null and createUser !=''">
+				AND ((CUSTOMER.regions = #{createUser} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 事业部权限 -->
+			<if test="deptCode !=null and deptCode !=''">
+				AND ((CUSTOMER.business = #{deptCode} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 客户经理-->
+			<if test="manageUser != null and manageUser != ''">
+				<![CDATA[
+					AND (CUSTOMER.MANAGEEMPCODE = #{manageUser} AND CUSTOMER.DISPENSESTATUS <> '3'
+						AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '1')
+				]]>
+			</if>
+			<!-- 团队经理 -->
+			<if test="termManage != null and termManage != ''">
+				<![CDATA[
+					AND CUSTOMER.MANAGEEMPCODE IN (SELECT account FROM t_org_employee WHERE deptcode = #{termManage})
+				]]>
+			</if>
+			<!-- 门店权限 -->
+			<if test="storeAuth != null and storeAuth != ''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{storeAuth} OR CUSTOMER.MANAGEEMPCODE = #{userCode})
+					AND CUSTOMER.DISPENSESTATUS <> '3' AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 路区权限 -->
+			<if test="road != null and road !=''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{road} OR CUSTOMER.MANAGEEMPCODE = #{userCode}) AND CUSTOMER.DISPENSESTATUS <> '3'
+					AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '0'
+				]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newStore != null and newStore !=''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="timeDesc != null and timeDesc != ''">
+				ORDER BY CUSTOMER.CREATE_DATE DESC
+			</when>
+			<when test="timeAsc != null and timeAsc != ''">
+				ORDER BY CUSTOMER.CREATE_DATE ASC
+			</when>
+			<otherwise>
+				ORDER BY CUSTOMER.CREATE_DATE DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 客户信息下载查询-->
+	<select id="queryAllUploadCustomer" parameterType="map"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_upload_account CUSTOMER
+			LEFT JOIN t_bse_district PROVINCE ON CUSTOMER.PROVINCE = PROVINCE.DISTRICT_CODE
+			LEFT JOIN t_bse_district CITY ON CUSTOMER.CITY = CITY.DISTRICT_CODE
+			LEFT JOIN t_bse_district AREA ON CUSTOMER.AREA = AREA.DISTRICT_CODE
+			LEFT JOIN t_org_employee EMP ON CUSTOMER.CREATE_USER = EMP.ACCOUNT
+			LEFT JOIN t_org_department REGIONS ON CUSTOMER.REGIONS = REGIONS.DEPTCODE
+		]]>
+			<where>
+			CUSTOMER.ACTIVE = 'Y' AND (CUSTOMER.ISPOTENTIAL IS NULL OR trim(CUSTOMER.ISPOTENTIAL) = '')
+			<if test="uploadDept != null and uploadDept != ''">
+				AND EMP.DEPTNAME like #{uploadDept}
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND CUSTOMER.COMPANYNAME like #{companyName}
+			</if>
+			<if test="contactPerson != null and contactPerson != ''">
+				AND CUSTOMER.CONTACTPERSON like #{contactPerson}
+			</if>
+			<if test="contactWay != null and contactWay != ''">
+				AND CUSTOMER.CONTACTWAY like #{contactWay}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND REGIONS.DEPTNAME like #{regions}
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND CUSTOMER.MANAGEPERSON like #{managePerson}
+			</if>
+			<if test="companyAddress != null and companyAddress != ''">
+				AND (CUSTOMER.PROVINCE like #{companyAddress} OR
+				CUSTOMER.CITY like #{companyAddress}
+				OR CUSTOMER.AREA like #{companyAddress} OR CUSTOMER.COMPANYADDRESS 
+				like #{companyAddress})
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE <= #{endDate}
+				]]>
+			</if>
+			<if test="dispenseStatus != null and dispenseStatus != ''">
+				AND CUSTOMER.DISPENSESTATUS = #{dispenseStatus}
+			</if>
+			<!-- 大区权限 -->
+			<if test="createUser !=null and createUser !=''">
+				AND ((CUSTOMER.regions = #{createUser} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 事业部权限 -->
+			<if test="deptCode !=null and deptCode !=''">
+				AND ((CUSTOMER.business = #{deptCode} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 客户经理 -->
+			<if test="manageUser != null and manageUser != ''">
+				<![CDATA[
+					AND (CUSTOMER.MANAGEEMPCODE = #{manageUser} AND CUSTOMER.DISPENSESTATUS <> '3'
+						AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '1')
+				]]>
+			</if>
+			<!-- 团队经理 -->
+			<if test="termManage != null and termManage != ''">
+				<![CDATA[
+					AND CUSTOMER.MANAGEEMPCODE IN (SELECT account FROM t_org_employee WHERE deptcode = #{termManage})
+				]]>
+			</if>
+			<!-- 门店权限 -->
+			<if test="storeAuth != null and storeAuth != ''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{storeAuth} OR CUSTOMER.MANAGEEMPCODE = #{userCode})
+					AND CUSTOMER.DISPENSESTATUS <> '3' AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 路区权限 -->
+			<if test="road != null and road !=''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{road} OR CUSTOMER.MANAGEEMPCODE = #{userCode}) AND CUSTOMER.DISPENSESTATUS <> '3'
+					AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '0'
+				]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newStore != null and newStore !=''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+		</where>
+		ORDER BY CUSTOMER.CREATE_DATE DESC
+	</select>
+
+	<!-- 查询客户信息总数 -->
+	<select id="countUploadCustomer" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_upload_account CUSTOMER
+		]]>
+		<if test="uploadDept != null and uploadDept != ''">
+			<![CDATA[
+				LEFT JOIN t_org_employee EMP ON CUSTOMER.CREATE_USER = EMP.ACCOUNT
+			]]>
+		</if>
+		<if test="regions != null and regions != ''">
+			<![CDATA[
+				LEFT JOIN t_org_department REGIONS ON CUSTOMER.REGIONS = REGIONS.DEPTCODE
+			]]>
+		</if>
+		<where>
+			CUSTOMER.ACTIVE = 'Y' AND (CUSTOMER.ISPOTENTIAL IS NULL OR trim(CUSTOMER.ISPOTENTIAL) = '')
+			<if test="uploadDept != null and uploadDept != ''">
+				AND EMP.DEPTNAME like #{uploadDept}
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND CUSTOMER.COMPANYNAME like #{companyName}
+			</if>
+			<if test="contactPerson != null and contactPerson != ''">
+				AND CUSTOMER.CONTACTPERSON like #{contactPerson}
+			</if>
+			<if test="contactWay != null and contactWay != ''">
+				AND CUSTOMER.CONTACTWAY like #{contactWay}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND REGIONS.DEPTNAME like #{regions}
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND CUSTOMER.MANAGEPERSON like #{managePerson}
+			</if>
+			<if test="companyAddress != null and companyAddress != ''">
+				AND (CUSTOMER.PROVINCE like #{companyAddress} OR
+				CUSTOMER.CITY like #{companyAddress}
+				OR CUSTOMER.AREA like #{companyAddress} OR CUSTOMER.COMPANYADDRESS   
+				like #{companyAddress})
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE <= #{endDate}
+				]]>
+			</if>
+			<if test="dispenseStatus != null and dispenseStatus != ''">
+				AND CUSTOMER.DISPENSESTATUS = #{dispenseStatus}
+			</if>
+			<!-- 大区权限 -->
+			<if test="createUser !=null and createUser !=''">
+				AND ((CUSTOMER.regions = #{createUser} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 事业部权限 -->
+			<if test="deptCode !=null and deptCode !=''">
+				AND ((CUSTOMER.business = #{deptCode} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 客户经理 -->
+			<if test="manageUser != null and manageUser != ''">
+				<![CDATA[
+					AND (CUSTOMER.MANAGEEMPCODE = #{manageUser} AND CUSTOMER.DISPENSESTATUS <> '3'
+						AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '1')
+				]]>
+			</if>
+			<!-- 团队经理 -->
+			<if test="termManage != null and termManage != ''">
+				<![CDATA[
+					AND CUSTOMER.MANAGEEMPCODE IN (SELECT account FROM t_org_employee WHERE deptcode = #{termManage})
+				]]>
+			</if>
+			<!-- 门店权限 -->
+			<if test="storeAuth != null and storeAuth != ''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{storeAuth} OR CUSTOMER.MANAGEEMPCODE = #{userCode})
+					AND CUSTOMER.DISPENSESTATUS <> '3' AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 路区权限 -->
+			<if test="road != null and road !=''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{road} OR CUSTOMER.MANAGEEMPCODE = #{userCode}) AND CUSTOMER.DISPENSESTATUS <> '3'
+					AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '0'
+				]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newStore != null and newStore !=''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+		</where>
+	</select>
+		
+	<!-- 新增客户信息 -->
+	<insert id="addUploadCustomer">
+		<![CDATA[
+			INSERT INTO t_upload_account(
+			ID,
+			COMPANYNAME,
+			CONTACTPERSON,
+			CONTACTWAY,
+			BUSINESS,
+			EMAIL,
+			PROVINCE,
+			CITY,
+			AREA,
+			COMPANYADDRESS,
+			MANAGEPERSON,
+			MANAGEEMPCODE,
+			DISPENSESTATUS,
+			ACTIVE,
+			CREATE_USER,
+			CREATE_DATE,
+			REGIONS
+		) VALUES(
+			#{id,jdbcType=VARCHAR},
+			#{companyName,jdbcType=VARCHAR},
+			#{contactPerson,jdbcType=VARCHAR},
+			#{contactWay,jdbcType=VARCHAR},
+			#{business,jdbcType=VARCHAR},
+			#{email,jdbcType=VARCHAR},
+			#{province,jdbcType=VARCHAR},
+			#{city,jdbcType=VARCHAR},
+			#{area,jdbcType=VARCHAR},
+			#{companyAddress,jdbcType=VARCHAR},
+			#{managePerson,jdbcType=VARCHAR},
+			#{manageEmpCode,jdbcType=VARCHAR},
+			#{dispenseStatus,jdbcType=VARCHAR},
+			'Y',
+			#{createUser,jdbcType=VARCHAR},
+			SYSDATE(),
+			#{regions,jdbcType=VARCHAR}
+		)
+		]]>
+	</insert>
+
+	<!-- 删除客户信息 -->
+	<update id="deleteUploadCustomer" parameterType="map">
+		<![CDATA[
+			UPDATE t_upload_account CUSTOMER SET
+				CUSTOMER.ACTIVE = 'N',
+				CUSTOMER.MODIFY_DATE = SYSDATE(),
+				CUSTOMER.MODIFY_USER = #{username}
+		]]>
+		<where>
+			CUSTOMER.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+
+	<!-- 修改客户信息 -->
+	<update id="updateUploadCustomer"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity">
+		<![CDATA[
+			UPDATE t_upload_account CUSTOMER SET
+			CUSTOMER.COMPANYNAME = #{companyName,jdbcType=VARCHAR},
+			CUSTOMER.CONTACTPERSON = #{contactPerson,jdbcType=VARCHAR},
+			CUSTOMER.CONTACTWAY = #{contactWay,jdbcType=VARCHAR},
+			CUSTOMER.BUSINESS = #{business,jdbcType=VARCHAR},
+			CUSTOMER.REGIONS = #{regions,jdbcType=VARCHAR},
+			CUSTOMER.EMAIL = #{email,jdbcType=VARCHAR},
+			CUSTOMER.PROVINCE = #{province,jdbcType=VARCHAR},
+			CUSTOMER.CITY = #{city,jdbcType=VARCHAR},
+			CUSTOMER.AREA = #{area,jdbcType=VARCHAR},
+			CUSTOMER.COMPANYADDRESS = #{companyAddress,jdbcType=VARCHAR},
+			CUSTOMER.MANAGEPERSON = #{managePerson,jdbcType=VARCHAR},
+			CUSTOMER.MANAGEEMPCODE = #{manageEmpCode,jdbcType=VARCHAR},
+			CUSTOMER.DISPENSESTATUS = #{dispenseStatus,jdbcType=VARCHAR},
+			CUSTOMER.MODIFY_DATE = SYSDATE(),
+			CUSTOMER.MODIFY_USER = #{modifyUser,jdbcType=VARCHAR}
+		]]>
+		<where>
+			CUSTOMER.ID = #{id,jdbcType=VARCHAR}
+		</where>
+	</update>
+
+	<!-- 判断当前信息是否重名,是否可以新增或修改 -->
+	<select id="isAllowCustomer"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity"
+		resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_upload_account CUSTOMER
+		]]>
+		<where>
+			CUSTOMER.ACTIVE = 'Y' AND (CUSTOMER.ISPOTENTIAL IS NULL OR trim(CUSTOMER.ISPOTENTIAL) = '')
+			<if test="id != null and id != ''">
+				AND CUSTOMER.id != #{id}
+			</if>
+			<if test="contactWay != null and contactWay != ''">
+				AND CUSTOMER.CONTACTWAY = #{contactWay}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据ID查询客户信息 -->
+	<select id="getCustomerInfoPoolById" parameterType="string"
+		resultMap="customerResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_param" />
+		<![CDATA[
+			FROM t_upload_account CUSTOMER
+			LEFT JOIN t_bse_district PROVINCE ON CUSTOMER.PROVINCE = PROVINCE.DISTRICT_CODE
+			LEFT JOIN t_bse_district CITY ON CUSTOMER.CITY = CITY.DISTRICT_CODE
+			LEFT JOIN t_bse_district AREA ON CUSTOMER.AREA = AREA.DISTRICT_CODE
+			LEFT JOIN t_org_employee EMP ON CUSTOMER.CREATE_USER = EMP.ACCOUNT
+			LEFT JOIN t_org_department REGIONS ON CUSTOMER.REGIONS = REGIONS.DEPTCODE
+		]]>
+		<where>
+			CUSTOMER.id = #{id}
+		</where>
+	</select>
+
+	<!-- 更新退回原因 -->
+	<update id="updateBackReason"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity">
+		<![CDATA[
+			UPDATE t_upload_account  CUSTOMER SET
+			CUSTOMER.BACKREASON = #{backReason,jdbcType=VARCHAR},
+			CUSTOMER.DISPENSESTATUS = #{dispenseStatus,jdbcType=VARCHAR},
+			CUSTOMER.MODIFY_DATE = SYSDATE(),
+			CUSTOMER.MODIFY_USER = #{modifyUser,jdbcType=VARCHAR}
+			WHERE CUSTOMER.ID = #{id}
+		]]>
+	</update>
+
+	<!-- 更新分发状态 -->
+	<update id="updateDispenseStatus"
+		parameterType="com.hoau.crm.module.customer.api.shared.domain.CustomerInfoPoolEntity">
+		<![CDATA[
+			UPDATE t_upload_account  CUSTOMER SET
+			CUSTOMER.MANAGEPERSON = #{managePerson,jdbcType=VARCHAR},
+			CUSTOMER.MANAGEEMPCODE = #{manageEmpCode,jdbcType=VARCHAR},
+			CUSTOMER.DISPENSESTATUS = #{dispenseStatus,jdbcType=VARCHAR},
+			CUSTOMER.MODIFY_DATE = SYSDATE(),
+			CUSTOMER.MODIFY_USER = #{modifyUser,jdbcType=VARCHAR}
+			WHERE CUSTOMER.ID = #{id}
+		]]>
+	</update>
+	
+	<!-- 获得行政区域 -->
+	<select id="getDistrictList" parameterType="com.hoau.crm.module.customer.api.shared.domain.DistrictEntity" 
+		resultType="com.hoau.crm.module.customer.api.shared.domain.DistrictEntity">
+		<![CDATA[
+			SELECT DISTRICT_CODE as districtCode,
+				DISTRICT_NAME as districtName
+			FROM t_bse_district
+		]]>
+		<where>
+			<if test="districtType !=null and districtType != ''">
+				DISTRICT_TYPE = #{districtType,jdbcType=VARCHAR}
+			</if>
+			<if test="parentDistrictCode !=null and parentDistrictCode != ''">
+				AND PARENT_DISTRICT_CODE = #{parentDistrictCode,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据行政名称或者编码获得行政区域 -->
+	<select id="getDistrictByNameOrCode" parameterType="com.hoau.crm.module.customer.api.shared.domain.DistrictEntity" 
+		resultType="com.hoau.crm.module.customer.api.shared.domain.DistrictEntity">
+		<![CDATA[
+			SELECT DISTRICT_NAME as districtName,
+				DISTRICT_CODE as districtCode,
+				DISTRICT_TYPE as districtType
+			FROM t_bse_district
+		]]>
+		<where>
+			<if test="districtType !=null and districtType != ''">
+				DISTRICT_TYPE = #{districtType,jdbcType=VARCHAR}
+			</if>
+			<if test="districtName !=null and districtName != ''">
+				AND DISTRICT_NAME = #{districtName,jdbcType=VARCHAR}
+			</if>
+			<if test="districtCode !=null and districtCode != ''">
+				AND DISTRICT_CODE = #{districtCode,jdbcType=VARCHAR}
+			</if>
+			<if test="parentDistrictCode !=null and parentDistrictCode != ''">
+				AND PARENT_DISTRICT_CODE = #{parentDistrictCode,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+	
+	
+	<!-- 根据id标记是否已转为潜在 -->
+	<update id="updateCustomeriSpotential"
+		parameterType="map">
+		<![CDATA[
+			UPDATE t_upload_account  CUSTOMER SET
+			CUSTOMER.ISPOTENTIAL = 'N',
+			CUSTOMER.customerid = #{customerId}
+			WHERE CUSTOMER.ID = #{customerPoolID}
+		]]>
+	</update>
+	
+	<!-- 部门结果集 -->
+	<resultMap type="com.hoau.crm.module.bse.api.shared.domain.BseDeptEntity" id="deptMap">
+		<result column="DEPT_CODE" property="deptCode"/>
+		<result column="DEPT_NAME" property="deptName"/>
+	</resultMap>
+	
+	<!-- 查询所有事业部 -->
+	<select id="getBusinessDepts" resultMap="deptMap">
+		<![CDATA[
+			SELECT 
+				DEPT_CODE,
+				DEPT_NAME
+			FROM t_bse_dept 
+			WHERE IS_BUSINESS = 'Y' AND ACTIVE = 'Y'
+		]]>
+	</select>
+	
+	<!-- 查询某个事业部下所有大区 -->
+	<select id="getRegionsDepts" parameterType="string" resultMap="deptMap">
+		<![CDATA[
+			SELECT 
+				DEPT_CODE,
+				DEPT_NAME
+			FROM t_bse_dept 
+			WHERE  PARENT_DEPT_CODE = #{supDeptCode} AND IS_REGION = 'Y' AND ACTIVE = 'Y'
+		]]>
+	</select>
+	
+	<!-- 查询部门名称 -->
+	<select id="getRegionsDeptCode" parameterType="string" resultType="string">
+		<![CDATA[
+			SELECT DEPT_CODE
+			FROM t_bse_dept
+			WHERE DEPT_NAME = #{deptName} AND ACTIVE = 'Y'
+		]]>
+	</select>
+	
+	<!-- 更新转让客户负责人 -->
+	<update id="updateTransferCustomerManager" parameterType="map">
+		<![CDATA[
+			update t_upload_account set manageEmpCode = #{account},
+				managePerson = #{empName},dispenseStatus = '2',
+				backReason = null,transferPerson = #{userName},transferDate = sysdate()
+		]]>
+		<where>
+			id IN
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 共享客户历史记录备份的所有字段 -->
+	<sql id="insert_customer_history_param">
+		companyName,
+		contactPerson,
+		contactWay,
+		business,
+		email,
+		province,
+		city,
+		area,
+		companyAddress,
+		managePerson,
+		manageEmpCode,
+		dispenseStatus,
+		backReason,
+		create_user,
+		create_date,
+		modify_user,
+		modify_date,
+		active,
+		ispotential,
+		customerid,
+		regions,
+		customerOfOrg,
+		transferPerson,
+		transferDate
+	</sql>
+	
+	<!-- 将批量转发客户的老数据备份到客户历史记录备份表 -->
+	<insert id="backupSaleTransferCustomer" parameterType="java.util.List">
+		<![CDATA[
+			INSERT INTO t_upload_account_history (id,accountId,backupTime,
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			) SELECT uuid(),id,sysdate(),
+		]]>
+		<include refid="insert_customer_history_param" />
+		<![CDATA[
+			FROM t_upload_account CUSTOMER
+		]]>
+		<where>
+			 CUSTOMER.id IN
+			<foreach collection="list" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</insert>
+	
+	<!-- 统计总数(导出) -->
+	<select id="countAllUploadCustomer" resultType="long" parameterType="map">
+		<![CDATA[
+			SELECT COUNT(1)
+		]]>
+		<![CDATA[
+			FROM t_upload_account CUSTOMER
+			LEFT JOIN t_bse_district PROVINCE ON CUSTOMER.PROVINCE = PROVINCE.DISTRICT_CODE
+			LEFT JOIN t_bse_district CITY ON CUSTOMER.CITY = CITY.DISTRICT_CODE
+			LEFT JOIN t_bse_district AREA ON CUSTOMER.AREA = AREA.DISTRICT_CODE
+			LEFT JOIN t_org_employee EMP ON CUSTOMER.CREATE_USER = EMP.ACCOUNT
+			LEFT JOIN t_org_department REGIONS ON CUSTOMER.REGIONS = REGIONS.DEPTCODE
+		]]>
+			<where>
+			CUSTOMER.ACTIVE = 'Y' AND (CUSTOMER.ISPOTENTIAL IS NULL OR trim(CUSTOMER.ISPOTENTIAL) = '')
+			<if test="uploadDept != null and uploadDept != ''">
+				AND EMP.DEPTNAME like #{uploadDept}
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND CUSTOMER.COMPANYNAME like #{companyName}
+			</if>
+			<if test="contactPerson != null and contactPerson != ''">
+				AND CUSTOMER.CONTACTPERSON like #{contactPerson}
+			</if>
+			<if test="contactWay != null and contactWay != ''">
+				AND CUSTOMER.CONTACTWAY like #{contactWay}
+			</if>
+			<if test="regions != null and regions != ''">
+				AND REGIONS.DEPTNAME like #{regions}
+			</if>
+			<if test="managePerson != null and managePerson != ''">
+				AND CUSTOMER.MANAGEPERSON like #{managePerson}
+			</if>
+			<if test="companyAddress != null and companyAddress != ''">
+				AND (CUSTOMER.PROVINCE like #{companyAddress} OR
+				CUSTOMER.CITY like #{companyAddress}
+				OR CUSTOMER.AREA like #{companyAddress} OR CUSTOMER.COMPANYADDRESS 
+				like #{companyAddress})
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND CUSTOMER.CREATE_DATE <= #{endDate}
+				]]>
+			</if>
+			<if test="dispenseStatus != null and dispenseStatus != ''">
+				AND CUSTOMER.DISPENSESTATUS = #{dispenseStatus}
+			</if>
+			<!-- 大区权限 -->
+			<if test="createUser !=null and createUser !=''">
+				AND ((CUSTOMER.regions = #{createUser} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 事业部权限 -->
+			<if test="deptCode !=null and deptCode !=''">
+				AND ((CUSTOMER.business = #{deptCode} OR CUSTOMER.create_user = #{userCode}) AND CUSTOMER.customerOfOrg = '0')
+			</if>
+			<!-- 客户经理 -->
+			<if test="manageUser != null and manageUser != ''">
+				<![CDATA[
+					AND (CUSTOMER.MANAGEEMPCODE = #{manageUser} AND CUSTOMER.DISPENSESTATUS <> '3'
+						AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '1')
+				]]>
+			</if>
+			<!-- 团队经理 -->
+			<if test="termManage != null and termManage != ''">
+				<![CDATA[
+					AND CUSTOMER.MANAGEEMPCODE IN (SELECT account FROM t_org_employee WHERE deptcode = #{termManage})
+				]]>
+			</if>
+			<!-- 门店权限 -->
+			<if test="storeAuth != null and storeAuth != ''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{storeAuth} OR CUSTOMER.MANAGEEMPCODE = #{userCode})
+					AND CUSTOMER.DISPENSESTATUS <> '3' AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 路区权限 -->
+			<if test="road != null and road !=''">
+				<![CDATA[
+					AND ((CUSTOMER.REGIONS = #{road} OR CUSTOMER.MANAGEEMPCODE = #{userCode}) AND CUSTOMER.DISPENSESTATUS <> '3'
+					AND CUSTOMER.DISPENSESTATUS <> '4' AND CUSTOMER.customerOfOrg = '0')
+				]]>
+			</if>
+			<!-- 客户管理部权限 -->
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '0'
+				]]>
+			</if>
+			<!-- 新门店研究组权限 -->
+			<if test="newStore != null and newStore !=''">
+				<![CDATA[
+					AND CUSTOMER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+		</where>
+	</select>
+	
+</mapper>

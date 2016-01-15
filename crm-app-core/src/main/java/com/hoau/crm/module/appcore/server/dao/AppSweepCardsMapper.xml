@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="com.hoau.crm.module.appcore.server.dao.AppSweepCardsMapper">
+		<insert id="insertSweepCardsInfo" parameterType="com.hoau.crm.module.appcore.api.shared.domain.AppSweepCardsEntity">
+		    insert into t_crm_app_sweepCards (
+		    	id,enterprise_name,address,emp_name,emp_deptname,telephone,mobilephone,email,create_user,create_date,active
+		    )values(
+		    	#{id},#{enterpriseName},#{address},#{empName},#{empDeptName},#{telephone},#{mobilephone},#{email},#{createUser},SYSDATE(),'Y'
+		    )
+		</insert>
+	</mapper>

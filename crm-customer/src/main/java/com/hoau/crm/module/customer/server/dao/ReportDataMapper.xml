@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.customer.server.dao.ReportDataMapper">
+	<!-- 行业报表数据结果集 -->
+	<resultMap
+		type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity"
+		id="customerIndustryMap">
+		<result property="type" column="TYPE" jdbcType="VARCHAR" />
+		<result property="dataOne" column="TOTAL" jdbcType="NUMERIC" />
+	</resultMap>
+
+	<!-- 客户性质报表数据结果集 -->
+	<resultMap
+		type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity"
+		id="customerNatureMap">
+		<result property="type" column="TYPE" jdbcType="VARCHAR" />
+		<result property="dataTwo" column="TOTAL" jdbcType="INTEGER"
+			javaType="int" />
+	</resultMap>
+
+	<!-- 行业报表数据查询 -->
+	<select id="queryCustomerIndustryData" resultMap="customerIndustryMap"
+		parameterType="map">
+		<![CDATA[
+			SELECT IFNULL(T2.TOTAL,0) AS TOTAL,
+						T1.VALUE_NAME AS TYPE
+ 			FROM (
+					SELECT
+						B.VALUE_CODE,
+						B.VALUE_NAME
+					FROM
+						t_data_dictionary D
+					JOIN t_data_dictionary_value B ON D.TERMS_CODE = B.TERMS_CODE
+					WHERE
+						D.TERMS_CODE = 'CUSTOMER_INDUSTRY'
+					ORDER BY B.VALUE_SEQ desc
+					) T1
+					LEFT JOIN (
+						SELECT
+						COUNT(A.ID) AS TOTAL,
+						TEMP.VALUE_NAME AS TYPE,
+						TEMP.VALUE_CODE AS CODE
+					FROM
+						t_crm_account A
+					JOIN (
+						SELECT
+							B.VALUE_CODE,
+							B.VALUE_NAME
+						FROM
+							t_data_dictionary D
+						JOIN t_data_dictionary_value B ON D.TERMS_CODE = B.TERMS_CODE
+						WHERE
+							D.TERMS_CODE = 'CUSTOMER_INDUSTRY'
+					) TEMP ON A.IndustryCode = TEMP.VALUE_CODE
+					WHERE
+						A.ACCOUNTCODE IS NOT NULL
+					AND A.ACTIVE = 'Y' AND A.isCustomerResourcePool = '0'
+		]]>
+		<if test="userDeptcode !=null and userDeptcode !=''">
+			<![CDATA[
+				AND ((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+							OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+					))
+			]]>
+		</if>
+		<if test="roadDeptcode !=null and roadDeptcode !=''">
+			<![CDATA[
+				AND (((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+							OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+					)) AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="managerPerson != null and managerPerson !=''">
+			<![CDATA[
+				AND A.MANAGEEMPCODE = #{managerPerson}
+			]]>
+		</if>
+		<if test="storeAuth != null and storeAuth !=''">
+			<![CDATA[
+				AND (A.TIERCODE = #{storeAuth} AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="newStoreData != null and newStoreData != ''">
+			<![CDATA[
+				AND A.CUSTOMEROFORG = '1'
+			]]>
+		</if>
+		<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+			<![CDATA[
+				AND ((A.ACCOUNTRATINGCODE = '1') OR (
+					A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+					OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+				))
+			]]>
+		</if>
+		<if test="customerManage != null and customerManage != ''">
+			<![CDATA[
+				AND ((
+					A.ACCOUNTRATINGCODE != '1'
+				) AND (
+					A.MANAGEEMPCODE NOT IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+						OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					
+				) AND (
+					A.CUSTOMEROFORG = '0'
+				))
+			]]>
+		</if>
+		<![CDATA[
+					GROUP BY A.IndustryCode
+			) T2 ON T1.VALUE_CODE = T2. CODE
+		]]>
+	</select>
+
+	<!-- 统计客户总数 -->
+	<select id="countTotalCustomer"
+		resultType="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity"
+		parameterType="map">
+		<![CDATA[
+			SELECT CUSTOMER.TYPE,CUSTOMER.TOTAL AS dataTwo
+			FROM (
+			SELECT  COUNT(A.ID) AS TOTAL,'客户总数' AS TYPE FROM t_crm_account A 
+			WHERE A.AccountCode IS NOT NULL AND A.ACTIVE = 'Y' AND A.isCustomerResourcePool = '0'
+					AND A.CREATEDON >= DATE_ADD(curdate(), interval - day(curdate()) + 1 day)
+		]]>
+		<if test="userDeptcode !=null and userDeptcode !=''">
+			<![CDATA[
+				AND ((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+							OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+					))
+			]]>
+		</if>
+		<if test="roadDeptcode !=null and roadDeptcode !=''">
+			<![CDATA[
+				AND (((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+							OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+					)) AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="managerPerson != null and managerPerson !=''">
+			<![CDATA[
+				AND A.MANAGEEMPCODE = #{managerPerson}
+			]]>
+		</if>
+		<if test="storeAuth != null and storeAuth !=''">
+			<![CDATA[
+				AND (A.TIERCODE = #{storeAuth} AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="newStoreData != null and newStoreData != ''">
+			<![CDATA[
+				AND A.CUSTOMEROFORG = '1'
+			]]>
+		</if>
+		<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+			<![CDATA[
+				AND ((A.ACCOUNTRATINGCODE = '1') OR (
+					A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+					OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+				))
+			]]>
+		</if>
+		<if test="customerManage != null and customerManage != ''">
+			<![CDATA[
+				AND ((
+					A.ACCOUNTRATINGCODE != '1'
+				) AND (
+					A.MANAGEEMPCODE NOT IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+						OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					
+				) AND (
+					A.CUSTOMEROFORG = '0'
+				))
+			]]>
+		</if>
+		<![CDATA[	
+			) CUSTOMER
+		]]>
+	</select>
+
+	<!-- 客户性质报表数据 -->
+	<select id="queryCustomerNatureData" resultMap="customerNatureMap"
+		parameterType="map">
+		<![CDATA[
+			SELECT
+				CUSTOMER_NEW.VALUE_NAME AS TYPE,
+				IFNULL(CUSTOMER_NEW.TOTAL,0) AS TOTAL
+			FROM
+				(
+					SELECT
+						T1.VALUE_CODE,
+						T1.VALUE_NAME,
+						T1.VALUE_SEQ,
+						T2.TOTAL
+					FROM
+						(
+							SELECT
+								B.VALUE_CODE,
+								B.VALUE_NAME,
+								B.VALUE_SEQ
+							FROM
+								t_data_dictionary D
+							JOIN t_data_dictionary_value B ON D.TERMS_CODE = B.TERMS_CODE
+							WHERE
+								D.TERMS_CODE = 'CUSTOMER_NATURE'
+							ORDER BY B.VALUE_SEQ
+						) T1
+					LEFT JOIN (
+						SELECT
+							COUNT(A.ID) AS TOTAL,
+							TEMP.VALUE_NAME AS TYPE,
+							TEMP.VALUE_CODE AS CODE
+						FROM
+							t_crm_account A
+						JOIN (
+							SELECT
+								B.VALUE_CODE,
+								B.VALUE_NAME
+							FROM
+								t_data_dictionary D
+							JOIN t_data_dictionary_value B ON D.TERMS_CODE = B.TERMS_CODE
+							WHERE
+								D.TERMS_CODE = 'CUSTOMER_NATURE'
+						) TEMP ON A.AccountType = TEMP.VALUE_CODE
+						WHERE
+							A.CREATEDON >= DATE_ADD(
+								curdate(),
+								INTERVAL - DAY (curdate()) + 1 DAY
+							)
+						AND A.ACCOUNTCODE IS NOT NULL AND A.isCustomerResourcePool = '0'
+		]]>
+		<if test="userDeptcode !=null and userDeptcode !=''">
+			<![CDATA[
+				AND ((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+							OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+					))
+			]]>
+		</if>
+		<if test="roadDeptcode !=null and roadDeptcode !=''">
+			<![CDATA[
+				AND (((A.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+							OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+					)
+					OR ( A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+					)) AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="managerPerson != null and managerPerson !=''">
+			<![CDATA[
+				AND A.MANAGEEMPCODE = #{managerPerson}
+			]]>
+		</if>
+		<if test="storeAuth != null and storeAuth !=''">
+			<![CDATA[
+				AND (A.TIERCODE = #{storeAuth} AND A.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="newStoreData != null and newStoreData != ''">
+			<![CDATA[
+				AND A.CUSTOMEROFORG = '1'
+			]]>
+		</if>
+		<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+			<![CDATA[
+				AND ((A.ACCOUNTRATINGCODE = '1') OR (
+					A.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+					OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+				))
+			]]>
+		</if>
+		<if test="customerManage != null and customerManage != ''">
+			<![CDATA[
+				AND ((
+					A.ACCOUNTRATINGCODE != '1'
+				) AND (
+					A.MANAGEEMPCODE NOT IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+						OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					
+				) AND (
+					A.CUSTOMEROFORG = '0'
+				))
+			]]>
+		</if>
+		<![CDATA[
+				GROUP BY A.AccountType
+				) T2 ON T1.VALUE_CODE = T2. CODE
+			) CUSTOMER_NEW
+			ORDER BY CUSTOMER_NEW.VALUE_SEQ DESC
+		]]>
+	</select>
+
+	<select id="countAllCustomer" resultType="long" parameterType="map">
+		<![CDATA[
+			SELECT 
+				COUNT(1)
+			FROM t_crm_account CRM
+		]]>
+		<where>
+			CRM.ACTIVE = 'Y' AND CRM.isCustomerResourcePool = '0'
+		<if test="userDeptcode !=null and userDeptcode !=''">
+			<![CDATA[
+				AND ((CRM.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+							OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+					)
+					OR ( CRM.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+					))
+			]]>
+		</if>
+		<if test="roadDeptcode !=null and roadDeptcode !=''">
+			<![CDATA[
+				AND (((CRM.TIERCODE IN (
+					SELECT v.logistcode 
+					FROM v_org_storedepartment v 
+					WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+							OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+					)
+					OR ( CRM.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+						OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+					)) AND CRM.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="managerPerson != null and managerPerson !=''">
+			<![CDATA[
+				AND CRM.MANAGEEMPCODE = #{managerPerson}
+			]]>
+		</if>
+		<if test="storeAuth != null and storeAuth !=''">
+			<![CDATA[
+				AND (CRM.TIERCODE = #{storeAuth} AND CRM.CUSTOMEROFORG='0')
+			]]>
+		</if>
+		<if test="newStoreData != null and newStoreData != ''">
+			<![CDATA[
+				AND CRM.CUSTOMEROFORG = '1'
+			]]>
+		</if>
+		<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+			<![CDATA[
+				AND ((CRM.ACCOUNTRATINGCODE = '1') OR (
+					CRM.MANAGEEMPCODE IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+					OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+				))
+			]]>
+		</if>
+		<if test="customerManage != null and customerManage != ''">
+			<![CDATA[
+				AND ((
+					CRM.ACCOUNTRATINGCODE != '1'
+				) AND (
+					CRM.MANAGEEMPCODE NOT IN(
+					SELECT  E.EMPCODE FROM t_org_employee E
+					LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+					WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+						OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+					
+				) AND (
+					CRM.CUSTOMEROFORG = '0'
+				))
+			]]>
+		</if>
+		</where>
+	</select>
+</mapper>

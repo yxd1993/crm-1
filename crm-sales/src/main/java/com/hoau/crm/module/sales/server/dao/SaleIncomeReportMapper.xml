@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.SaleIncomeReportMapper">
+
+	<!-- 奖金数据MAP -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity" id="bonusDistributionMap">
+		<result property="type" column="TYPE"/>
+		<result property="dataThree" column="DATATHREE"/>
+	</resultMap>
+	
+	<!-- 运输类型数据MAP -->
+	<resultMap type="com.hoau.crm.module.customer.api.shared.domain.ReportDataEntity" id="transportTypeDistributionMap">
+		<result property="type" column="TYPE"/>
+		<result property="dataFour" column="DATAFOUR"/>
+		<result property="dataThree" column="DATATHREE"/>
+	</resultMap>
+
+	<!-- 查询奖金分布数据 -->
+	<select id="queryBonusDistributionLists" parameterType="string" resultMap="bonusDistributionMap">
+		<![CDATA[
+			SELECT
+				t1.type AS TYPE,
+			  	SUM(t2.DATATHREE) AS  DATATHREE
+			FROM
+				(
+					SELECT
+						dayofmonth(CUSTOMER.BILLINGDATE) AS TYPE,
+						SUM(CUSTOMER.MONEY) AS DATATHREE
+					FROM
+						t_report_salereport CUSTOMER
+					WHERE CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR} AND CUSTOMER.ISREFRESH = 'Y'
+					GROUP BY
+						DATE_FORMAT(CUSTOMER.BILLINGDATE,'%Y-%m-%d')
+				) t1
+			JOIN 
+			(
+				SELECT
+						dayofmonth(CUSTOMER.BILLINGDATE) AS TYPE,
+						SUM(CUSTOMER.MONEY) AS DATATHREE
+					FROM
+						t_report_salereport CUSTOMER
+					WHERE CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR} AND CUSTOMER.ISREFRESH = 'Y'
+					GROUP BY
+						DATE_FORMAT(CUSTOMER.BILLINGDATE,'%Y-%m-%d')
+			) t2 on t1.TYPE >= t2.TYPE
+			GROUP BY t1.DATATHREE
+			ORDER BY t1.type
+		]]>
+	</select>
+	
+	<!-- 查询运输类型分布数据 -->
+	<select id="queryTransportTypeDistributionLists" parameterType="string" resultMap="transportTypeDistributionMap">
+		<![CDATA[
+			SELECT T2.TRANSPORTTYPE AS TYPE,T2.MONEY AS DATATHREE,CAST((T2.TOTAL*100/T1.TOTAL) AS DECIMAL (4,2)) AS DATAFOUR
+			FROM (SELECT CUSTOMER.ManageEmpCode,COUNT(1) AS TOTAL
+			FROM t_report_salereport CUSTOMER
+			WHERE CUSTOMER.ISREFRESH = 'Y'
+			GROUP BY CUSTOMER.ManageEmpCode) T1
+			LEFT JOIN (
+				SELECT CUSTOMER.ManageEmpCode,CUSTOMER.TRANSPORTTYPE,SUM(MONEY) AS MONEY,COUNT(1) AS TOTAL
+			FROM t_report_salereport CUSTOMER
+			WHERE CUSTOMER.ISREFRESH = 'Y'
+			GROUP BY CUSTOMER.TRANSPORTTYPE,CUSTOMER.ManageEmpCode
+			) T2 ON T1.ManageEmpCode = T2.ManageEmpCode
+			WHERE T1.ManageEmpCode = #{empCode,jdbcType=VARCHAR}
+		]]>
+	</select>
+	
+	
+	<!-- 查询奖金总和 -->
+	<select id="queryBonusTotal" parameterType="string" resultType="double">
+		<![CDATA[
+			SELECT IFNULL(SUM(MONEY),0)
+			FROM t_report_salereport CUSTOMER
+			WHERE CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR} 	AND CUSTOMER.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+	<!-- 分页查询收入明细  -->
+	<select id="querySaleIncomeDetailLists" parameterType="string" 
+		resultType="com.hoau.crm.module.sales.api.shared.domain.SaleIncomeDetailEntity">
+		<![CDATA[
+			SELECT CUSTOMER.billingDate,CUSTOMER.ENTERPRISENAME AS enterpriseName,CUSTOMER.transportType,CUSTOMER.MONEY AS bonus
+			FROM t_report_salereport CUSTOMER
+			WHERE CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR} AND CUSTOMER.ISREFRESH = 'Y'
+			ORDER BY CUSTOMER.billingDate DESC
+		]]>
+	</select>
+	
+	<!-- 统计查询收入明细总数 -->
+	<select id="countSaleIncomeDetailLists" parameterType="string" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)
+			FROM t_report_salereport CUSTOMER
+			WHERE CUSTOMER.ManageEmpCode = #{empCode,jdbcType=VARCHAR} AND CUSTOMER.ISREFRESH = 'Y'
+		]]>
+	</select>
+	
+</mapper>

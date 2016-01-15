@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.ReserveAppMapper">
+	<!-- 分页查询预约信息 -->
+	<select id="getReserveByPaging" parameterType="map"	resultMap="reserveMapByPaging">
+			<![CDATA[
+				select 
+			]]>
+		<include refid="queryParamByPaging" />
+			<![CDATA[
+				FROM
+					(
+						SELECT
+							DATE_FORMAT(
+								t.reserve_start_time,
+								'%Y-%m-%d'
+							) AS fdate
+						FROM
+							t_sale_reserve t
+						GROUP BY
+							DATE_FORMAT(
+								t.reserve_start_time,
+								'%Y-%m-%d'
+							)
+					) date
+				LEFT JOIN t_sale_reserve tsr ON DATE_FORMAT(
+					tsr.reserve_start_time,
+					'%Y-%m-%d'
+				) = date.fdate
+				left join t_crm_account tca on tsr.account_id = tca.id
+				left join t_crm_contact tcc on tsr.contact_id = tcc.id
+				left join t_org_employee toe on toe.empcode = tsr.create_user
+				left join t_sale_chats tsc on tsr.id = tsc.relation_reserve_id and tsc.create_user = #{userCode,jdbcType=VARCHAR}
+			]]>
+		<where>
+			tsr.active ='Y'
+			<!-- 预约开始时间 -->
+			<if test="reserveStartTime != null and reserveStartTime != '' ">
+				<![CDATA[
+					and tsr.reserve_start_time >= #{reserveStartTime}
+				]]>
+			</if>
+			<!-- 预约结束时间 -->
+			<if test="reserveEndTime!=null and reserveEndTime!=''">
+				<![CDATA[
+					and tsr.reserve_start_time <= #{reserveEndTime}
+				]]>
+			</if>
+			<if test="userCode !=null and userCode !=''">
+				<![CDATA[
+					AND ((tsr.create_user = #{userCode,jdbcType=VARCHAR}) 
+						OR (tsr.com_tier_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.team_manager_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_road_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_regions_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_business_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_od_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_ceo_emp_code = #{userCode,jdbcType=VARCHAR})
+					)
+				]]>
+			</if>
+		</where>
+		order by tsc.id is null desc,tsr.reserve_start_time desc
+	</select>
+	<!-- 查询预约信息总数-->
+	<select id="reserveCount" parameterType="map"	resultType="long">
+			<![CDATA[
+				select count(1)
+				FROM
+					(
+						SELECT
+							DATE_FORMAT(
+								t.reserve_start_time,
+								'%Y-%m-%d'
+							) AS fdate
+						FROM
+							t_sale_reserve t
+						GROUP BY
+							DATE_FORMAT(
+								t.reserve_start_time,
+								'%Y-%m-%d'
+							)
+					) date
+				LEFT JOIN t_sale_reserve tsr ON DATE_FORMAT(
+					tsr.reserve_start_time,
+					'%Y-%m-%d'
+				) = date.fdate
+			]]>
+		<where>
+			tsr.active ='Y'
+			<!-- 预约开始时间 -->
+			<if test="reserveStartTime != null and reserveStartTime != '' ">
+				<![CDATA[
+					and tsr.reserve_start_time >= #{reserveStartTime}
+				]]>
+			</if>
+			<!-- 预约结束时间 -->
+			<if test="reserveEndTime!=null and reserveEndTime!=''">
+				<![CDATA[
+					and tsr.reserve_start_time <= #{reserveEndTime}
+				]]>
+			</if>
+			<if test="userCode !=null and userCode !=''">
+				<![CDATA[
+					AND ((tsr.create_user = #{userCode,jdbcType=VARCHAR}) 
+						OR (tsr.com_tier_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.team_manager_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_road_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_regions_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_business_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_od_emp_code = #{userCode,jdbcType=VARCHAR})
+						OR (tsr.com_ceo_emp_code = #{userCode,jdbcType=VARCHAR})
+					)
+				]]>
+			</if>
+		</where>
+	</select>
+	<!--按id查询返回信息 -->
+	<select id="queryReserveById" parameterType="string"
+		resultMap="reserveMapById">
+			<![CDATA[
+				select
+			]]>
+		<include refid="queryParamById" />
+			<![CDATA[
+				from t_sale_reserve tsr
+				left join t_crm_account tca on tsr.account_id = tca.id
+				left join t_crm_contact tcc on tsr.contact_id = tcc.id
+				left join t_org_employee tier on tsr.com_tier_emp_code = tier.empcode
+				left join t_org_employee road on tsr.com_road_emp_code = road.empcode
+				left join t_org_employee regions on tsr.com_regions_emp_code = regions.empcode
+				left join t_org_employee business on tsr.com_business_emp_code = business.empcode
+				left join t_org_employee od on tsr.com_od_emp_code = od.empcode
+				left join t_org_employee ceo on tsr.com_ceo_emp_code = ceo.empcode
+				left join t_org_employee team on tsr.team_manager_emp_code = team.empcode
+				left join t_org_employee sale on tsr.sale_man_emp_code = sale.empcode
+			]]>
+		<where>
+			tsr.id = #{id}
+		</where>
+	</select>
+	<!-- 分页查询sql -->
+	<sql id="queryParamByPaging">
+		tsr.id as reserveId,
+		date.fdate as reserveTime,
+		tsr.reserve_start_time as reserveStartTime,
+		tsr.reserve_end_time as reserveEndTime,
+		tsr.reserve_type as reserveType,
+		tsr.create_user as createUser,
+		tca.id as accountId,
+		tca.EnterpriseName as enterpriseName,
+		tca.ManagePerson as managePerson,
+		tca.ManageEmpCode as manageEmpCode,
+		convert(AES_DECRYPT(UNHEX(tca.detailedAddress),'CRM') using utf8) as detailedAddress,
+		tcc.id as contactId,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) as cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) as telephone,
+		CASE WHEN tsc.id is null THEN 'N' ELSE 'Y' END as isAgreement
+	</sql>
+	<!-- 按id查询的sql -->
+	<sql id="queryParamById">
+		tsr.id as reserveId,
+		tsr.reserve_start_time as reserveStartTime,
+		tsr.reserve_end_time as reserveEndTime,
+		tsr.warning_time as warningTime,
+		tsr.reserve_theme as reserveTheme,
+		tsr.reserve_contents as reserveContents,
+		tsr.reserve_type as reserveType,
+		tsr.com_tier_emp_code as comTierEmpCode,
+		tsr.com_road_emp_code as comRoadEmpCode,
+		tsr.com_regions_emp_code as comRegionsEmpCode,
+		tsr.com_business_emp_code as comBusinessEmpCode,
+		tsr.com_od_emp_code as comOdEmpCode,
+		tsr.com_ceo_emp_code as comCeoEmpCode,
+		tsr.team_manager_emp_code as teamManagerEmpCode,
+		tsr.sale_man_emp_code as saleManEmpCode,
+		tier.empname as tierEmpName,
+		road.empname as roadEmpName,
+		regions.empname as regionsEmpName,
+		business.empname as businessEmpName,
+		od.empname as odEmpName,
+		ceo.empname as ceoEmpName,
+		team.empname as teamManagerEmpName,
+		sale.empname as saleManEmpName,
+		tca.id as accountId,
+		tca.EnterpriseName,
+		tca.ManagePerson as managePerson,
+		tca.ManageEmpCode as manageEmpCode,
+		convert(AES_DECRYPT(UNHEX(tca.DetailedAddress),'CRM') using utf8) as DetailedAddress,
+		tca.TierCode as tierCode,
+		tcc.id as contactId,
+		tcc.ContactName,
+		convert(AES_DECRYPT(UNHEX(tcc.Cellphone),'CRM') using utf8) AS Cellphone,
+		convert(AES_DECRYPT(UNHEX(tcc.Telephone),'CRM') using utf8) AS Telephone
+	</sql>
+	<!--分页查询预约列表  Map-->
+	<resultMap type="com.hoau.crm.module.bse.api.shared.vo.ReviewHistoryVo"
+		id="reserveMapByPaging">
+	    <id property="reserveTime" column="reserveTime"/>
+	    <collection property="reserveList" resultMap="reserveListMap"/>
+	</resultMap>
+	<resultMap type="com.hoau.crm.module.sales.api.shared.domain.SaleReserveEntity" id="reserveListMap">
+	    	<id property="id" column="reserveId" />
+			<result property="reserveStartTime" column="reserveStartTime" />
+			<result property="reserveEndTime" column="reserveEndTime" />
+			<result property="reserveType" column="reserveType"/>
+			<result property="isAgreement" column="isAgreement"/>
+			<result property="createUser" column="createUser"/>
+			<association property="customerEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="enterpriseName"/>
+				<result property="detailedAddress" column="detailedAddress"/>
+				<result property="managePerson" column="managePerson"/>
+				<result property="manageEmpCode" column="manageEmpCode"/>
+			</association>
+			<association property="contactEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="ContactName"/>
+				<result property="cellphone" column="cellphone"/>
+				<result property="telephone" column="telephone"/>
+			</association>
+	</resultMap>
+	
+	<!--详情map -->
+	<resultMap type="com.hoau.crm.module.appcore.api.shared.vo.ReserveAppVo"
+		id="reserveMapById">
+		<result property="tierEmpName" column="tierEmpName" />
+		<result property="roadEmpName" column="roadEmpName" />
+		<result property="regionsEmpName" column="regionsEmpName" />
+		<result property="businessUnitEmpName" column="businessEmpName" />
+		<result property="odEmpName" column="odEmpName" />
+		<result property="ceoEmpName" column="ceoEmpName" />
+		<result property="teamManagerEmpName" column="teamManagerEmpName" />
+		<result property="saleManEmpName" column="saleManEmpName" />
+		<association property="reserveEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleReserveEntity">
+			<id property="id" column="reserveId" />
+			<result property="reserveStartTime" column="reserveStartTime" />
+			<result property="reserveEndTime" column="reserveEndTime" />
+			<result property="reserveType" column="reserveType" />
+			<result property="comTierEmpCode" column="comTierEmpCode"/>
+			<result property="comRoadEmpCode" column="comRoadEmpCode"/>
+			<result property="comRegionsEmpCode" column="comRegionsEmpCode"/>
+			<result property="comBusinessEmpCode" column="comBusinessEmpCode"/>
+			<result property="comOdEmpCode" column="comOdEmpCode"/>
+			<result property="comCeoEmpCode" column="comCeoEmpCode"/>
+			<result property="teamManagerEmpCode" column="teamManagerEmpCode" />
+			<result property="saleManEmpCode" column="saleManEmpCode" />
+			<result property="warningTime" column="warningTime" />
+			<result property="reserveTheme" column="reserveTheme" />
+			<result property="reserveContents" column="reserveContents" />
+			<result property="isAgreement" column="isAgreement" />
+			<result property="active" column="active" />
+			<association property="customerEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+				<id property="id" column="accountId" />
+				<result property="enterpriseName" column="EnterpriseName" />
+				<result property="detailedAddress" column="DetailedAddress" />
+				<result property="tierCode" column="tierCode"/>
+				<result property="managePerson" column="managePerson"/>
+				<result property="manageEmpCode" column="manageEmpCode"/>
+			</association>
+			<association property="contactEntity"
+				javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+				<id property="id" column="contactId" />
+				<result property="contactName" column="ContactName" />
+				<result property="cellphone" column="Cellphone" />
+				<result property="telephone" column="Telephone"/>
+			</association>
+		</association>
+	</resultMap>
+</mapper>

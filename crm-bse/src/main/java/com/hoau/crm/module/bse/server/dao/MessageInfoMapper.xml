@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.MessageInfoMapper">
+
+	<!-- 消息基础信息 -->
+	<resultMap id="messageInfoResultMap"
+		type="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoEntity">
+		<id property="id" column="M_ID" />
+		<result property="busType" column="M_BUSTYPE" />
+		<result property="messageType" column="M_MTYPE" />
+		<result property="messageTitle" column="M_MTITLE" />
+		<result property="pushType" column="M_PUSHTYPE" />
+		<result property="messageContent" column="M_MCONTENT" />
+		<result property="messageUrl" column="M_MURL" />
+		<result property="sendUserId" column="M_SENDUSERID" />
+		<result property="receiveUserId" column="M_RECEIVEUSERID" />
+		<result property="isSend" column="M_ISSEND" />
+		<result property="isRead" column="M_ISREAD" />
+		<result property="msgId" column="M_MSGID" />
+		<result property="sendTime" column="M_SENDTIME" />
+		<result property="createUser" column="M_CREATEDUSER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="M_CREATEDDATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="M_MODIFIEDUSER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="M_MODIFIEDDATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<association property="customerEntity" column="CUSTOMER_ID"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="CUSTOMER_ID" />
+			<result property="enterpriseName" column="CUSTOMER_ENTERPRISENAME" />
+		</association>
+	</resultMap>
+	
+	<!-- 统计用户消息 -->
+	<resultMap id="countMessageTypeMap"
+		type="com.hoau.crm.module.appcore.api.shared.vo.MessageInfoVo">
+		<result property="busType" column="M_BUSTYPE" />
+		<result property="countMessage" column="M_COUNTMESSAGE" />
+		<result property="allCountMessage" column="M_ALLCOUNTMESSAGE" />
+	</resultMap>
+
+	<!-- 分页查询返回字段 -->
+	<sql id="query_messageinfo_param">
+		M.ID AS M_ID,
+		M.BUSTYPE AS M_BUSTYPE,
+		M.MTYPE AS M_MTYPE,
+		M.MTITLE AS M_MTITLE,
+		M.PUSHTYPE AS M_PUSHTYPE,
+		M.MCONTENT AS M_MCONTENT,
+		M.MURL AS M_MURL,
+		M.SENDUSERID AS
+		M_SENDUSERID,
+		M.RECEIVEUSERID AS M_RECEIVEUSERID,
+		M.ISSEND AS M_ISSEND,
+		M.ISREAD AS M_ISREAD,
+		M.MID AS M_MSGID,
+		M.SENDTIME AS M_SENDTIME,
+		M.CREATEUSER AS M_CREATEDUSER,
+		M.CREATEDATE AS
+		M_CREATEDDATE,
+		M.MODIFYUSER AS M_MODIFIEDUSER,
+		M.MODIFYDATE AS
+		M_MODIFIEDDATE,
+		M.ACCOUNTID AS CUSTOMER_ID,
+		CUSTOMER.EnterpriseName AS
+		CUSTOMER_ENTERPRISENAME
+	</sql>
+
+	<!-- 分页查询消息信息 -->
+	<select id="getMessageInfo" parameterType="map" resultMap="messageInfoResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_messageinfo_param" />
+		<![CDATA[
+			FROM t_crm_message M
+			LEFT JOIN t_crm_account CUSTOMER ON M.ACCOUNTID = CUSTOMER.id
+		]]>
+		<where>
+			M.ACTIVE = 'Y'
+			<![CDATA[
+				AND M.CREATEDATE < SYSDATE()
+			]]>
+			<if test="receiveUserId != null and receiveUserId != ''">
+				<![CDATA[
+					AND (M.RECEIVEUSERID = #{receiveUserId} OR M.RECEIVEUSERID = 'ALL_ANDROID')
+				]]>
+			</if>
+			<if test="messageType != null and messageType != ''">
+				<![CDATA[
+					AND M.MTYPE = #{messageType}
+				]]>
+			</if>
+			<if test="busType != null and busType != ''">
+				<![CDATA[
+					AND M.BUSTYPE = #{busType}
+				]]>
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND M.CREATEDATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND M.CREATEDATE <= #{endDate}
+				]]>
+			</if>
+		</where>
+		ORDER BY M.CREATEDATE ${sortType}
+	</select>
+
+	<!-- 查询消息信息总数 -->
+	<select id="countMessageInfo" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM t_crm_message M
+		]]>
+		<where>
+			M.ACTIVE = 'Y'
+			<![CDATA[
+				AND M.CREATEDATE < SYSDATE()
+			]]>
+			<if test="receiveUserId != null and receiveUserId != ''">
+				<![CDATA[
+					AND (M.RECEIVEUSERID = #{receiveUserId} OR M.RECEIVEUSERID = 'ALL_ANDROID')
+				]]>
+			</if>
+			<if test="messageType != null and messageType != ''">
+				<![CDATA[
+					AND M.MTYPE = #{messageType}
+				]]>
+			</if>
+			<if test="busType != null and busType != ''">
+				<![CDATA[
+					AND M.BUSTYPE = #{busType}
+				]]>
+			</if>
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND M.CREATEDATE >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND M.CREATEDATE <= #{endDate}
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 统计用户消息 -->
+	<select id="countMessageType" parameterType="map" resultMap="countMessageTypeMap">
+		<![CDATA[
+			SELECT
+				M.BUSTYPE AS M_BUSTYPE,
+				M3.NUM AS M_COUNTMESSAGE,
+			    M5.NUM AS M_ALLCOUNTMESSAGE
+			FROM
+				t_crm_message M
+			LEFT JOIN (
+				SELECT
+					M2.BUSTYPE,
+					COUNT(1) AS NUM
+				FROM
+					t_crm_message M2
+				WHERE
+					M2.ISREAD = '0'
+				AND (M2.RECEIVEUSERID = #{receiveUserId} OR M2.RECEIVEUSERID = 'ALL_ANDROID') AND M2.ACTIVE = 'Y' AND M2.CREATEDATE < SYSDATE()
+				GROUP BY
+					M2.BUSTYPE
+			) M3 ON M.BUSTYPE = M3.BUSTYPE
+			LEFT JOIN (
+				SELECT
+					M4.BUSTYPE,
+					COUNT(1) AS NUM
+				FROM
+					t_crm_message M4
+				WHERE
+					(M4.RECEIVEUSERID = #{receiveUserId} OR M4.RECEIVEUSERID = 'ALL_ANDROID') AND M4.ACTIVE = 'Y' AND M4.CREATEDATE < SYSDATE()
+				GROUP BY
+					M4.BUSTYPE
+			) M5 ON M.BUSTYPE = M5.BUSTYPE
+			WHERE
+				(M.RECEIVEUSERID = #{receiveUserId} OR M.RECEIVEUSERID = 'ALL_ANDROID') AND M.ACTIVE = 'Y' AND M.CREATEDATE < SYSDATE()
+			GROUP BY
+				M.BUSTYPE
+		]]>
+	</select>
+
+	<!-- 新增消息 -->
+	<insert id="addMessage"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoEntity">
+		<![CDATA[
+			insert into t_crm_message(
+				ID,
+				ACCOUNTID,
+				BUSTYPE,
+				MTYPE,
+				MTITLE,
+				PUSHTYPE,
+				MCONTENT,
+				MURL,
+				SENDUSERID,
+				RECEIVEUSERID,
+				CONDITIONS,
+				ISSEND,
+				ISREAD,
+				ALLOWSENDTIME,
+				ACTIVE,
+				CREATEUSER,
+				CREATEDATE,
+				MODIFYUSER,
+				MODIFYDATE
+			) values (
+				#{id},
+				#{customerEntity.id},
+				#{busType},
+				#{messageType},
+				#{messageTitle},
+				#{pushType},
+				#{messageContent},
+				#{messageUrl},
+				#{sendUserId},
+				#{receiveUserId},
+				#{condition},
+				#{isSend},
+				#{isRead},
+				#{allowSendTime},
+				'Y',
+				#{createUser},
+				#{createDate},
+				#{modifyUser},
+				SYSDATE()
+			)
+		]]>
+	</insert>
+
+	<!-- 修改消息发送状态 -->
+	<update id="updateMessageSendStatus" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_message M SET
+				M.ISSEND = #{isSend},
+				M.MID = #{msgId},
+				M.SENDTIME = #{sendTime},
+				M.modifyUser = #{modifyUser},
+				M.MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			M.ID = #{id}
+		</where>
+	</update>
+
+	<!-- 修改消息已读状态 -->
+	<update id="updateMessageReadStatus" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_message M SET
+				M.ISREAD = #{isRead},
+				M.modifyUser = #{modifyUser},
+				M.MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			M.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+
+	<!-- 删除消息 -->
+	<update id="deleteMessage" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_message M SET
+				M.ACTIVE = #{active},
+				M.modifyUser = #{modifyUser},
+				M.MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			M.ID IN
+			<foreach collection="ids" item="id" open="(" close=")"
+				separator=",">
+				#{id}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 根据条件修改消息的状态、发送时间、内容等 -->
+	<update id="updateMessageByCondition" parameterType="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoEntity">
+		<![CDATA[
+			UPDATE t_crm_message M SET
+		]]>
+		<if test="allowSendTime != null and allowSendTime != ''">
+			M.ALLOWSENDTIME = #{allowSendTime},
+			M.CREATEDATE = #{allowSendTime},
+		</if>
+		<if test="messageContent != null and messageContent != ''">
+			M.MCONTENT = #{messageContent},
+		</if>
+		<if test="isSend != null and isSend != ''">
+			M.ISSEND = #{isSend},
+		</if>
+		<if test="modifyUser != null and modifyUser != ''">
+			M.MODIFYUSER = #{modifyUser},
+		</if>
+		<![CDATA[
+			M.ISREAD = '0',
+			M.MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			CONDITIONS = #{condition}
+			<if test="receiveUserId != null and receiveUserId != ''">
+				AND M.RECEIVEUSERID = #{receiveUserId}
+			</if>
+		</where>
+	</update>
+	
+	<!-- 查询百度推送用户信息 -->
+	<select id="findPushUser" parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity"
+		resultType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+		<![CDATA[
+		select 
+			ID,
+			USERID,
+			BAIDU_USERID,
+			CHANNELID,
+			APPID,
+			CREATEDATE,
+			CANCEL,
+			notification_builder_id,
+			notification_basic_style,
+			sound,
+			badge,
+			sendstate,
+			beginhour,
+			endhour
+		from t_app_pushuser 
+		]]>
+		<where>
+			<if test="userid !=null and userid!=''">
+				and USERID =#{userid}
+			</if>
+			<if test="baidu_userid !=null and baidu_userid !=''">
+				and BAIDU_USERID=#{baidu_userid}
+			</if>
+			<if test="cancel==0 or cancel==1">
+				and CANCEL =#{cancel}
+			</if>
+			<if test="userid ==null and baidu_userid==null">and 1=2</if>
+			<if test="userid =='' and baidu_userid==''">and 1=2</if>
+		</where>
+	</select>
+	
+	<!-- 查询此工号是否有百度推送账号信息 -->
+	<select id="findPushUserByEmpCode" parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity"
+		resultType="long">
+		<![CDATA[
+		select 
+			count(1)
+		from t_app_pushuser p 
+		left join t_auth_user u on p.userid = u.login_name
+		]]>
+		<where>
+			<if test="userid !=null and userid!=''">
+				and p.USERID =#{userid}
+			</if>
+			<if test="empCode !=null and empCode!=''">
+				and u.emp_code =#{empCode}
+			</if>
+			<if test="cancel==0 or cancel==1">
+				and p.CANCEL =#{cancel}
+			</if>
+		</where>
+	</select>
+</mapper>

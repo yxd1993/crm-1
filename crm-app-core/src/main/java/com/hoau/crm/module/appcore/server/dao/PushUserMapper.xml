@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.PushUserMapper">
+
+	<!-- 新增百度推送用户ID信息 -->
+	<insert id="createPushUser"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+		<![CDATA[
+			INSERT INTO t_app_pushuser (ID,USERID,BAIDU_USERID,APPID,CHANNELID,CREATEDATE,CANCEL) 
+			VALUES(#{id},#{userid},#{baidu_userid},#{appid},#{channelid},SYSDATE(),'0') 
+		]]>
+	</insert>
+
+	<!-- 用户注销清楚推送用户信息 -->
+	<update id="modifyPushUser"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+		<![CDATA[
+			UPDATE t_app_pushuser SET CANCEL=#{cancel} WHERE ID=#{id}
+		]]>
+	</update>
+
+	<!-- 推送消息声音设置 -->
+	<update id="modifyPushSound"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+		<![CDATA[
+		UPDATE t_app_pushuser 	
+		SET 
+		notification_basic_style=#{notification_basic_style},
+		sound=#{sound}	
+		WHERE USERID=#{userid} and BAIDU_USERID=#{baidu_userid}
+		]]>
+	</update>
+
+	<!-- 推送消息接收设置 -->
+	<update id="modifyPushSendState"
+		parameterType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+		<![CDATA[
+		UPDATE t_app_pushuser 	
+		SET
+		sendstate=#{sendstate},
+		beginhour=#{beginhour},
+		endhour=#{endhour}
+		WHERE USERID=#{userid} and BAIDU_USERID=#{baidu_userid}
+		]]>
+	</update>
+</mapper>

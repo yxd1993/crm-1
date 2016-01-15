@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.sales.server.dao.ReportEmpWorkMapper">
+    <sql id="query_param">
+        e.empname as empName,
+		e.account as account,
+		e.deptname as deptName,
+		a.reserve as reserveCount ,
+		b.chats as chatsCount,
+		c.intention as intentionCount
+    </sql>
+    <!--查询当前登录员工  -->
+    <select id="queryCurrentEmpWork" parameterType="map" resultMap="resultEmpList">
+        <![CDATA[
+        	SELECT
+        ]]>
+        <include refid="query_param"/>
+        <![CDATA[
+			FROM
+				t_org_employee e
+			LEFT JOIN (
+				SELECT
+					SUM(reserve) AS reserve,
+					createUser
+				FROM
+					v_log_reserve
+				GROUP BY
+					createUser
+			) a ON e.empcode = a.createUser
+			LEFT JOIN (
+				SELECT
+					SUM(chats) AS chats,
+					createUser createUser
+				FROM
+					v_log_chats
+				GROUP BY
+					createUser
+			) b ON e.empcode = b.createUser
+			LEFT JOIN (
+				SELECT
+					SUM(intention) AS intention,
+					createUser
+				FROM
+					v_log_intention
+				GROUP BY
+					createUser
+			) c ON e.empcode = c.createUser
+			WHERE
+        	e.empcode = #{empCode}
+        ]]>
+    </select>
+	<!--分页查询员工总工作记录 -->
+	<select id="queryEmpWorkList" parameterType="map" resultMap="resultEmpList">
+         <![CDATA[
+		    	select 
+		  ]]>
+         <include refid="query_param"/>
+         <![CDATA[
+		    	FROM
+					t_org_employee e
+				LEFT JOIN (
+					SELECT
+						SUM(reserve) AS reserve,
+						createUser
+					FROM
+						v_log_reserve
+					GROUP BY
+						createUser
+				) a ON e.empcode = a.createUser
+				LEFT JOIN (
+					SELECT
+						SUM(chats) AS chats,
+						createUser createUser
+					FROM
+						v_log_chats
+					GROUP BY
+						createUser
+				) b ON e.empcode = b.createUser
+				LEFT JOIN (
+					SELECT
+						SUM(intention) AS intention,
+						createUser
+					FROM
+						v_log_intention
+					GROUP BY
+						createUser
+				) c ON e.empcode = c.createUser
+				WHERE
+ 				(
+					e.empcode IN (
+						SELECT
+							A.EMPCODE
+						FROM
+							t_org_employee A
+						WHERE
+							A.DEPTCODE = #{deptCode} and A.empcode <> #{empCode}
+					)
+				)
+				OR (
+					e.empcode IN (
+						SELECT
+							D2.MANAGERID
+						FROM
+							t_org_department D1
+						JOIN t_org_department D2 ON D1.DEPTCODE = D2.DEPTCODE
+						WHERE
+							D1.SUPDEPTCODE = #{deptCode} AND D1.canceled='0'
+					)
+				)
+				GROUP BY e.empcode
+		 ]]>
+	</select>
+	<!--员工操作总数 -->
+	<select id="queryEmpWorkListCount" resultType="long">
+		  <![CDATA[
+		    	select count(1)
+		    	FROM t_org_employee e
+				LEFT JOIN v_log_reserve a ON e.empcode = a.createUser
+				LEFT JOIN v_log_chats b ON e.empcode = b.createUser
+				LEFT JOIN v_log_intention c ON e.empcode = c.createUser
+				WHERE
+ 				(
+					e.empcode IN (
+						SELECT
+							A.EMPCODE
+						FROM
+							t_org_employee A
+						WHERE
+							A.DEPTCODE = #{deptCode} and A.empcode <> #{empCode}
+					)
+				)
+				OR (
+					e.empcode IN (
+						SELECT
+							D2.MANAGERID
+						FROM
+							t_org_department D1
+						JOIN t_org_department D2 ON D1.DEPTCODE = D2.DEPTCODE
+						WHERE
+							D1.SUPDEPTCODE = #{deptCode} AND D1.canceled='0'
+					)
+				)
+		 ]]>		
+	</select>
+	<!--分页查询员工操作的所有客户记录,以及产值--> 
+	<select id="queryEmpWorkListDetail" parameterType="map" resultType="map">
+		<![CDATA[
+			SELECT
+				h.account_id AS accountId,
+				tca.EnterpriseName as enterPriseName,
+				IFNULL(a.reserve,0) AS reserve,
+				IFNULL(b.chats,0) AS chats,
+				IFNULL(c.billingAmount,0) AS billingAmount
+			FROM
+				t_log_review_history h
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					count(1) AS reserve
+				FROM
+					t_log_review_history t
+				WHERE
+					t.operate_type = '5'
+				AND t.create_user = #{empCode} AND (date_format(`t`.`create_date`,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(`t`.`create_date`,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY accountId
+				) a ON h.account_id = a.accountId
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					count(1) AS chats
+				FROM
+					t_log_review_history t
+				WHERE
+					(
+						t.operate_type = '6'
+						OR t.operate_type = '7'
+					)
+				AND t.create_user = #{empCode} AND (date_format(`t`.`create_date`,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(`t`.`create_date`,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY accountId
+			) b ON h.account_id = b.accountId
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					IFNULL(SUM(w.billingAmount), 0) AS billingAmount
+				FROM
+					(SELECT DISTINCT account_id,create_user FROM t_log_review_history ) t
+				LEFT JOIN t_crm_account c ON c.id = t.account_id
+				LEFT JOIN t_crm_waybill w ON w.dcAccount = c.DCaccount
+				WHERE
+					t.create_user =  #{empCode}
+				AND (date_format(w.billingDate,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(w.billingDate,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY
+					accountId,
+					create_user
+			) c ON h.account_id = c.accountId
+			LEFT JOIN t_crm_account tca on tca.id = h.account_id
+			WHERE
+				h.create_user = #{empCode} AND c.billingAmount is not null
+			GROUP BY
+				h.account_id
+			ORDER BY IFNULL(c.billingAmount,0) desc
+		]]>
+	</select>
+	<!--当月客户记录总数 --> 
+	<select id="queryEmpWorkListDetailCount" parameterType="map" resultType="long">
+	    <![CDATA[
+			SELECT
+				COUNT(DISTINCT account_id)
+			FROM
+				t_log_review_history h
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					count(1) AS reserve
+				FROM
+					t_log_review_history t
+				WHERE
+					t.operate_type = '5'
+				AND t.create_user = #{empCode} AND (date_format(`t`.`create_date`,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(`t`.`create_date`,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY accountId
+				) a ON h.account_id = a.accountId
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					count(1) AS chats
+				FROM
+					t_log_review_history t
+				WHERE
+					(
+						t.operate_type = '6'
+						OR t.operate_type = '7'
+					)
+				AND t.create_user = #{empCode} AND (date_format(`t`.`create_date`,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(`t`.`create_date`,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY accountId
+			) b ON h.account_id = b.accountId
+			LEFT JOIN (
+				SELECT
+					t.account_id AS accountId,
+					t.create_user AS createUser,
+					IFNULL(SUM(w.billingAmount), 0) AS billingAmount
+				FROM
+					(SELECT DISTINCT account_id,create_user FROM t_log_review_history ) t
+				LEFT JOIN t_crm_account c ON c.id = t.account_id
+				LEFT JOIN t_crm_waybill w ON w.dcAccount = c.DCaccount
+				WHERE
+					t.create_user =  #{empCode}
+				AND (date_format(w.billingDate,'%Y-%m-%d') <= (SELECT last_day(curdate())))
+				AND (date_format(w.billingDate,'%Y-%m-%d') >= (SELECT(curdate() + INTERVAL (-(dayofmonth(curdate())) + 1) DAY)))
+				GROUP BY
+					accountId,
+					create_user
+			) c ON h.account_id = c.accountId
+			LEFT JOIN t_crm_account tca on tca.id = h.account_id
+			WHERE
+				h.create_user = #{empCode}
+			]]>
+	</select>
+	<!--查询指定时间段的拜访次数指标  -->
+	<select id="queryEmpWorkIndex" parameterType="map" resultType="long">
+	    <![CDATA[
+	    SELECT
+			IFNULL(sum(chats.chats),0) as chats
+			FROM v_chats_index chats
+			WHERE
+			chats.createUser = #{empCode} 
+		]]>
+		<if test="startDate != null and startDate != ''">
+		 	<![CDATA[
+				and createDate >= #{startDate} 
+ 			]]>
+ 		</if>
+ 		<if test="endDate !=null and endDate != '' ">
+		 	<![CDATA[
+				and createDate <= #{endDate}
+ 			]]>
+ 		</if>
+	</select>
+	<!--查询登录角色  -->
+	<select id="queryUserRole" parameterType="string" resultType="string">
+	    <![CDATA[
+	   		 select role_code as roleCode from t_auth_userrole where user_code = #{userName}
+	    ]]>
+	</select>
+	<!--查询登录角色 的指标信息 -->
+	<select id="queryUserRoleIndex" parameterType="map" resultType="long">
+	    <![CDATA[
+	   		SELECT
+				IFNULL(COUNT(indexNum),0) as indexNum
+			FROM
+				t_sale_role_index r
+			WHERE
+				r.rolecode = #{roleCode}
+			AND year = #{year} AND month = #{month}
+	    ]]>
+	</select>
+	<!--查询门店类型  -->
+	<select id="queryStoreType" parameterType="string" resultType="string">
+	     <![CDATA[
+	  		 select storeType 
+	  		 from t_org_department d 
+		     where
+		      d.deptcode = 
+	  		 (select e.deptcode from t_org_employee e where e.empcode= #{empCode})
+	    ]]>
+	</select>
+	<!--查询是否存在该月指标信息  -->
+	<select id="queryIndexCountByDate" parameterType="map" resultType="long">
+	    <![CDATA[
+	    	SELECT count(1) FROM t_sale_role_index s WHERE `year` = #{year} AND `month` = #{month}
+	    ]]>
+	</select>
+	<!--默认指标初始化到表中  -->
+	<insert id="insertDefaultIndex" parameterType="map">
+	    INSERT INTO T_SALE_ROLE_INDEX (
+			id,
+			YEAR,
+			MONTH,
+			rolecode,
+			indexNum,
+			active
+		)
+		VALUES
+		(
+			#{id},
+			#{year},
+			#{month},
+			#{roleCode},
+			#{indexNum},
+			'Y'
+		) 
+	</insert>
+	<!--查询事业部,路区,大区,角色员工的指标完成信息  -->
+	<select id="querEmpIndexNoStore" parameterType="map" resultType="map">
+	    <![CDATA[
+			SELECT
+				*
+			FROM
+				(
+					SELECT
+						u.emp_code AS empCode,
+						CONVERT (
+							IFNULL(SUM(c.visits), 0),
+							SIGNED
+						) AS visits,
+						CONVERT (
+							IFNULL(i.indexNum, 0),
+							SIGNED
+						) AS visitIndex,
+						CONVERT (
+							IFNULL(SUM(c.telephones), 0),
+							SIGNED
+						) AS telephones,
+					0 as telephoneIndex,
+					'1' as pushType
+					FROM
+						t_auth_user u
+					LEFT JOIN t_auth_userrole ur ON u.login_name = ur.user_code
+					LEFT JOIN t_auth_role r ON ur.role_code = r.role_code
+					LEFT JOIN (
+						SELECT
+							chats.createUser,
+							IFNULL(sum(chats.telephone), 0) AS telephones,
+							IFNULL(sum(chats.visit), 0) AS visits
+						FROM
+							v_chats_index_type chats
+						WHERE
+							chats.createDate >= #{startDate}
+						AND chats.createDate <= #{endDate}
+						GROUP BY
+							chats.createUser
+					) c ON c.createUser = u.emp_code
+					LEFT JOIN t_sale_role_index i ON (i.rolecode = r.role_code)
+					WHERE
+						(
+							r.role_code = '1010'
+							OR r.role_code = '1004'
+							OR r.role_code = '1005'
+						)
+					AND year = #{year} 
+					AND month = #{month}
+					GROUP BY
+						u.emp_code
+				) s
+			WHERE
+				IFNULL(s.visits, 0) < s.visitIndex
+	    ]]>
+	</select>
+	<!--查询门店(到货门店,无到货门店)角色员工的指标完成信息  -->
+	<select id="querEmpIndexByStore" parameterType="map" resultType="map">
+	    <![CDATA[
+	    SELECT
+			*
+		FROM
+			(
+				SELECT
+					e.empcode AS empCode,
+					CONVERT (
+						IFNULL(SUM(c.visits), 0),
+						SIGNED
+					) AS visits,
+					CONVERT (
+						IFNULL(i.indexNum, 0),
+						SIGNED
+					) AS visitIndex,
+					CONVERT (
+						IFNULL(SUM(c.telephones), 0),
+						SIGNED
+					) AS telephones,
+				8 as telephoneIndex,
+				'0' as pushType
+				FROM
+					`t_org_employee` e
+				LEFT JOIN t_org_department dept ON dept.deptcode = e.deptcode
+				LEFT JOIN t_auth_userrole ur ON e.account = ur.user_code
+				LEFT JOIN t_auth_user u ON (
+					e.account = u.login_name
+					AND u.login_name = ur.user_code
+				)
+				LEFT JOIN (
+					SELECT
+						chats.createUser,
+						IFNULL(sum(chats.telephone), 0) AS telephones,
+						IFNULL(sum(chats.visit), 0) AS visits
+					FROM
+						v_chats_index_type chats
+					WHERE
+						chats.createDate >= #{startDate}
+					AND chats.createDate <= #{endDate}
+					GROUP BY
+						chats.createUser
+				) c ON c.createUser = e.empcode
+				LEFT JOIN t_sale_role_index i ON i.rolecode = (
+					CASE
+					WHEN dept.storeType = '0' THEN
+						'100601'
+					WHEN dept.storeType = '1' THEN
+						'100602'
+					ELSE
+						''
+					END
+				)
+				WHERE
+					(
+						ur.role_code = '1006'
+						AND dept.isstore = '1'
+						AND (
+							storeType = '0'
+							OR storeType = '1'
+						)
+						AND i.indexNum IS NOT NULL
+					)
+				AND year = #{year} 
+				AND month = #{month}
+				GROUP BY
+					e.empcode
+			) s
+		WHERE
+			IFNULL(s.visits, 0) < s.visitIndex OR IFNULL(s.telephones, 0) < telephoneIndex
+		]]>
+	</select>
+	<!--个人当月工作列表Map映射  -->
+	<resultMap type="com.hoau.crm.module.sales.api.shared.domain.ReportEmpWorkEntity" id="resultEmpList">
+	    <id column="account" property="account"/>
+	    <result column="empName" property="empName"/>
+	    <result column="deptName" property="deptName"/>
+	    <result column="reserveCount" property="reserveCount"/>
+	    <result column="chatsCount" property="chatsCount"/>
+	    <result column="intentionCount" property="intentionCount"/>
+	</resultMap>
+	
+</mapper>

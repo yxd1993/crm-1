@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.RoleMapper">
+
+	<!-- 角色单表查询结果映射配置 -->
+	<resultMap id="roleSimpleResultMap"
+		type="com.hoau.crm.module.bse.api.shared.domain.RoleEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="roleCode" column="ROLE_CODE" />
+		<result property="roleName" column="ROLE_NAME" />
+		<result property="roleDesc" column="ROLE_DESC" />
+		<result property="isDefault" column="ROLE_ISDEFAULT" />
+		<result property="createUser" column="CREATE_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="createDate" column="CREATE_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+		<result property="modifyUser" column="MODIFY_USER" javaType="String"
+			jdbcType="VARCHAR" />
+		<result property="modifyDate" column="MODIFY_DATE" javaType="Date"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<!-- 角色插入参数配置信息 -->
+	<sql id="insert_param">
+		ID,
+		ROLE_CODE,
+		ROLE_NAME,
+		ROLE_DESC,
+		ACTIVE,
+		CREATE_USER,
+		CREATE_DATE,
+		MODIFY_USER,
+		MODIFY_DATE
+	</sql>
+
+	<!-- 角色查询参数配置信息 -->
+	<sql id="query_param">
+		ID,
+		ROLE_CODE,
+		ROLE_NAME,
+		ROLE_DESC,
+		isdefault as ROLE_ISDEFAULT,
+		ACTIVE,
+		CREATE_USER,
+		CREATE_DATE,
+		MODIFY_USER,
+		MODIFY_DATE
+	</sql>
+	
+	<!-- 角色权限参数配置信息 -->
+	<sql id="query_userrole_param">
+		MASTER.ID,
+		MASTER.ROLE_CODE,
+		MASTER.ROLE_NAME,
+		MASTER.ROLE_DESC,
+		MASTER.ACTIVE,
+		MASTER.CREATE_USER,
+		MASTER.CREATE_DATE,
+		MASTER.MODIFY_USER,
+		MASTER.MODIFY_DATE
+	</sql>
+
+	<!-- 分页查询角色信息 -->
+	<select id="getRoleList"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.RoleEntity"
+		resultMap="roleSimpleResultMap">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_param" />
+		<![CDATA[
+			FROM T_AUTH_ROLE MASTER
+		]]>
+		<where>
+			<!-- 角色名称 -->
+			<if test="roleCode != null and roleCode != ''">
+				MASTER.ROLE_CODE = #{roleCode}
+			</if>
+			<!-- 用户姓名 -->
+			<if test="roleName != null and roleName != ''">
+				AND MASTER.ROLE_NAME = #{roleName}
+			</if>
+			<!-- 用户状态 -->
+			<choose>
+				<when test="active != null">
+					AND MASTER.ACTIVE = #{active},
+				</when>
+				<otherwise>
+					AND MASTER.ACTIVE = 'Y'
+				</otherwise>
+			</choose>
+		</where>
+		ORDER BY MASTER.MODIFY_DATE DESC
+	</select>
+
+	<!-- 查询信息总数 -->
+	<select id="countRole"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.RoleEntity"
+		resultType="long">
+		<![CDATA[
+			SELECT 
+			COUNT(1)
+			FROM T_AUTH_ROLE MASTER
+		]]>
+		<where>
+			<!-- 角色名称 -->
+			<if test="roleCode != null and roleCode != ''">
+				MASTER.ROLE_CODE = #{roleCode}
+			</if>
+			<!-- 用户姓名 -->
+			<if test="roleName != null and roleName != ''">
+				AND MASTER.ROLE_NAME = #{roleName}
+			</if>
+			<!-- 用户状态 -->
+			<choose>
+				<when test="active != null">
+					AND MASTER.ACTIVE = #{active},
+				</when>
+				<otherwise>
+					AND MASTER.ACTIVE = 'Y'
+				</otherwise>
+			</choose>
+		</where>
+		ORDER BY MASTER.MODIFY_DATE DESC
+	</select>
+
+	<!-- 保存角色对象 -->
+	<insert id="insert"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.RoleEntity">
+		<![CDATA[
+			insert into T_AUTH_ROLE(
+		]]>
+		<include refid="insert_param" />
+		<![CDATA[
+			) values (
+		]]>
+		#{id},
+		<choose>
+			<when test="roleCode != null">
+				#{roleCode},
+			</when>
+			<otherwise>
+				null,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="roleName != null">
+				#{roleName},
+			</when>
+			<otherwise>
+				null,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="roleDesc != null">
+				#{roleDesc},
+			</when>
+			<otherwise>
+				null,
+			</otherwise>
+		</choose>
+		'Y',
+		<choose>
+			<when test="createUser !=null and createUser !=''">
+				#{createUser},
+			</when>
+			<otherwise>
+				null,
+			</otherwise>
+		</choose>
+		SYSDATE(),
+		<choose>
+			<when test="modifyUser !=null and modifyUser !=''">
+				#{modifyUser},
+			</when>
+			<otherwise>
+				null,
+			</otherwise>
+		</choose>
+		SYSDATE()
+		)
+	</insert>
+
+	<!-- 修改角色对象 -->
+	<update id="update">
+		UPDATE T_AUTH_ROLE
+		<set>
+			<if test="roleName!=null and roleName!=''">
+				ROLE_NAME = #{roleName},
+			</if>
+			<if test="roleDesc!=null and roleDesc!=''">
+				ROLE_DESC = #{roleDesc},
+			</if>
+			<if test="modifyUser != null and modifyUser != '' ">
+				MODIFY_USER = #{modifyUser},
+			</if>
+			MODIFY_DATE = SYSDATE()
+		</set>
+		WHERE ID = #{id}
+	</update>
+
+	<!-- 根据角色ID删除逻辑删除角色数据 -->
+	<update id="delete" parameterType="map">
+		<![CDATA[
+			 UPDATE T_AUTH_ROLE SET MODIFY_USER = #{modifyUser} ,
+			 MODIFY_DATE = SYSDATE(),
+			 ACTIVE = 'N'
+			 WHERE ID = #{id}
+		]]>
+	</update>
+
+	<!-- 通过角色ID得到角色对象 -->
+	<select id="getRoleById" resultMap="roleSimpleResultMap"
+		parameterType="string">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_param" />
+		<![CDATA[
+			FROM T_AUTH_ROLE WHERE ID=#{id} AND ACTIVE='Y'
+		]]>
+	</select>
+
+	<!-- 得到待分配的角色对象集合 -->
+	<select id="getLeftRoles" resultMap="roleSimpleResultMap"
+		parameterType="string">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_userrole_param" />
+		<![CDATA[
+			FROM T_AUTH_ROLE MASTER
+ 			WHERE MASTER.ROLE_CODE NOT IN (
+ 			SELECT ROLE_CODE 
+ 			FROM T_AUTH_USERROLE
+ 			WHERE USER_CODE=#{userCode}) AND MASTER.ACTIVE = 'Y'
+		]]>
+	</select>
+
+	<!-- 得到已分配的角色对象集合 -->
+	<select id="getAuthedRoles" resultMap="roleSimpleResultMap"
+		parameterType="string">
+		<![CDATA[
+			SELECT 
+		]]>
+		<include refid="query_userrole_param" />
+		<![CDATA[
+			FROM T_AUTH_ROLE MASTER
+			RIGHT JOIN T_AUTH_USERROLE ENTITY_0 ON MASTER.ROLE_CODE = ENTITY_0.ROLE_CODE
+ 			WHERE ENTITY_0.USER_CODE = #{userCode} AND MASTER.ACTIVE = 'Y'
+ 			
+		]]>
+	</select>
+
+	<!-- 判断当前信息是否重名,是否可以新增或修改 -->
+	<select id="isAllowRole" parameterType="com.hoau.crm.module.bse.api.shared.domain.RoleEntity" resultType="long">
+		<![CDATA[
+			SELECT
+			COUNT(1)
+			FROM T_AUTH_ROLE role
+		]]>
+		<where>
+			role.ACTIVE = 'Y'
+			AND (role.ROLE_CODE = #{roleCode}
+			OR role.ROLE_NAME = #{roleName})
+			<if test="id != null and id != ''">
+				AND role.id != #{id}
+			</if>
+		</where>
+	</select>
+</mapper>

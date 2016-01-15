@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.appcore.server.dao.CustomerAppMapper">
+
+	<!-- 客户与联系人分页表格信息 -->
+	<resultMap id="customerGridResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+		<id property="id" column="MASTER_ID" />
+		<result property="accountType" column="MASTER_ACCOUNTTYPE" />
+		<result property="enterpriseName" column="MASTER_ENTERPRISENAME" />
+		<result property="industryCode" column="MASTER_INDUSTRYCODE" />
+		<result property="detailedAddress" column="MASTER_DETAILEDADDRESS" />
+		<result property="manageEmpCode" column="MASTER_MANAGEEMPCODE" />
+		<result property="managePerson" column="MASTER_MANAGEPERSON" />
+		<result property="tierCode" column="MASTER_TIERCODE" />
+		<result property="regionsName" column="VS_REGIONSNAME" />
+		<result property="accountCreditGrade" column="MASTER_ACCOUNTCREDITGRADE" />
+		<result property="lastChatsDate" column="MASTER_LASTCHATSDATE" />
+		<result property="createDate" column="MASTER_CREATEDON"
+			javaType="Date" jdbcType="TIMESTAMP" />
+        <result property="productValueOfThreeMonthAvg" column="MASTER_PRODUCTVALUEOFTHREEMONTHAVG" />
+		<association property="contactEntity" column="CONTACT_ACCOUNTID"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="CONTACT_ID" />
+			<result property="contactName" column="CONTACT_CONTACTNAME" />
+			<result property="districtNumber" column="CONTACT_DISTRICTNUMBER" />
+			<result property="telephone" column="CONTACT_TELEPHONE" />
+			<result property="cellphone" column="CONTACT_CELLPHONE" />
+			<result property="isDefault" column="CONTACT_ISDEFAULT" />
+		</association>
+	</resultMap>
+
+	<!-- 客户与联系人分页表格信息 -->
+	<sql id="query_customer_grid_param">
+		MASTER.ID AS MASTER_ID,
+		MASTER.ACCOUNTTYPE AS
+		MASTER_ACCOUNTTYPE,
+		MASTER.ENTERPRISENAME AS
+		MASTER_ENTERPRISENAME,
+		MASTER.INDUSTRYCODE AS MASTER_INDUSTRYCODE,
+		convert(AES_DECRYPT(UNHEX(MASTER.DETAILEDADDRESS),'CRM') using utf8) as
+		MASTER_DETAILEDADDRESS,
+		MASTER.ManageEmpCode AS
+		MASTER_MANAGEEMPCODE,
+		MASTER.MANAGEPERSON AS MASTER_MANAGEPERSON,
+		MASTER.TIERCODE AS
+		MASTER_TIERCODE,
+		MASTER.CREATEDON AS
+		MASTER_CREATEDON,
+		MASTER.AccountCreditGrade AS MASTER_ACCOUNTCREDITGRADE,
+        MASTER.PRODUCTVALUEOFTHREEMONTH AS MASTER_PRODUCTVALUEOFTHREEMONTHAVG,
+		<!-- VS.regionsname AS VS_REGIONSNAME, -->
+		CONTACT.ID AS CONTACT_ID,
+		CONTACT.ACCOUNTID AS
+		CONTACT_ACCOUNTID,
+		CONTACT.CONTACTNAME AS
+		CONTACT_CONTACTNAME,
+		CONTACT.DISTRICTNUMBER AS
+		CONTACT_DISTRICTNUMBER,
+		convert(AES_DECRYPT(UNHEX(CONTACT.TELEPHONE),'CRM') using utf8) AS
+		CONTACT_TELEPHONE,
+		convert(AES_DECRYPT(UNHEX(CONTACT.CELLPHONE),'CRM') using utf8) AS
+		CONTACT_CELLPHONE,
+		CONTACT.ISDEFAULT AS CONTACT_ISDEFAULT,
+		chats.maxStartTime AS MASTER_LASTCHATSDATE
+	</sql>
+
+	<!-- 分页查询客户信息 -->
+	<select id="getCustomerInfo" parameterType="map"
+		resultMap="customerGridResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_customer_grid_param" />
+		<![CDATA[
+			FROM t_crm_account MASTER
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+			LEFT JOIN (SELECT c.account_id,MAX(c.chat_start_time) AS maxStartTime FROM t_sale_chats c WHERE c.active = 'Y' group by c.account_id) chats on MASTER.ID = chats.account_id
+		]]>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '0'
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON < #{endDate}
+				]]>	
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="contractStatus != null and contractStatus != ''">
+				<!-- AND EXISTS SELECT C.crmAccount FROM t_sale_contract C WHERE MASTER.AccountCode = C.crmAccount AND C.STATUS = #{contractStatus} -->
+				AND MASTER.AccountCode IN (SELECT C.crmAccount FROM t_sale_contract C WHERE C.STATUS = #{contractStatus})
+			</if>
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<!-- 拼音首字母 -->
+			<if test="enterpriseShortName != null and enterpriseShortName != ''">
+				AND MASTER.EnterpriseShortName like #{enterpriseShortName}
+			</if>
+			<!-- CRM账号 -->
+			<if test="accountCode != null and accountCode != ''">
+				AND MASTER.AccountCode = #{accountCode}
+			</if>
+			<!-- DC账号 -->
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCaccount = #{dcAccount}
+			</if>
+			<!-- 手机号 -->
+			<if test="cellPhone != null and cellPhone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 座机号 -->
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName !=''">
+				AND CONTACT.CONTACTNAME like #{contactName}
+			</if>
+			<!-- 客户地址 -->
+			<if test="customerAddress != null and customerAddress != ''">
+				AND MASTER.DETAILEDADDRESS = HEX(AES_ENCRYPT(#{customerAddress}, 'CRM'))
+			</if>
+			<if test="userDeptcode !=null and userDeptcode !=''">
+				AND ((MASTER.TIERCODE IN (
+				SELECT v.logistcode
+				FROM v_org_storedepartment v
+				WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode}
+				OR v.roadareacode = #{userDeptcode} OR v.deptcode = #{userDeptcode})
+				)
+				OR ( MASTER.MANAGEEMPCODE IN(
+				SELECT E.EMPCODE FROM t_org_employee E
+				LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+				WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE =
+				#{userDeptcode}
+				OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode} OR V.ONE_LEVEL_DEPTCODE =
+				#{userDeptcode})
+				)
+				)
+			</if>
+			<if test="roadDeptcode !=null and roadDeptcode !=''">
+				AND ((
+					(MASTER.TIERCODE IN (
+				SELECT v.logistcode
+				FROM v_org_storedepartment v
+				WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode}
+				OR v.roadareacode = #{roadDeptcode} OR v.deptcode = #{roadDeptcode})
+				)
+				OR ( MASTER.MANAGEEMPCODE IN(
+				SELECT E.EMPCODE FROM t_org_employee E
+				LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+				WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+				OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode} OR V.ONE_LEVEL_DEPTCODE =	#{roadDeptcode})
+				)
+				) AND MASTER.CUSTOMEROFORG = '0' )
+			</if>
+			<if test="salePerson != null and salePerson !=''">
+				<![CDATA[
+					AND MASTER.MANAGEEMPCODE = #{salePerson}
+				]]>
+			</if>
+			<if test="storeAuth != null and storeAuth !=''">
+				<![CDATA[
+					AND (MASTER.TIERCODE = #{storeAuth} AND MASTER.CUSTOMEROFORG = '0')
+				]]>
+			</if>
+			<if test="newStoreData != null and newStoreData != ''">
+				<![CDATA[
+					AND MASTER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+			<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+				<![CDATA[
+					AND ((MASTER.ACCOUNTRATINGCODE = '1') OR (
+						MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+					))
+				]]>
+			</if>
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND ((
+						MASTER.ACCOUNTRATINGCODE != '1'
+					) AND (
+						MASTER.MANAGEEMPCODE NOT IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+						
+					) AND (
+						MASTER.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+			
+			<if test="chatsStartDate != null and chatsStartDate != ''">
+				<![CDATA[
+					AND chats.maxStartTime >= #{chatsStartDate}
+				]]>
+			</if>
+			<choose>
+				<when test="(chatsStartDate == null or chatsStartDate == '') and (chatsEndDate != null and chatsEndDate != '')">
+					<![CDATA[
+						AND (chats.maxStartTime is null OR chats.maxStartTime < #{chatsEndDate})
+					]]>	
+				</when>
+				<when test="chatsEndDate != null and chatsEndDate != ''">
+					<![CDATA[
+						AND chats.maxStartTime < #{chatsEndDate}
+					]]>	
+				</when>
+			</choose>
+			<!-- 客户ID -->
+			<if test="customerId != null and customerId != ''">
+				<![CDATA[
+					AND MASTER.ID = #{customerId}
+				]]>
+			</if>
+		</where>
+		<choose>
+			<when test="timeSortDesc != null and timeSortDesc != ''">
+				<![CDATA[
+					ORDER BY MASTER.CREATEDON DESC
+				]]>
+			</when>
+			<when test="productValueSortDesc != null and productValueSortDesc != ''">
+				<![CDATA[
+					ORDER BY MASTER.productValueOfThreeMonth DESC
+				]]>
+			</when>
+			<when test="timeSortAsc != null and timeSortAsc != ''">
+				<![CDATA[
+					ORDER BY MASTER.CREATEDON ASC
+				]]>
+			</when>
+			<when test="productValueSortAsc != null and productValueSortAsc != ''">
+				<![CDATA[
+					ORDER BY MASTER.productValueOfThreeMonth ASC
+				]]>
+			</when>
+		</choose>
+	</select>
+
+	<!-- 分页查询客户信息 -->
+	<select id="countCustomer" parameterType="map" resultType="long">
+		<![CDATA[
+			SELECT COUNT(1)	FROM t_crm_account MASTER
+		]]>
+		<if test="contactName != null and contactName !=''">
+			LEFT JOIN t_crm_contact CONTACT ON (MASTER .ID = CONTACT.ACCOUNTID AND CONTACT.ISDEFAULT = 'Y')
+		</if>
+		<if test="(chatsStartDate != null and chatsStartDate != '') or (chatsEndDate != null and chatsEndDate != '')">
+			LEFT JOIN (SELECT c.account_id,MAX(c.chat_start_time) AS maxStartTime FROM t_sale_chats c WHERE c.active = 'Y' group by c.account_id) chats on MASTER.ID = chats.account_id
+		</if>
+		<where>
+			MASTER.ACTIVE = 'Y' AND MASTER.isCustomerResourcePool = '0'
+			<if test="startDate != null and startDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON >= #{startDate}
+				]]>
+			</if>
+			<if test="endDate != null and endDate != ''">
+				<![CDATA[
+					AND MASTER.CREATEDON < #{endDate}
+				]]>	
+			</if>
+			<if test="accountType != null and accountType != ''">
+				AND MASTER.ACCOUNTTYPE = #{accountType}
+			</if>
+			<if test="contractStatus != null and contractStatus != ''">
+				<!-- AND EXISTS SELECT C.crmAccount FROM t_sale_contract C WHERE MASTER.AccountCode = C.crmAccount AND C.STATUS = #{contractStatus} -->
+				AND MASTER.AccountCode IN (SELECT C.crmAccount FROM t_sale_contract C WHERE C.STATUS = #{contractStatus})
+			</if>
+			<!-- 企业名称 -->
+			<if test="enterpriseName != null and enterpriseName != ''">
+				AND MASTER.ENTERPRISENAME like #{enterpriseName}
+			</if>
+			<!-- 拼音首字母 -->
+			<if test="enterpriseShortName != null and enterpriseShortName != ''">
+				AND MASTER.EnterpriseShortName like #{enterpriseShortName}
+			</if>
+			<!-- CRM账号 -->
+			<if test="accountCode != null and accountCode != ''">
+				AND MASTER.AccountCode = #{accountCode}
+			</if>
+			<!-- DC账号 -->
+			<if test="dcAccount != null and dcAccount != ''">
+				AND MASTER.DCaccount = #{dcAccount}
+			</if>
+			<!-- 手机号 -->
+			<if test="cellPhone != null and cellPhone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.CELLPHONE = HEX(AES_ENCRYPT(#{cellPhone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 座机号 -->
+			<if test="telephone != null and telephone != ''">
+				AND MASTER.ID IN (SELECT C.AccountId FROM t_crm_contact C WHERE C.TELEPHONE = HEX(AES_ENCRYPT(#{telephone}, 'CRM')) AND C.ACTIVE = 'Y')
+			</if>
+			<!-- 联系人名称 -->
+			<if test="contactName != null and contactName !=''">
+				AND CONTACT.CONTACTNAME like #{contactName}
+			</if>
+			<!-- 客户地址 -->
+			<if test="customerAddress != null and customerAddress != ''">
+				AND MASTER.DETAILEDADDRESS = HEX(AES_ENCRYPT(#{customerAddress}, 'CRM'))
+			</if>
+			<if test="userDeptcode !=null and userDeptcode !=''">
+				AND ((MASTER.TIERCODE IN (
+				SELECT v.logistcode
+				FROM v_org_storedepartment v
+				WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode}
+				OR v.roadareacode = #{userDeptcode} OR v.deptcode = #{userDeptcode})
+				)
+				OR ( MASTER.MANAGEEMPCODE IN(
+				SELECT E.EMPCODE FROM t_org_employee E
+				LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+				WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE =
+				#{userDeptcode}
+				OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode} OR V.ONE_LEVEL_DEPTCODE =
+				#{userDeptcode})
+				)
+				)
+			</if>
+			<if test="roadDeptcode !=null and roadDeptcode !=''">
+				AND ((
+					(MASTER.TIERCODE IN (
+				SELECT v.logistcode
+				FROM v_org_storedepartment v
+				WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode}
+				OR v.roadareacode = #{roadDeptcode} OR v.deptcode = #{roadDeptcode})
+				)
+				OR ( MASTER.MANAGEEMPCODE IN(
+				SELECT E.EMPCODE FROM t_org_employee E
+				LEFT JOIN v_org_department V ON E.DEPTCODE = V.FOUR_LEVEL_DEPTCODE
+				WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+				OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode} OR V.ONE_LEVEL_DEPTCODE =	#{roadDeptcode})
+				)
+				) AND MASTER.CUSTOMEROFORG = '0' )
+			</if>
+			<if test="salePerson != null and salePerson !=''">
+				<![CDATA[
+					AND MASTER.MANAGEEMPCODE = #{salePerson}
+				]]>
+			</if>
+			<if test="storeAuth != null and storeAuth !=''">
+				<![CDATA[
+					AND (MASTER.TIERCODE = #{storeAuth} AND MASTER.CUSTOMEROFORG = '0')
+				]]>
+			</if>
+			<if test="newStoreData != null and newStoreData != ''">
+				<![CDATA[
+					AND MASTER.CUSTOMEROFORG = '1'
+				]]>
+			</if>
+			<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+				<![CDATA[
+					AND ((MASTER.ACCOUNTRATINGCODE = '1') OR (
+						MASTER.MANAGEEMPCODE IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+							OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+					))
+				]]>
+			</if>
+			<if test="customerManage != null and customerManage != ''">
+				<![CDATA[
+					AND ((
+						MASTER.ACCOUNTRATINGCODE != '1'
+					) AND (
+						MASTER.MANAGEEMPCODE NOT IN(
+						SELECT  E.EMPCODE FROM t_org_employee E
+						LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+						WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+							OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+						
+					) AND (
+						MASTER.CUSTOMEROFORG = '0'
+					))
+				]]>
+			</if>
+			<if test="chatsStartDate != null and chatsStartDate != ''">
+				<![CDATA[
+					AND chats.maxStartTime >= #{chatsStartDate}
+				]]>
+			</if>
+			<choose>
+				<when test="(chatsStartDate == null or chatsStartDate == '') and (chatsEndDate != null and chatsEndDate != '')">
+					<![CDATA[
+						AND (chats.maxStartTime is null OR chats.maxStartTime < #{chatsEndDate})
+					]]>	
+				</when>
+				<when test="chatsEndDate != null and chatsEndDate != ''">
+					<![CDATA[
+						AND chats.maxStartTime < #{chatsEndDate}
+					]]>	
+				</when>
+			</choose>
+			<!-- 客户ID -->
+			<if test="customerId != null and customerId != ''">
+				<![CDATA[
+					AND MASTER.ID = #{customerId}
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<resultMap id="customerLatlngResultMap"
+		type="com.hoau.crm.module.customer.api.shared.domain.CustomerLatlngEntity">
+		<id property="id" column="id" />
+		<result property="lat" column="lat" />
+		<result property="lng" column="lng" />
+		<result property="type" column="type" />
+		<result property="customerId" column="customerId" />
+		<result property="managePerson" column="managePerson" />
+		<result property="enterpriseName" column="enterpriseName" />
+		<result property="detailedAddress" column="detailedAddress" />
+		<result property="cellphone" column="cellphone" />
+		<result property="districtNumber" column="districtNumber" />
+		<result property="telephone" column="telephone" />
+		<result property="contactName" column="ContactName" />
+	</resultMap>
+	
+	<!-- 获得附近10公里客户 -->
+	<select id="getNearCustomerScopeLatLng" parameterType="map" resultMap="customerLatlngResultMap">
+		<![CDATA[
+			SELECT
+				l.*, a.enterpriseName,
+				convert(AES_DECRYPT(UNHEX(a.DetailedAddress),'CRM') using utf8) AS detailedAddress,
+				a.managePerson,
+				a.RegionsCode,
+				a.accountType,
+				a.id AS aid,
+				convert(AES_DECRYPT(UNHEX(c.Cellphone),'CRM') using utf8) as cellphone,
+				c.ContactName,
+				c.districtNumber,
+				convert(AES_DECRYPT(UNHEX(c.telephone),'CRM') using utf8) as telephone,
+				c.id AS cid
+			FROM
+				t_crm_customer_latlng l
+				LEFT JOIN t_crm_account a ON (l.customerId = a.id and a.active='Y')
+				LEFT JOIN t_crm_contact c ON (c.AccountId = a.id and  c.ISDEFAULT = 'Y')
+			]]>
+			<where>
+				<![CDATA[
+					l.type = '1' AND lng > #{minLat} 
+					AND lng < #{maxLat} 
+					AND lat > #{minLng}
+					AND lat < #{maxLng}
+					AND a.isCustomerResourcePool = '0'
+				]]>	
+			<if test="userDeptcode !=null and userDeptcode !=''">
+					<![CDATA[
+						AND ((a.TIERCODE IN (
+							SELECT v.logistcode 
+							FROM v_org_storedepartment v 
+							WHERE v.businesscode = #{userDeptcode} OR v.regionscode = #{userDeptcode} 
+									OR v.roadareacode = #{userDeptcode}  OR v.deptcode = #{userDeptcode})
+							)
+							OR ( a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{userDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{userDeptcode}
+								OR V.TWO_LEVEL_DEPTCODE = #{userDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{userDeptcode})
+							))
+					]]>
+				</if>
+				<if test="roadDeptcode !=null and roadDeptcode !=''">
+					<![CDATA[
+						AND (((a.TIERCODE IN (
+							SELECT v.logistcode 
+							FROM v_org_storedepartment v 
+							WHERE v.businesscode = #{roadDeptcode} OR v.regionscode = #{roadDeptcode} 
+									OR v.roadareacode = #{roadDeptcode}  OR v.deptcode = #{roadDeptcode})
+							)
+							OR ( a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{roadDeptcode} OR V.THREE_LEVEL_DEPTCODE = #{roadDeptcode}
+								OR V.TWO_LEVEL_DEPTCODE = #{roadDeptcode}  OR V.ONE_LEVEL_DEPTCODE = #{roadDeptcode})
+							)) AND a.customerOfOrg = '0' )
+					]]>
+				</if>
+				<if test="salePerson != null and salePerson !=''">
+					<![CDATA[
+						AND a.MANAGEEMPCODE = #{salePerson}
+					]]>
+				</if>
+				<if test="newStoreData != null and newStoreData != ''">
+					<![CDATA[
+						AND a.customerOfOrg = '1'
+					]]>
+				</if>
+				<if test="tacticCustomerDeptCode !=null and tacticCustomerDeptCode != ''">
+					<![CDATA[
+						AND ((a.ACCOUNTRATINGCODE = '1') OR (
+							a.MANAGEEMPCODE IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = #{tacticCustomerDeptCode} OR V.THREE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}
+								OR V.TWO_LEVEL_DEPTCODE = #{tacticCustomerDeptCode}  OR V.ONE_LEVEL_DEPTCODE = #{tacticCustomerDeptCode})
+						))
+					]]>
+				</if>
+				<if test="customerManage != null and customerManage != ''">
+					<![CDATA[
+						AND ((
+							a.ACCOUNTRATINGCODE != '1'
+						) AND (
+							a.MANAGEEMPCODE NOT IN(
+							SELECT  E.EMPCODE FROM t_org_employee E
+							LEFT JOIN v_org_department V ON E.DEPTCODE  = V.FOUR_LEVEL_DEPTCODE
+							WHERE V.FOUR_LEVEL_DEPTCODE = 'DP140994' OR V.THREE_LEVEL_DEPTCODE = 'DP140994'
+								OR V.TWO_LEVEL_DEPTCODE = 'DP140994'  OR V.ONE_LEVEL_DEPTCODE = 'DP140994')
+							
+						) AND (
+							a.customerOfOrg = '0'
+						))
+					]]>
+				</if>
+			<if test="storeAuth != null and storeAuth !=''">
+				<![CDATA[
+					AND (a.TIERCODE = #{storeAuth} AND a.customerOfOrg = '0')
+				]]>
+			</if>
+			</where>
+		<![CDATA[
+			ORDER BY
+				(ROUND(((ACOS(
+					SIN((#{lng} * 3.1415) / 180) * SIN((lat * 3.1415) / 180) + COS((#{lng} * 3.1415) / 180) * COS((lat * 3.1415) / 180) * COS(
+						(#{lat} * 3.1415) / 180 - (lng * 3.1415) / 180
+					)
+				) * 6380) * 1000),2)) ASC limit 0,30
+		]]>
+	</select>
+
+</mapper>

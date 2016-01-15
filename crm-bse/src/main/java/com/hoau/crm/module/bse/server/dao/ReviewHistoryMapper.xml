@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.ReviewHistoryMapper">
+    <!--添加历程和回顾信息  -->
+    <insert id="insertReviewOrHistory">
+        insert into t_log_review_history(
+ 			id,account_id,contact_id,reserve_id,chats_id,app_sign_id,sweep_sign_id,
+ 			operate_type,create_user,create_date       
+        )values(
+       		#{id},#{customerEntity.id,jdbcType=VARCHAR},#{contactEntity.id,jdbcType=VARCHAR},
+       		#{reserveEntity.id,jdbcType=VARCHAR},#{chatsEntity.id,jdbcType=VARCHAR},
+        	#{signEntity.id,jdbcType=VARCHAR},#{sweepSignEntity.id},#{operateType},#{createUser},#{createDate}
+        )
+    </insert>
+    <!--查询客户历程信息参数 -->
+    <select id="queryHistoryList" resultMap="historyVoMap" parameterType="java.util.HashMap">
+        <![CDATA[
+        select
+        ]]>
+        <include refid="query_history_param"/>
+       <![CDATA[
+			FROM
+				(
+					SELECT
+						date_format(h.create_date, '%Y-%m-%d') AS fdate
+					FROM
+						t_log_review_history h
+					WHERE
+						h.account_id = #{accountId}
+					GROUP BY
+						date_format(h.create_date, '%Y-%m-%d')
+				) date
+			LEFT JOIN t_log_review_history tlrh ON date.fdate = date_format(
+				tlrh.create_date,
+				'%Y-%m-%d'
+			)
+			LEFT JOIN t_crm_account tca ON tlrh.account_id = tca.id
+			LEFT JOIN t_crm_contact tcc ON tlrh.contact_id = tcc.id
+			LEFT JOIN t_sale_reserve tsr ON tlrh.reserve_id = tsr.id
+			LEFT JOIN t_sale_chats tsc ON tlrh.chats_id = tsc.id
+			LEFT JOIN t_sale_sign tas ON tlrh.app_sign_id = tas.id
+			LEFT JOIN t_data_dictionary_value tddv ON tlrh.operate_type = tddv.VALUE_CODE
+			LEFT JOIN t_org_employee emp on emp.empcode = tlrh.create_user
+			WHERE 
+			tca.id = #{accountId} 
+			AND tddv.TERMS_CODE = 'OPER_CUSTOMER_TYPE' 
+			AND (
+				tddv.VALUE_CODE = '1'
+				OR tddv.VALUE_CODE = '2'
+				OR tddv.VALUE_CODE = '3'
+				OR tddv.VALUE_CODE = '5'
+				OR tddv.VALUE_CODE = '6'
+				OR tddv.VALUE_CODE = '7'
+				OR tddv.VALUE_CODE = '8'
+			)
+			ORDER BY tlrh.create_date DESC
+        ]]>
+    </select>
+     <!--查询客户历程信息总数 -->
+    <select id="queryHistoryCount" parameterType="java.util.HashMap" resultType="long">
+       <![CDATA[
+        select count(1)
+			FROM
+				(
+					SELECT
+						date_format(h.create_date, '%Y-%m-%d') AS fdate
+					FROM
+						t_log_review_history h
+					WHERE
+						h.account_id = #{accountId}
+					GROUP BY
+						date_format(h.create_date, '%Y-%m-%d')
+				) date
+			LEFT JOIN t_log_review_history tlrh ON date.fdate = date_format(
+				tlrh.create_date,
+				'%Y-%m-%d'
+			)
+			LEFT JOIN t_crm_account tca ON tlrh.account_id = tca.id
+			LEFT JOIN t_crm_contact tcc ON tlrh.contact_id = tcc.id
+			LEFT JOIN t_sale_reserve tsr ON tlrh.reserve_id = tsr.id
+			LEFT JOIN t_sale_chats tsc ON tlrh.chats_id = tsc.id
+			LEFT JOIN t_sale_sign tas ON tlrh.app_sign_id = tas.id
+			LEFT JOIN t_data_dictionary_value tddv ON tlrh.operate_type = tddv.VALUE_CODE
+			LEFT JOIN t_org_employee emp on emp.empcode = tlrh.create_user
+			WHERE 
+			tca.id = #{accountId}
+			AND tddv.TERMS_CODE = 'OPER_CUSTOMER_TYPE' 
+			AND (
+				tddv.VALUE_CODE = '1'
+				OR tddv.VALUE_CODE = '2'
+				OR tddv.VALUE_CODE = '3'
+				OR tddv.VALUE_CODE = '5'
+				OR tddv.VALUE_CODE = '6'
+				OR tddv.VALUE_CODE = '7'
+				OR tddv.VALUE_CODE = '8'
+			)
+			ORDER BY tlrh.create_date DESC
+        ]]>
+    </select>
+    <!--app端接口 查询工作回顾信息参数 -->
+    <select id="queryReviewList" resultMap="reviewVoMap" parameterType="java.util.HashMap">
+        <![CDATA[
+        select
+        ]]>
+        <include refid="query_review_param"/>
+       <![CDATA[
+			FROM
+				(
+					SELECT
+						date_format(h.create_date, '%Y-%m-%d') AS fdate
+					FROM
+						t_log_review_history h
+					WHERE
+						 h.create_user = #{createUser}
+					GROUP BY
+						date_format(h.create_date, '%Y-%m-%d')
+				)  date
+			LEFT JOIN t_log_review_history tlrh ON date.fdate = date_format(
+				tlrh.create_date,
+				'%Y-%m-%d'
+			)
+			LEFT JOIN t_crm_account tca ON tlrh.account_id = tca.id
+			LEFT JOIN t_crm_contact tcc ON tlrh.contact_id = tcc.id
+			LEFT JOIN t_sale_reserve tsr ON tlrh.reserve_id = tsr.id
+			LEFT JOIN t_sale_chats tsc ON tlrh.chats_id = tsc.id
+			LEFT JOIN t_sale_sign tas ON tlrh.app_sign_id = tas.id
+			LEFT JOIN t_sale_sweep_sign tsss ON tlrh.sweep_sign_id = tsss.id
+			LEFT JOIN t_data_dictionary_value tddv ON tlrh.operate_type = tddv.VALUE_CODE
+			WHERE
+			tlrh.create_user = #{createUser}
+			AND tddv.TERMS_CODE = 'OPER_CUSTOMER_TYPE'
+			AND (
+				tddv.VALUE_CODE = '1'
+				OR tddv.VALUE_CODE = '2'
+				OR tddv.VALUE_CODE = '3'
+				OR tddv.VALUE_CODE = '5'
+				OR tddv.VALUE_CODE = '6'
+				OR tddv.VALUE_CODE = '7'
+				OR tddv.VALUE_CODE = '8'
+				OR tddv.VALUE_CODE = '17'
+			)
+			AND
+				date_format(
+					tlrh.create_date,
+					'%Y-%m-%d') >= #{startDate}
+					AND date_format(
+					tlrh.create_date,
+					'%Y-%m-%d') <= #{endDate}
+			ORDER BY tlrh.create_date DESC
+        ]]>
+    </select>
+     <!--app端接口 查询工作回顾信息参数 -->
+    <select id="queryReviewCount" parameterType="java.util.HashMap" resultType="long">
+       <![CDATA[
+        select count(1)
+			FROM
+				(
+					SELECT
+						date_format(h.create_date, '%Y-%m-%d') AS fdate
+					FROM
+						t_log_review_history h
+					WHERE
+						 h.create_user = #{createUser}
+					GROUP BY
+						date_format(h.create_date, '%Y-%m-%d')
+				)  date
+			LEFT JOIN t_log_review_history tlrh ON date.fdate = date_format(
+				tlrh.create_date,
+				'%Y-%m-%d'
+			)
+			LEFT JOIN t_crm_account tca ON tlrh.account_id = tca.id
+			LEFT JOIN t_crm_contact tcc ON tlrh.contact_id = tcc.id
+			LEFT JOIN t_sale_reserve tsr ON tlrh.reserve_id = tsr.id
+			LEFT JOIN t_sale_chats tsc ON tlrh.chats_id = tsc.id
+			LEFT JOIN t_sale_sign tas ON tlrh.app_sign_id = tas.id
+			LEFT JOIN t_sale_sweep_sign tsss ON tlrh.sweep_sign_id = tsss.id
+			LEFT JOIN t_data_dictionary_value tddv ON tlrh.operate_type = tddv.VALUE_CODE
+			WHERE
+			tlrh.create_user = #{createUser}
+			AND tddv.TERMS_CODE = 'OPER_CUSTOMER_TYPE'
+			AND (
+				tddv.VALUE_CODE = '1'
+				OR tddv.VALUE_CODE = '2'
+				OR tddv.VALUE_CODE = '3'
+				OR tddv.VALUE_CODE = '5'
+				OR tddv.VALUE_CODE = '6'
+				OR tddv.VALUE_CODE = '7'
+				OR tddv.VALUE_CODE = '8'
+				OR tddv.VALUE_CODE = '17'
+			)
+			AND
+				date_format(
+					tlrh.create_date,
+					'%Y-%m-%d') >= #{startDate}
+					AND date_format(
+					tlrh.create_date,
+					'%Y-%m-%d') <= #{endDate}
+			ORDER BY tlrh.create_date DESC
+        ]]>
+    </select>
+     <!--web端接口 查询客户历程信息参数 -->
+    <select id="queryHistoryListByWeb" parameterType="string" resultType="java.util.HashMap">
+        <![CDATA[
+        select
+        ]]>
+        <include refid="query_historyparam_web"/>
+       <![CDATA[
+			FROM
+				(
+					SELECT
+						date_format(h.create_date, '%Y-%m-%d') AS fdate
+					FROM
+						t_log_review_history h
+					WHERE
+						h.account_id = #{accountId}
+					GROUP BY
+						date_format(h.create_date, '%Y-%m-%d')
+				) date
+			LEFT JOIN t_log_review_history tlrh ON date.fdate = date_format(
+				tlrh.create_date,
+				'%Y-%m-%d'
+			)
+			LEFT JOIN t_crm_account tca ON tlrh.account_id = tca.id
+			LEFT JOIN t_crm_contact tcc ON tlrh.contact_id = tcc.id
+			LEFT JOIN t_sale_reserve tsr ON tlrh.reserve_id = tsr.id
+			LEFT JOIN t_sale_chats tsc ON tlrh.chats_id = tsc.id
+			LEFT JOIN t_sale_sign tas ON tlrh.app_sign_id = tas.id
+			LEFT JOIN t_data_dictionary_value tddv ON tlrh.operate_type = tddv.VALUE_CODE
+			LEFT JOIN t_org_employee emp ON emp.empcode = tlrh.create_user
+			WHERE 
+			tca.id = #{accountId}
+			AND tddv.TERMS_CODE = 'OPER_CUSTOMER_TYPE' 
+			AND (
+				tddv.VALUE_CODE = '1'
+				OR tddv.VALUE_CODE = '2'
+				OR tddv.VALUE_CODE = '3'
+				OR tddv.VALUE_CODE = '5'
+				OR tddv.VALUE_CODE = '6'
+				OR tddv.VALUE_CODE = '7'
+				OR tddv.VALUE_CODE = '8'
+			)
+			ORDER BY tlrh.create_date DESC
+        ]]>
+    </select>
+    <!--app端 客户历史跟进信息参数  -->
+    <sql id="query_history_param">
+       	date.fdate AS createDate,
+		tlrh.id AS Id,
+		tlrh.account_id AS accountId,
+		tca.EnterpriseName AS enterPriseName,
+		tca.MainGoodsName as mainGoodsName,
+		tlrh.contact_id AS contactId,
+		tcc.ContactName,
+		tlrh.reserve_id AS reserveId,
+		tsr.reserve_theme AS reserveTheme,
+		tsr.active AS tsrActive,
+		tsr.reserve_start_time AS reserveStartTime,
+		tlrh.chats_id AS chatsId,
+		tsc.chat_theme AS chatTheme,
+		tlrh.app_sign_id AS signId,
+		tas.longitude AS longitude,
+		tas.latitude AS latitude,
+		tas.signAddress AS signAddress,
+		tddv.VALUE_NAME AS operateName,
+		tlrh.operate_type as operateType,
+		tlrh.create_date as createTime,
+		emp.empname AS empName
+    </sql>
+    <!--app端 工作回顾信息参数  -->
+     <sql id="query_review_param">
+       	date.fdate as createDate,
+		tlrh.id AS Id,
+		tlrh.account_id AS accountId,
+		tca.EnterpriseName as enterPriseName,
+		tca.MainGoodsName as mainGoodsName,
+		tca.active as tcaActive,
+		tlrh.contact_id AS contactId,
+		tcc.ContactName,
+		tlrh.reserve_id AS reserveId,
+		tsr.reserve_theme AS reserveTheme,
+		tsr.active as tsrActive,
+		tsr.reserve_start_time as reserveStartTime,
+		tlrh.chats_id AS chatsId,
+		tsc.chat_theme AS chatTheme,
+		tsc.chat_start_time as chatStartTime,
+		tlrh.app_sign_id as signId,
+		tas.longitude as longitude,
+		tas.latitude as latitude,
+		tas.signAddress as signAddress,
+		tsss.id as sweepSignId,
+		tsss.signAddress as sweepSignAddress,
+		tsss.wasSweepPeopDeptCode as wasSweepPeopDeptCode,
+		tddv.VALUE_NAME as operateName,
+		tlrh.operate_type,
+		tlrh.create_user as createUser,
+		tlrh.create_date as createDate
+    </sql>
+    <!--web端的历史跟进信息  -->
+    <sql id="query_historyparam_web">
+        tlrh.id as id,
+        tcc.ContactName as contactName,
+        tca.MainGoodsName as mainGoodsName,
+        tddv.VALUE_NAME AS operateName,
+		tsr.reserve_theme AS reserveTheme,
+		tsr.reserve_start_time AS reserveStartTime,
+		tsc.chat_theme AS chatTheme,
+		tsc.chat_start_time as chatStartTime,
+		tas.signAddress AS signAddress,
+		tlrh.create_date AS createTime,
+	    tlrh.operate_type as operateType,
+		emp.empname AS empName
+    </sql>
+    <!--app端接口历史结果映射  -->
+    <resultMap type="com.hoau.crm.module.bse.api.shared.vo.ReviewHistoryVo" id="historyVoMap">
+         <result property="createDate" column="createDate"/>
+         <result property="enterpriseName" column="enterPriseName" />
+         <collection property="reviewHistoryEntityList" resultMap="reviewHistoryEntityMap"></collection>
+    </resultMap>
+    <resultMap type="com.hoau.crm.module.bse.api.shared.domain.ReviewHistoryEntity" id="reviewHistoryEntityMap">
+    	<id property="id" column="Id" />
+    	<result property="operateType" column="operateType" />
+    	<result property="operateName" column="operateName" />
+    	<result property="createDate" column="createTime"/>
+    	<result property="empName" column="empName" />
+         <association property="customerEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="accountId" />
+			<result property="enterpriseName" column="enterPriseName"/>
+			<result property="mainGoodsName" column="mainGoodsName"/>
+			<result property="active" column="tcaActive" />
+		</association>
+		<association property="contactEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="contactId" />
+			<result property="contactName" column="ContactName" />
+		</association>
+		<association property="reserveEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleReserveEntity">
+			<id property="id" column="reserveId" />
+			<result property="reserveTheme" column="reserveTheme"/>
+			<result property="active" column="tsrActive" />
+		</association>
+		<association property="chatsEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity">
+			<id property="id" column="chatsId" />
+			<result property="chatTheme" column="chatTheme"/>
+		</association>
+		<association property="signEntity"
+			javaType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+			<id property="id" column="signId" />
+			<result property="longitude" column="longitude"/>
+			<result property="latitude" column="latitude"/>
+			<result property="signAddress" column="signAddress"/>
+		</association>
+    </resultMap>
+    <!-- app端接口回顾结果映射 -->
+    <resultMap type="com.hoau.crm.module.bse.api.shared.vo.ReviewHistoryVo" id="reviewVoMap">
+         <result property="createDate" column="createDate"/>
+         <collection property="reviewHistoryEntityList" resultMap="reviewReviewEntityMap"></collection>
+    </resultMap>
+    <resultMap type="com.hoau.crm.module.bse.api.shared.domain.ReviewHistoryEntity" id="reviewReviewEntityMap">
+    	<id property="id" column="Id" />
+    	<result property="operateType" column="operate_type" />
+    	<result property="operateName" column="operateName" />
+    	<result property="createUser" column="createUser" />
+         <association property="customerEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.CustomerEntity">
+			<id property="id" column="accountId" />
+			<result property="enterpriseName" column="enterPriseName" />
+			<result property="mainGoodsName" column="mainGoodsName"/>
+			<result property="active" column="tcaActive" />
+		</association>
+		<association property="contactEntity"
+			javaType="com.hoau.crm.module.customer.api.shared.domain.ContactEntity">
+			<id property="id" column="contactId" />
+			<result property="contactName" column="ContactName" />
+		</association>
+		<association property="reserveEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleReserveEntity">
+			<id property="id" column="reserveId" />
+			<result property="reserveTheme" column="reserveTheme"/>
+			<result property="reserveStartTime" column="reserveStartTime"/>
+			<result property="active" column="tsrActive" />
+		</association>
+		<association property="chatsEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SaleChatsEntity">
+			<id property="id" column="chatsId" />
+			<result property="chatStartTime" column="chatStartTime"/>
+			<result property="chatTheme" column="chatTheme"/>
+		</association>
+		<association property="signEntity"
+			javaType="com.hoau.crm.module.appcore.api.shared.domain.SignEntity">
+			<id property="id" column="signId" />
+			<result property="longitude" column="longitude"/>
+			<result property="latitude" column="latitude"/>
+			<result property="signAddress" column="signAddress"/>
+		</association>
+		<association property="sweepSignEntity"
+			javaType="com.hoau.crm.module.sales.api.shared.domain.SweepSignEntity">
+			<id property="id" column="sweepSignId" />
+			<result property="wasSweepPeopDeptCode" column="wasSweepPeopDeptCode"/>
+			<result property="signAddress" column="sweepSignAddress"/>
+			<association property="departmentEntity" column="{deptcode = wasSweepPeopDeptCode}" select="getlogistcode"/>
+		</association>
+    </resultMap>
+    <!--获取被扫描人的门店代码  -->
+    <select id="getlogistcode" parameterType="map" resultType="com.hoau.crm.module.bse.api.shared.domain.DepartmentEntity">
+        select 
+        	logistcode as logistCode
+        from 
+        	t_org_department 
+       	where 
+        deptcode = #{deptcode} and canceled = '0'
+    </select>
+</mapper>

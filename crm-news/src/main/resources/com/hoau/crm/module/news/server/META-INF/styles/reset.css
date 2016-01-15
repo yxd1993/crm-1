@@ -1,0 +1,44 @@
+@charset "utf-8";
+/* ~~~~~~~~~ generic ~~~~~~~~~~ */
+
+html, body, address, blockquote, div, dl, form, h1, h2, h3, h4, h5, h6, ol, p, pre, table, ul,
+dd, dt, li, tbody, td, tfoot, th, thead, tr, button, del, ins, map, object,
+a, abbr, acronym, b, bdo, big, br, cite, code, dfn, em, i, img, kbd, q, samp, small, span,
+strong, sub, sup, tt, var, legend, fieldset {
+	margin: 0;
+	padding: 0;
+}
+a,
+a:link,
+a:visited,
+a:active,
+a:focus{
+	color:#000000 ;
+	outline: 0;
+	text-decoration: none;
+}
+input,button,select,textarea{
+	outline:none
+}
+textarea{
+	resize:none
+}
+img {
+	vertical-align: bottom;
+}
+html {
+	overflow-y: scroll;
+}
+html,
+body {
+	height: 100%;
+	font-size: 16px;
+	/* font-family: 'PingHei', 'Helvetica Neue', 'Helvetica', 'STHeitiSC-Light', 'Arial', sans-serif; */
+	font-family: 'Microsoft Yahei', sans-serif;
+	background: #E4E7EA;
+    text-shadow: 1px 1px 2px rgba(50,50,50,.15)
+}
+/*其他样式  */
+.ui-page-theme-a a:visited,html .ui-bar-a a:visited,html .ui-body-a a:visited,html body .ui-group-theme-a a:visited {
+    color: rgb(0,0,0);
+}

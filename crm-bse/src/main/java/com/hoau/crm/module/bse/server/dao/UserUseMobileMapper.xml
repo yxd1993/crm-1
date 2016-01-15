@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.bse.server.dao.UserUseMobileMapper">
+
+	<!-- 查询此用户是否已在此手机登录过 -->
+	<select id="getUserMobileInfo" parameterType="com.hoau.crm.module.bse.api.shared.domain.UserUseMobileEntity"
+		resultType="com.hoau.crm.module.bse.api.shared.domain.UserUseMobileEntity">
+		<![CDATA[
+			SELECT m.ID,m.UNIQUEID,m.USERCODE,m.CREATEDATE FROM t_app_usermobile m 
+			where m.UNIQUEID = #{uniqueId} and m.USERCODE = #{userCode} and m.ACTIVE = 'Y'
+		]]>
+	</select>
+
+	<!-- 创建用户与使用手机信息 -->
+	<insert id="createUserMobile"
+		parameterType="com.hoau.crm.module.bse.api.shared.domain.UserUseMobileEntity">
+		<![CDATA[
+			INSERT INTO t_app_usermobile(ID,UNIQUEID,USERCODE,APPTYPE,ACTIVE,CREATEUSER,CREATEDATE) 
+			VALUES (#{id},#{uniqueId},#{userCode},#{appType},'Y',#{createUser},sysdate())
+		]]>
+	</insert>
+</mapper>

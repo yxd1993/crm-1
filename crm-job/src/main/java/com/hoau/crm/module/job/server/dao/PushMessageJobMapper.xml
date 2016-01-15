@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hoau.crm.module.job.server.dao.PushMessageJobMapper">
+
+	<!-- 消息基础信息 -->
+	<resultMap id="messageInfoResultMap"
+		type="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoEntity">
+		<id property="id" column="M_ID" />
+		<result property="messageType" column="M_MTYPE" />
+		<result property="messageTitle" column="M_MTITLE" />
+		<result property="pushType" column="M_PUSHTYPE" />
+		<result property="messageContent" column="M_MCONTENT" />
+		<result property="receiveUserId" column="M_RECEIVEUSERID" />
+		<collection property="pushUserEntityList" 
+			ofType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+			<id property="id" column="PU_ID" />
+			<result property="userid" column="PU_USERID" />
+			<result property="baidu_userid" column="PU_BAIDU_USERID" />
+			<result property="channelid" column="PU_CHANNELID" />
+			<result property="appid" column="PU_APPID" />
+			<result property="notification_builder_id" column="PU_NOTIFICATION_BUILDER_ID" />
+			<result property="notification_basic_style" column="PU_NOTIFICATION_BASIC_STYLE" />
+			<result property="sound" column="PU_SOUND" />
+			<result property="badge" column="PU_BADGE" />
+			<result property="beginhour" column="PU_BEGINHOUR" />
+			<result property="endhour" column="PU_ENDHOUR" />
+			<result property="sendstate" column="PU_SENDSTATE" />
+			<result property="cancel" column="PU_CANCEL" />
+		</collection>
+	</resultMap>
+	
+	<!-- 分页查询返回字段 -->
+	<sql id="query_messageinfo_param">
+		M.ID AS M_ID,
+		M.MTYPE AS M_MTYPE,
+		M.MTITLE AS M_MTITLE,
+		M.PUSHTYPE AS M_PUSHTYPE,
+		M.MCONTENT AS M_MCONTENT,
+		M.RECEIVEUSERID AS M_RECEIVEUSERID,
+		PU.ID AS PU_ID,
+		PU.USERID AS PU_USERID,
+		PU.BAIDU_USERID AS PU_BAIDU_USERID,
+		PU.CHANNELID AS PU_CHANNELID,
+		PU.APPID AS PU_APPID,
+		PU.NOTIFICATION_BUILDER_ID AS PU_NOTIFICATION_BUILDER_ID,
+		PU.NOTIFICATION_BASIC_STYLE AS PU_NOTIFICATION_BASIC_STYLE,
+		PU.SOUND AS PU_SOUND,
+		PU.BADGE AS PU_BADGE,
+		PU.BEGINHOUR AS PU_BEGINHOUR,
+		PU.ENDHOUR AS PU_ENDHOUR,
+		PU.SENDSTATE AS PU_SENDSTATE,
+		PU.CANCEL AS PU_CANCEL
+	</sql>
+	
+	<!-- 分页查询消息信息 -->
+	<select id="queryMessageInfo" parameterType="int" resultMap="messageInfoResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_messageinfo_param" />
+		<![CDATA[
+			FROM (
+					SELECT
+						M1.*
+					FROM
+						t_crm_message M1
+					WHERE
+						M1.ACTIVE = 'Y'
+					AND M1.ISSEND = '0'
+					AND M1.CREATEDATE < SYSDATE()
+					ORDER BY M1.CREATEDATE ASC
+					LIMIT #{pushNum}
+				) M
+			LEFT JOIN t_auth_user U ON M.RECEIVEUSERID = U.emp_code
+			LEFT JOIN t_app_pushuser PU ON U.login_name = PU.USERID
+		]]>
+		ORDER BY M.ID
+	</select>
+	
+	<!-- 修改消息发送状态 -->
+	<update id="updateMessageSendStatus" parameterType="map">
+		<![CDATA[
+			UPDATE t_crm_message M SET
+				M.ISSEND = #{isSend},
+				M.MID = #{msgId},
+				M.SENDTIME = #{sendTime},
+				M.modifyUser = #{modifyUser},
+				M.MODIFYDATE = SYSDATE()
+		]]>
+		<where>
+			M.ID = #{id}
+		</where>
+	</update>
+	
+	<!-- 补发消息信息返回 -->
+	<resultMap id="messageInfoRepeatResultMap"
+		type="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoRepeatEntity">
+		<id property="id" column="R_ID" />
+		<result property="repeatNum" column="R_REPEATNUM" />
+		<result property="repeatStatus" column="R_REPEATSTATUS" />
+		<association property="messageInfoEntity" column="M_ID"
+			javaType="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoEntity">
+			<id property="id" column="M_ID" />
+			<result property="messageType" column="M_MTYPE" />
+			<result property="messageTitle" column="M_MTITLE" />
+			<result property="pushType" column="M_PUSHTYPE" />
+			<result property="messageContent" column="M_MCONTENT" />
+			<result property="receiveUserId" column="M_RECEIVEUSERID" />
+		</association>
+		<association property="pushUserEntity" column="PU_ID"
+			javaType="com.hoau.crm.module.appcore.api.shared.domain.PushUserEntity">
+			<id property="id" column="PU_ID" />
+			<result property="userid" column="PU_USERID" />
+			<result property="baidu_userid" column="PU_BAIDU_USERID" />
+			<result property="channelid" column="PU_CHANNELID" />
+			<result property="appid" column="PU_APPID" />
+			<result property="notification_builder_id" column="PU_NOTIFICATION_BUILDER_ID" />
+			<result property="notification_basic_style" column="PU_NOTIFICATION_BASIC_STYLE" />
+			<result property="sound" column="PU_SOUND" />
+			<result property="badge" column="PU_BADGE" />
+			<result property="beginhour" column="PU_BEGINHOUR" />
+			<result property="endhour" column="PU_ENDHOUR" />
+			<result property="sendstate" column="PU_SENDSTATE" />
+			<result property="cancel" column="PU_CANCEL" />
+		</association>
+	</resultMap>
+	
+	<!-- 补发消息分页查询返回字段 -->
+	<sql id="query_messageinfoRepeat_param">
+		R.ID AS R_ID,
+		R.REPEATNUM AS R_REPEATNUM,
+		R.REPEATSTATUS AS R_REPEATSTATUS,
+		M.ID AS M_ID,
+		M.MTYPE AS M_MTYPE,
+		M.MTITLE AS M_MTITLE,
+		M.PUSHTYPE AS M_PUSHTYPE,
+		M.MCONTENT AS M_MCONTENT,
+		M.RECEIVEUSERID AS M_RECEIVEUSERID,
+		PU.ID AS PU_ID,
+		PU.USERID AS PU_USERID,
+		PU.BAIDU_USERID AS PU_BAIDU_USERID,
+		PU.CHANNELID AS PU_CHANNELID,
+		PU.APPID AS PU_APPID,
+		PU.NOTIFICATION_BUILDER_ID AS PU_NOTIFICATION_BUILDER_ID,
+		PU.NOTIFICATION_BASIC_STYLE AS PU_NOTIFICATION_BASIC_STYLE,
+		PU.SOUND AS PU_SOUND,
+		PU.BADGE AS PU_BADGE,
+		PU.BEGINHOUR AS PU_BEGINHOUR,
+		PU.ENDHOUR AS PU_ENDHOUR,
+		PU.SENDSTATE AS PU_SENDSTATE,
+		PU.CANCEL AS PU_CANCEL
+	</sql>
+	
+	<!-- 分页查询补发消息信息 -->
+	<select id="queryRepeatMessageInfo" resultMap="messageInfoRepeatResultMap">
+		<![CDATA[
+			SELECT
+		]]>
+		<include refid="query_messageinfoRepeat_param" />
+		<![CDATA[
+			FROM t_crm_message_repeat R
+			LEFT JOIN t_crm_message M ON R.MESSAGEID = M.ID
+			LEFT JOIN t_app_pushuser PU ON R.PUSHUSERID = PU.ID
+		]]>
+		<where>
+			<![CDATA[
+				R.REPEATNUM < 3 AND R.REPEATSTATUS IS NULL
+			]]>
+		</where>
+		ORDER BY R.CREATEDATE ASC
+	</select>
+	
+	<!-- 新增发送失败消息 -->
+	<insert id="insertSendFailureMessage" parameterType="com.hoau.crm.module.appcore.api.shared.domain.MessageInfoRepeatEntity">
+		<![CDATA[
+			INSERT INTO t_crm_message_repeat (PUSHUSERID,MESSAGEID,REPEATNUM,REPEATSTATUS,ACTIVE,CREATEUSER,CREATEDATE) 
+			VALUES (#{pushuserId}, #{messageId}, 0, NULL, 'Y', 'sysadmin', SYSDATE()) 
+		]]>
+	</insert>
+	
+	<!-- 将消息置为发送成功 -->
+	<update id="updateMessageSuccess" parameterType="java.util.List">
+		<![CDATA[
+			UPDATE t_crm_message_repeat SET REPEATSTATUS = 1,MODIFYDATE=sysdate() WHERE ID IN 
+		]]>
+		<foreach collection="list" item="id" open="(" close=")"
+				separator=",">
+			#{id}
+		</foreach>
+	</update>
+	
+	<!-- 将消息增加一次发送次数 -->
+	<update id="updateMessageRepeatNum" parameterType="java.util.List">
+		<![CDATA[
+			UPDATE t_crm_message_repeat SET REPEATNUM = (REPEATNUM + 1),MODIFYDATE=sysdate() WHERE ID IN 
+		]]>
+		<foreach collection="list" item="id" open="(" close=")"
+				separator=",">
+			#{id}
+		</foreach>
+	</update>
+</mapper>

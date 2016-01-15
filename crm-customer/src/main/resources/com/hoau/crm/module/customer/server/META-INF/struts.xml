@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+	<!-- 文件上传大小限制 -->
+	<constant name="struts.multipart.maxSize" value="20000000"></constant>
+	<package name="customer" namespace="/customer" extends="crm-default">
+		<result-types>
+			<result-type name="streamx"
+				class="com.sunspoter.lib.web.struts2.dispatcher.StreamResultX" />
+		</result-types>
+		<!-- 进入客户信息查看界面 -->
+		<action name="index" class="customerAction" method="index">
+			<result name="success">customerMain.jsp</result>
+		</action>
+		<!-- 进入客户信息新增界面 -->
+		<action name="addCustomer" class="customerAction">
+			<result name="success">addCustomer.jsp</result>
+		</action>
+		<!-- 进入客户信息查看界面 -->
+		<action name="lookCustomer" class="customerAction">
+			<result name="success">lookCustomer.jsp</result>
+		</action>
+		<!-- 进入个人客户信息查询界面 -->
+		<action name="personalMain" class="personalCustomerAction" method="main">
+			<result name="success">personalCustomerMain.jsp</result>
+		</action>
+				
+		<!-- 分页查询客户信息 -->
+		<action name="customerAction" class="customerAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+
+		<!-- 分页查询个人客户信息 -->
+		<action name="personalCustomerAction" class="personalCustomerAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 进入客户资源池界面 -->
+		<action name="resourcePool">
+			<result name="success">resourcePool.jsp</result>
+		</action>		
+		<!-- 分页查询资源客户信息 -->
+		<action name="customerResourcePoolAction" class="customerResourcePoolAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 进入客户共享界面 -->
+		<action name="customerInfoPool" class="customerInfoPoolAction">
+			<result name="success">customerInfoPool.jsp</result>
+		</action>
+		<!-- 分页查询客户信息 -->
+		<action name="customerInfoPoolAction" class="customerInfoPoolAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+			
+		<!-- 进入上传excel界面 -->
+		<action name="toUpload" class="tableUploadAction" method="toUpload">
+			<result name="success">upload.jsp</result>
+		</action>
+		<!-- 批量上传 -->
+		<action name="upload" class="tableUploadAction" method="tableUpload">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 模板下载 -->
+		<action name="downloadCustomerTemplate" class="tableUploadAction"
+			method="downloadFile">
+			<result name="download" type="streamx">
+				<param name="contentType">application/x-download</param>
+				<param name="contentDisposition">attachment;filename=${fileName}</param>
+				<param name="inputName">inputStream</param>
+				<param name="bufferSize">4096</param>
+			</result>
+			<result name="fileNotExist">
+			</result>
+		</action>
+		<!-- 客户信息池下载 -->
+		<action name="export" class="customerInfoPoolExportAction" method="excelExport">
+			<result name="success" type="streamx" > 
+				<param name="contentType">application/x-download</param>
+				<param name="inputName">excelStream</param>
+				<param name="contentDisposition">attachment;filename=${downloadFileName}</param>
+				<param name="bufferSize">1024</param>
+			</result>
+			<result name="error">
+				customerInfoPoolExportError.jsp
+			</result>
+		</action>
+		
+		<!-- 行业报表数据 -->
+		<action name="reportIndustry" class="reportDataAction" method="customerIndustryData">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 客户性质报表数据 -->
+		<action name="reportNature" class="reportDataAction" method="customerNatureData" >
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 总客户数数据 -->
+		<action name="reportAllCustomer" class="reportDataAction" method="allCustomerData">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 百度测试 -->
+		<action name="baiduMap" class="intentionAction">
+			<result name="success">baiduMap.jsp</result>
+		</action>
+		
+		<!-- 用户范围确认-->
+		<action name="userScopeAction" class="userScopeAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		
+		<!-- 客户坐标-->
+		<action name="customerLatlngAction" class="customerLatlngAction">
+			<result name="success" type="json" />
+			<result name="error" type="json" />
+		</action>
+		<!-- 附近客户 -->
+		<action name="nearCustomerMap" class="customerLatlngAction">
+			<result name="success">nearCustomerMap.jsp</result>
+		</action>
+		
+		<!-- 热力图客户 -->
+		<action name="customerHeatMap" class="customerLatlngAction">
+			<result name="success">customerHeatMap.jsp</result>
+		</action>
+		
+		<!-- 自定义查询SQL -->
+		<action name="showQuerySqlIndex"
+			class="querySqlAction"
+			method="showQueryPage">
+			<result name="success">querySqlIndex.jsp</result>
+		</action>
+		<!-- 分页查询自定义查询SQL -->
+		<action name="showPageQuerySql"
+			class="querySqlAction"
+			method="showPageQuerySql">
+			<result name="success" type="json"></result>
+		</action>
+		<!-- 保存或修改自定义查询SQL -->
+		<action name="saveorModifyQuerySql"
+			class="querySqlAction"
+			method="saveorModifyQuerySql">
+			<result name="success" type="json"></result>
+		</action>
+		<!-- 批量删除自定义查询SQL -->
+		<action name="toVoidQuerySql"
+			class="querySqlAction"
+			method="toVoidQuerySql">
+			<result name="success" type="json"></result>
+		</action>
+		<!-- 加载SQL绑定的角色 -->
+		<action name="querySqlRoleList"
+			class="querySqlAction"
+			method="querySqlRoleList">
+			<result name="success" type="json"></result>
+		</action>
+
+		<!--查询sql -->
+		<action name="ShowQueryAssembleIndex"
+			class="queryAssembleAction"
+			method="showQueryPage">
+			<result name="success">queryAssembleIndex.jsp</result>
+		</action>
+		<action name="showQuerySql"
+			class="queryAssembleAction"
+			method="showQuerySql">
+			<result name="success" type="json"></result>
+		</action>
+
+		<action name="execSqlAll"
+			class="queryAssembleAction"
+			method="execSqlAll">
+			<result name="success" type="json"></result>
+		</action>
+
+		<action name="checkNumber"
+			class="queryAssembleAction"
+			method="checkQueryNumber">
+			<result name="success" type="json"></result>
+		</action>
+
+		<!--加载下啦框store -->
+		<action name="queryCombo"
+			class="queryAssembleAction"
+			method="queryCombo">
+			<result name="success" type="json"></result>
+		</action>
+
+		<!-- 导出Excel -->
+		<action name="querySqlExcelPort"
+			class="queryAssembleAction"
+			method="exportExcel">
+			<result name="success" type="stream">
+				<param name="contentType">application/vnd.ms-excel;charset=UTF-8</param>
+				<param name="inputName">excelStream</param>
+				<param name="contentDisposition">attachment;filename="${fileName}.xls"</param>
+				<param name="bufferSize">1024</param>
+			</result>
+		</action>
+		
+		<!-- 自定义创建表查询SQL -->
+		<action name="showQueryCreateSqlIndex"
+			class="queryCreateSqlAction"
+			method="showQueryCreatePage">
+			<result name="success">queryCreateSqlIndex.jsp</result>
+		</action>
+		<!-- 分页查询自定义创建表SQL -->
+		<action name="showPagequeryCreateSql"
+			class="queryCreateSqlAction"
+			method="showPagequeryCreateSql">
+			<result name="success" type="json"></result>
+		</action>
+		
+			<!-- 保存或修改自定义创建表SQL -->
+		<action name="saveorModifyqueryCreateSql"
+			class="queryCreateSqlAction"
+			method="saveorModifyqueryCreateSql">
+			<result name="success" type="json"></result>
+		</action>
+		
+		<!-- 批量删除自定义查询SQL -->
+		<action name="toVoidqueryCreateSql"
+			class="queryCreateSqlAction"
+			method="toVoidqueryCreateSql">
+			<result name="success" type="json"></result>
+		</action>
+		
+		<!-- 自定义创建存储过程更新数据SQL -->
+		<action name="showQueryProcIndex"
+			class="queryCreateSqlAction"
+			method="showQueryCreatePage">
+			<result name="success">queryProcSqlIndex.jsp</result>
+		</action>
+		
+		<!-- 批量删除存储过程SQL -->
+		<action name="deleteProcSql"
+			class="queryCreateSqlAction"
+			method="deleteProcSql">
+			<result name="success" type="json"></result>
+		</action>
+	</package>
+</struts>
